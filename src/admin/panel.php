@@ -1,25 +1,64 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Panel Administrador</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-  <div class="container mt-4">
-    <h1>Panel del Administrador</h1>
-    <p>Gestión de locales, dueños, promociones y novedades.</p>
+<?php
+session_start();
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'administrador') {
+    header('Location: ../login.php');
+    exit;
+}
 
-    <div class="mt-4">
-      <h3>Acciones rápidas</h3>
-      <a href="#" class="btn btn-primary">Aprobar promociones</a>
-      <a href="#" class="btn btn-secondary">Crear novedad</a>
-    </div>
+require_once '../includes/header.php';
+?>
 
-    <div class="mt-4">
-      <h3>Reportes</h3>
-      <p>Aquí se mostrarán estadísticas del uso de promociones.</p>
+<div class="container mt-4">
+    <h1>Panel de Administrador</h1>
+    <p class="text-muted">Bienvenido, <?= htmlspecialchars($_SESSION['usuario']['nombre']) ?></p>
+    
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Locales</h5>
+                    <p class="card-text">Gestionar locales del shopping</p>
+                    <a href="gestion_locales.php" class="btn btn-primary">Administrar</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Promociones</h5>
+                    <p class="card-text">Gestionar promociones</p>
+                    <a href="gestion_promociones.php" class="btn btn-primary">Administrar</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Validar Dueños</h5>
+                    <p class="card-text">Aprobar cuentas de dueños</p>
+                    <a href="validar_duenos.php" class="btn btn-primary">Validar</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Novedades</h5>
+                    <p class="card-text">Gestionar novedades</p>
+                    <a href="gestion_novedades.php" class="btn btn-primary">Administrar</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Reportes</h5>
+                    <p class="card-text">Ver reportes del sistema</p>
+                    <a href="reportes.php" class="btn btn-primary">Ver Reportes</a>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</body>
-</html>
+</div>
+
+<?php require_once '../includes/footer.php'; ?>
