@@ -2,6 +2,46 @@
 session_start();
 // Aquí luego irá la lógica de validación
 ?>
+<?php
+// login.php
+require_once __DIR__ . '/../config.php';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
+    
+    if (empty($email) || empty($password)) {
+        $_SESSION['error'] = "Todos los campos son obligatorios";
+        header('Location: login.php');
+        exit;
+    }
+    
+    if (MODO_SIMULACION) {
+        // Login con datos de prueba
+        $usuario = getUserByEmail($email);
+        
+        if ($usuario && $usuario['password'] === $password) {
+            $_SESSION['usuario'] = [
+                'id' => $usuario['id'],
+                'email' => $email,
+                'nombre' => $usuario['nombre'],
+                'rol' => $usuario['rol'],
+                'categoria' => $usuario['categoria']
+            ];
+            
+            $_SESSION['success'] = "¡Bienvenido " . $usuario['nombre'] . "!";
+            header('Location: index.php');
+            exit;
+        } else {
+            $_SESSION['error'] = "Credenciales incorrectas";
+        }
+    } else {
+        // Login real con BD (para después)
+        $_SESSION['error'] = "Sistema en mantenimiento";
+    }
+}
+
+// ... (el resto del HTML del login) ...
 
 <!DOCTYPE html>
 <html lang="es">
