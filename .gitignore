@@ -1,0 +1,81 @@
+# .gitignore para proyecto PHP - PromoShopping
+
+# ==================== #
+# ENTORNO DE DESARROLLO #
+# ==================== #
+/.vscode/
+/.idea/
+/.vs/
+/nbproject/
+/Thumbs.db
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# ==================== #
+# DEPENDENCIAS #
+# ==================== #
+/vendor/
+/node_modules/
+/composer.lock
+package-lock.json
+yarn.lock
+
+# ==================== #
+# ARCHIVOS DE SISTEMA #
+# ==================== #
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+._*
+
+# ==================== #
+# ARCHIVOS SENSIBLES #
+# ==================== #
+.env
+.env.local
+.env.production
+config.php # ¡CUIDADO! No incluir si tiene datos sensibles
+*.key
+*.pem
+*.crt
+
+# ==================== #
+# ARCHIVOS DE BACKUP #
+# ==================== #
+*.backup
+*.bak
+*.old
+
+# ==================== #
+# ARCHIVOS DE USUARIO #
+# ==================== #
+.htaccess
+error_log
+*.sqlite
+*.db
+
+# ==================== #
+# ARCHIVOS DE SUBIDA #
+# ==================== #
+/uploads/
+/tmp/
+/cache/
+
+# ==================== #
+# ARCHIVOS DE IDE #
+# ==================== #
+*.phpstorm.meta.php
+/.phpstorm.meta.php
+/.settings/
+/.buildpath
+/.project
+
+# ==================== #
+# EXCEPCIONES IMPORTANTES #
+# ==================== #
+!includes/config.php # MANTENER este archivo pero cuidado con datos sensibles
+!includes/database.php # MANTENER este archivo
