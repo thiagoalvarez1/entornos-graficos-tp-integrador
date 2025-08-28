@@ -9,18 +9,29 @@ if ($auth->isLoggedIn()) {
 }
 
 $error = '';
+$success = '';
 
-// Procesar formulario de login
+// Procesar formulario de registro
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
+    $confirm_password = trim($_POST['confirm_password']);
+    $user_type = trim($_POST['user_type']);
 
-    $result = $auth->login($email, $password);
-
-    if ($result === true) {
-        $auth->redirectUser();
+    // Validaciones
+    if ($password !== $confirm_password) {
+        $error = "Las contraseñas no coinciden";
     } else {
-        $error = $result;
+        // Establecer categoría por defecto para clientes
+        $category = ($user_type == USER_CLIENT) ? CATEGORY_INITIAL : '';
+
+        $result = $auth->register($email, $password, $user_type, '', $category);
+
+        if ($result === true) {
+            $success = "Usuario registrado correctamente. Ahora puedes iniciar sesión.";
+        } else {
+            $error = $result;
+        }
     }
 }
 ?>
@@ -31,13 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - PromoShopping</title>
+    <title>Registro - PromoShopping</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #2c3e50;
-            --secondary: #e74c3c;
+            --secondary: #3498db;
         }
 
         body {
@@ -48,23 +59,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             align-items: center;
         }
 
-        .login-container {
+        .register-container {
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             width: 100%;
-            max-width: 400px;
+            max-width: 500px;
         }
 
-        .login-header {
-            background: linear-gradient(rgba(44, 62, 80, 0.9), rgba(44, 62, 80, 0.9)), url('https://images.unsplash.com/photo-1563013546-72e6b2025c93?ixlib=rb-4.0.3') center/cover;
+        .register-header {
+            background: linear-gradient(rgba(52, 152, 219, 0.9), rgba(52, 152, 219, 0.9)), url('https://images.unsplash.com/photo-1563013546-72e6b2025c93?ixlib=rb-4.0.3') center/cover;
             color: white;
             padding: 30px;
             text-align: center;
         }
 
-        .login-form {
+        .register-form {
             padding: 30px;
         }
 
@@ -74,13 +85,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .btn-primary:hover {
-            background-color: #c0392b;
-            border-color: #c0392b;
+            background-color: #2980b9;
+            border-color: #2980b9;
         }
 
         .form-control:focus {
             border-color: var(--secondary);
-            box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
         }
     </style>
 </head>
@@ -88,17 +99,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="login-container">
-                    <div class="login-header">
+            <div class="col-md-8">
+                <div class="register-container">
+                    <div class="register-header">
                         <h3><i class="fas fa-store me-2"></i>PromoShopping</h3>
-                        <p class="mb-0">Iniciar sesión en tu cuenta</p>
+                        <p class="mb-0">Crear una nueva cuenta</p>
                     </div>
 
-                    <div class="login-form">
+                    <div class="register-form">
                         <?php if (!empty($error)): ?>
                             <div class="alert alert-danger" role="alert">
                                 <?php echo $error; ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($success)): ?>
+                            <div class="alert alert-success" role="alert">
+                                <?php echo $success; ?>
                             </div>
                         <?php endif; ?>
 
@@ -112,6 +129,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             </div>
 
                             <div class="mb-3">
+                                <label for="user_type" class="form-label">Tipo de usuario</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <select class="form-select" id="user_type" name="user_type" required>
+                                        <option value="">Seleccionar tipo</option>
+                                        <option value="<?php echo USER_CLIENT; ?>">Cliente</option>
+                                        <option value="<?php echo USER_OWNER; ?>">Dueño de local</option>
+                                    </select>
+                                </div>
+                                <div class="form-text">Los dueños de locales deben ser validados por un administrador
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="password" class="form-label">Contraseña</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
@@ -119,20 +150,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 </div>
                             </div>
 
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="remember">
-                                <label class="form-check-label" for="remember">Recordarme</label>
+                            <div class="mb-3">
+                                <label for="confirm_password" class="form-label">Confirmar contraseña</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="confirm_password"
+                                        name="confirm_password" required>
+                                </div>
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+                            <button type="submit" class="btn btn-primary w-100">Registrarse</button>
                         </form>
 
                         <hr>
 
                         <div class="text-center">
-                            <p>¿No tienes una cuenta? <a href="<?php echo SITE_URL; ?>registro.php">Regístrate aquí</a>
+                            <p>¿Ya tienes una cuenta? <a href="<?php echo SITE_URL; ?>login.php">Inicia sesión aquí</a>
                             </p>
-                            <p><a href="#">¿Olvidaste tu contraseña?</a></p>
                         </div>
                     </div>
                 </div>

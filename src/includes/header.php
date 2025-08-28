@@ -1,298 +1,362 @@
 <?php
-session_start();
+// Iniciar sesión si no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Determinar si el usuario está logueado
+$isLoggedIn = isset($_SESSION['user_id']);
+$userType = $isLoggedIn ? $_SESSION['user_type'] : '';
+$userEmail = $isLoggedIn ? $_SESSION['user_email'] : '';
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Promociones - Shopping Center</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
+    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>PromoShopping</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Custom CSS -->
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --light-bg: #f8f9fa;
-            --dark-text: #2c3e50;
-            --border-radius: 12px;
-            --box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            --primary: #2c3e50;
+            --secondary: #e74c3c;
+            --accent: #3498db;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #27ae60;
+            --warning: #f39c12;
         }
-        
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: var(--light-bg);
-            font-family: 'Inter', sans-serif;
-            color: var(--dark-text);
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
             line-height: 1.6;
         }
-        
+
+        /* Header Styles */
         .navbar {
-            background: linear-gradient(135deg, var(--primary-color), #34495e);
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            padding: 15px 0;
+            background: linear-gradient(135deg, var(--primary) 0%, #34495e 100%);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 0.8rem 1rem;
         }
-        
+
         .navbar-brand {
             font-weight: 700;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: white !important;
         }
-        
+
+        .navbar-brand i {
+            color: var(--secondary);
+            margin-right: 0.5rem;
+        }
+
         .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
             font-weight: 500;
-            color: rgba(255,255,255,0.9) !important;
+            padding: 0.5rem 1rem !important;
+            margin: 0 0.2rem;
+            border-radius: 6px;
             transition: all 0.3s ease;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
         }
-        
-        .nav-link:hover {
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
             color: white !important;
-            background: rgba(255,255,255,0.1);
             transform: translateY(-2px);
         }
-        
-        .card {
+
+        .navbar-toggler {
             border: none;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            transition: all 0.3s ease;
-            background: white;
+            color: white !important;
         }
-        
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-        }
-        
-        .btn {
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            font-weight: 600;
-            padding: 12px 24px;
-            transition: all 0.3s ease;
-            border: none;
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--secondary-color), #2980b9);
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+
+        .dropdown-item {
+            padding: 0.5rem 1rem;
         }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+
+        .dropdown-item:hover {
+            background-color: var(--light);
         }
-        
-        .btn-success {
-            background: linear-gradient(135deg, var(--success-color), #229954);
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, var(--warning-color), #e67e22);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, var(--accent-color), #c0392b);
-        }
-        
-        .hero-section {
-            background: linear-gradient(rgba(44, 62, 80, 0.9), rgba(44, 62, 80, 0.8)), 
-                       url('https://images.unsplash.com/photo-1556740711-a2c0d7c4c5e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover;
-            padding: 120px 0;
-            color: white;
-            text-align: center;
-        }
-        
-        .feature-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .badge-notification {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            min-height: calc(100vh - 160px);
+            padding: 2rem 0;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: linear-gradient(135deg, var(--dark) 0%, #2c3e50 100%);
             color: white;
-            font-size: 2rem;
-            box-shadow: var(--box-shadow);
+            padding: 3rem 0 1.5rem;
+            margin-top: auto;
         }
-        
-        .badge {
-            border-radius: 20px;
-            padding: 8px 16px;
+
+        .footer h5 {
+            color: var(--secondary);
             font-weight: 600;
+            margin-bottom: 1.2rem;
+            font-size: 1.1rem;
         }
-        
-        .modal-content {
-            border-radius: var(--border-radius);
-            border: none;
-            box-shadow: var(--box-shadow);
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
         }
-        
-        .table {
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--box-shadow);
+
+        .footer-links li {
+            margin-bottom: 0.6rem;
         }
-        
-        .table th {
-            background: linear-gradient(135deg, var(--primary-color), #34495e);
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--secondary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            font-weight: 600;
-            border: none;
-            padding: 15px;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: all 0.3s ease;
         }
-        
-        .table td {
-            padding: 15px;
-            vertical-align: middle;
-            border-color: #eee;
+
+        .social-links a:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
         }
-        
-        .alert {
-            border-radius: var(--border-radius);
-            border: none;
-            box-shadow: var(--box-shadow);
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+            margin-top: 2rem;
+            text-align: center;
         }
-        
+
         /* Responsive */
         @media (max-width: 768px) {
-            .hero-section {
-                padding: 80px 0;
+            .navbar-nav {
+                padding: 1rem 0;
             }
-            
-            .display-4 {
-                font-size: 2.5rem;
+
+            .nav-link {
+                margin: 0.2rem 0;
             }
+
+            .footer {
+                text-align: center;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+        }
+
+        /* Utility Classes */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary) 0%, #c0392b 100%);
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-outline-light {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-light:hover {
+            background-color: white;
+            color: var(--primary) !important;
+            border-color: white;
         }
     </style>
 </head>
+
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <!-- Navigation Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="index.php">
-                <i class="fas fa-shopping-center me-2"></i>ShopCenter
+            <a class="navbar-brand" href="<?php echo SITE_URL; ?>index.php">
+                <i class="fas fa-store"></i>PromoShopping
             </a>
-            
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.php">
-                            <i class="fas fa-home me-1"></i>Inicio
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>"
+                            href="<?php echo SITE_URL; ?>index.php">
+                            <i class="fas fa-home"></i> Inicio
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="promociones.php">
-                            <i class="fas fa-tags me-1"></i>Promociones
+                        <a class="nav-link" href="<?php echo SITE_URL; ?>index.php#promociones">
+                            <i class="fas fa-tags"></i> Promociones
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="locales.php">
-                            <i class="fas fa-store me-1"></i>Locales
+                        <a class="nav-link" href="<?php echo SITE_URL; ?>index.php#locales">
+                            <i class="fas fa-store"></i> Locales
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="contacto.php">
-                            <i class="fas fa-envelope me-1"></i>Contacto
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'contacto.php' ? 'active' : ''; ?>"
+                            href="<?php echo SITE_URL; ?>contacto.php">
+                            <i class="fas fa-envelope"></i> Contacto
                         </a>
                     </li>
-                </ul>
-                
-                <ul class="navbar-nav ms-auto">
-                    <?php if (isset($_SESSION['usuario'])): ?>
-                        <!-- Notifications -->
+
+                    <?php if ($isLoggedIn): ?>
+                        <!-- Menú para usuarios logueados -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-bell"></i>
-                                <span class="badge bg-danger">3</span>
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> Mi Cuenta
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><h6 class="dropdown-header">Notificaciones</h6></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-check-circle text-success me-2"></i>Promoción aprobada</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-store text-primary me-2"></i>Nuevo local disponible</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-star text-warning me-2"></i>Subiste de categoría</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-center" href="#">Ver todas</a></li>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="<?php echo SITE_URL . $userType . '/panel.php'; ?>">
+                                        <i class="fas fa-tachometer-alt me-2"></i>Panel de Control
+                                    </a></li>
+                                <li><a class="dropdown-item" href="<?php echo SITE_URL; ?>perfil.php">
+                                        <i class="fas fa-user me-2"></i>Mi Perfil
+                                    </a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item" href="<?php echo SITE_URL; ?>logout.php">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                    </a></li>
                             </ul>
-                        </li>
-                        
-                        <!-- User Profile -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle me-1"></i>
-                                <?= htmlspecialchars($_SESSION['usuario']['nombre'] ?? $_SESSION['usuario']['email']) ?>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><h6 class="dropdown-header">Mi Cuenta</h6></li>
-                                <li><a class="dropdown-item" href="perfil.php"><i class="fas fa-user-edit me-2"></i>Mi Perfil</a></li>
-                                <li><a class="dropdown-item" href="mis_promociones.php"><i class="fas fa-ticket-alt me-2"></i>Mis Promociones</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                
-                                <?php if ($_SESSION['usuario']['rol'] === 'administrador'): ?>
-                                    <li><a class="dropdown-item" href="admin/panel.php"><i class="fas fa-cog me-2"></i>Panel Administrador</a></li>
-                                <?php elseif ($_SESSION['usuario']['rol'] === 'dueno'): ?>
-                                    <li><a class="dropdown-item" href="dueño/panel.php"><i class="fas fa-store me-2"></i>Panel Dueño</a></li>
-                                <?php else: ?>
-                                    <li><a class="dropdown-item" href="cliente/panel.php"><i class="fas fa-user-circle me-2"></i>Panel Cliente</a></li>
-                                <?php endif; ?>
-                                
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
-                            </ul>
-                        </li>
-                    <?php else: ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="login.php">
-                                <i class="fas fa-sign-in-alt me-1"></i>Ingresar
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="register.php">
-                                <i class="fas fa-user-plus me-1"></i>Registrarse
-                            </a>
                         </li>
                     <?php endif; ?>
                 </ul>
+
+                <div class="d-flex align-items-center">
+                    <?php if ($isLoggedIn): ?>
+                        <!-- Usuario logueado -->
+                        <div class="dropdown">
+                            <a href="#" class="dropdown-toggle text-white text-decoration-none d-flex align-items-center"
+                                id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userEmail); ?>&background=random&size=32"
+                                    class="user-avatar me-2">
+                                <span class="d-none d-md-inline"><?php echo explode('@', $userEmail)[0]; ?></span>
+                                <span class="badge-notification">3</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><span class="dropdown-item-text">
+                                        <small>Conectado como</small><br>
+                                        <strong><?php echo $userEmail; ?></strong>
+                                    </span></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item" href="<?php echo SITE_URL . $userType . '/panel.php'; ?>">
+                                        <i class="fas fa-tachometer-alt me-2"></i>Panel
+                                    </a></li>
+                                <li><a class="dropdown-item" href="<?php echo SITE_URL; ?>perfil.php">
+                                        <i class="fas fa-cog me-2"></i>Configuración
+                                    </a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item" href="<?php echo SITE_URL; ?>logout.php">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                    </a></li>
+                            </ul>
+                        </div>
+                    <?php else: ?>
+                        <!-- Usuario no logueado -->
+                        <a href="<?php echo SITE_URL; ?>login.php" class="btn btn-outline-light me-2">
+                            <i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión
+                        </a>
+                        <a href="<?php echo SITE_URL; ?>registro.php" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i> Registrarse
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Messages -->
-    <?php if (isset($_SESSION['error'])): ?>
-        <div class="container mt-3">
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Error:</strong> <?= $_SESSION['error'] ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        </div>
-        <?php unset($_SESSION['error']); ?>
-    <?php endif; ?>
-
-    <?php if (isset($_SESSION['success'])): ?>
-        <div class="container mt-3">
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
-                <strong>Éxito:</strong> <?= $_SESSION['success'] ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        </div>
-        <?php unset($_SESSION['success']); ?>
-    <?php endif; ?>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">

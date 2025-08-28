@@ -1,25 +1,16 @@
-<?php
-require_once '../includes/auth.php';
-
-$auth = new Auth();
-// Verificar que el usuario sea administrador
-$auth->checkAccess([USER_ADMIN]);
-
-// El resto de tu código para el panel...
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administrador - PromoShopping</title>
+    <title>Panel de Dueño - PromoShopping</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #2c3e50;
-            --secondary: #e74c3c;
-            --accent: #3498db;
+            --secondary: #3498db;
+            --accent: #e74c3c;
             --light: #ecf0f1;
             --dark: #2c3e50;
         }
@@ -94,26 +85,16 @@ $auth->checkAccess([USER_ADMIN]);
         }
         
         .btn-primary:hover {
-            background-color: #c0392b;
-            border-color: #c0392b;
+            background-color: #2980b9;
+            border-color: #2980b9;
         }
         
-        .table th {
-            border-top: none;
-            font-weight: 600;
-            color: var(--dark);
-        }
-        
-        .badge-pendiente {
-            background-color: #f39c12;
-        }
-        
-        .badge-aprobado {
-            background-color: #2ecc71;
-        }
-        
-        .badge-rechazado {
-            background-color: #e74c3c;
+        .local-header {
+            background: linear-gradient(rgba(44, 62, 80, 0.8), rgba(44, 62, 80, 0.8)), url('https://images.unsplash.com/photo-1563013546-72e6b2025c93?ixlib=rb-4.0.3') center/cover;
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -121,8 +102,8 @@ $auth->checkAccess([USER_ADMIN]);
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="text-center mb-4">
-            <h4>PromoShopping</h4>
-            <p class="text-muted">Panel de Administración</p>
+            <h4>Fashion Store</h4>
+            <p class="text-muted">Panel de Dueño</p>
         </div>
         <ul class="nav flex-column">
             <li class="nav-item">
@@ -132,27 +113,17 @@ $auth->checkAccess([USER_ADMIN]);
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#">
-                    <i class="fas fa-store"></i> Gestión de Locales
+                    <i class="fas fa-tags"></i> Mis Promociones
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#">
-                    <i class="fas fa-tags"></i> Gestión de Promociones
+                    <i class="fas fa-clipboard-check"></i> Solicitudes
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#">
-                    <i class="fas fa-user-check"></i> Validar Dueños
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-bullhorn"></i> Novedades
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-chart-bar"></i> Reportes
+                    <i class="fas fa-chart-bar"></i> Estadísticas
                 </a>
             </li>
             <li class="nav-item mt-4">
@@ -179,8 +150,8 @@ $auth->checkAccess([USER_ADMIN]);
                 <div class="d-flex align-items-center">
                     <div class="dropdown">
                         <a href="#" class="dropdown-toggle text-dark text-decoration-none" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <img src="https://ui-avatars.com/api/?name=Admin+User&background=random" class="rounded-circle me-2" width="32" height="32">
-                            <span>Admin User</span>
+                            <img src="https://ui-avatars.com/api/?name=Maria+Gonzalez&background=random" class="rounded-circle me-2" width="32" height="32">
+                            <span>María González</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i> Perfil</a></li>
@@ -193,12 +164,17 @@ $auth->checkAccess([USER_ADMIN]);
             </div>
         </nav>
 
-        <!-- Page Heading -->
-        <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
-            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-                <i class="fas fa-download fa-sm text-white-50"></i> Generar Reporte
-            </a>
+        <!-- Local Header -->
+        <div class="local-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2>Fashion Store</h2>
+                    <p class="mb-0">Moda actual y tendencias para todos los estilos</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span class="badge bg-light text-dark p-2">Código: L-1025</span>
+                </div>
+            </div>
         </div>
 
         <!-- Content Row -->
@@ -209,11 +185,11 @@ $auth->checkAccess([USER_ADMIN]);
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Locales Registrados</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">24</div>
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Promociones Activas</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">5</div>
                             </div>
                             <div class="col-auto">
-                                <i class="fas fa-store stats-icon text-primary"></i>
+                                <i class="fas fa-tags stats-icon text-primary"></i>
                             </div>
                         </div>
                     </div>
@@ -225,11 +201,11 @@ $auth->checkAccess([USER_ADMIN]);
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Promociones Activas</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">18</div>
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Solicitudes Hoy</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">12</div>
                             </div>
                             <div class="col-auto">
-                                <i class="fas fa-tags stats-icon text-success"></i>
+                                <i class="fas fa-clipboard-list stats-icon text-success"></i>
                             </div>
                         </div>
                     </div>
@@ -241,11 +217,11 @@ $auth->checkAccess([USER_ADMIN]);
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Solicitudes Pendientes</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">5</div>
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Tasa de Aceptación</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">78%</div>
                             </div>
                             <div class="col-auto">
-                                <i class="fas fa-clipboard-list stats-icon text-info"></i>
+                                <i class="fas fa-percent stats-icon text-info"></i>
                             </div>
                         </div>
                     </div>
@@ -257,11 +233,11 @@ $auth->checkAccess([USER_ADMIN]);
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Dueños por Validar</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">3</div>
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Clientes Únicos</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">184</div>
                             </div>
                             <div class="col-auto">
-                                <i class="fas fa-user-check stats-icon text-warning"></i>
+                                <i class="fas fa-users stats-icon text-warning"></i>
                             </div>
                         </div>
                     </div>
@@ -271,11 +247,11 @@ $auth->checkAccess([USER_ADMIN]);
 
         <!-- Content Row -->
         <div class="row">
-            <!-- Promociones Pendientes -->
+            <!-- Solicitudes Recientes -->
             <div class="col-xl-6 col-lg-6">
                 <div class="card-dashboard card shadow mb-4">
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Promociones Pendientes</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Solicitudes Recientes</h6>
                         <a class="btn btn-sm btn-primary" href="#">Ver todas</a>
                     </div>
                     <div class="card-body">
@@ -283,35 +259,35 @@ $auth->checkAccess([USER_ADMIN]);
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Local</th>
+                                        <th>Cliente</th>
                                         <th>Promoción</th>
-                                        <th>Estado</th>
+                                        <th>Fecha</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>Fashion Store</td>
+                                        <td>Laura Martínez</td>
                                         <td>20% descuento en verano</td>
-                                        <td><span class="badge badge-pendiente">Pendiente</span></td>
+                                        <td>15/08/2025 14:30</td>
                                         <td>
                                             <button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
                                             <button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Shoes & More</td>
-                                        <td>2x1 en calzado</td>
-                                        <td><span class="badge badge-pendiente">Pendiente</span></td>
+                                        <td>Juan Pérez</td>
+                                        <td>15% en accesorios</td>
+                                        <td>15/08/2025 13:15</td>
                                         <td>
                                             <button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
                                             <button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>TechWorld</td>
-                                        <td>30% + 10% off acumulable</td>
-                                        <td><span class="badge badge-pendiente">Pendiente</span></td>
+                                        <td>Mónica Silva</td>
+                                        <td>2x1 en jeans</td>
+                                        <td>15/08/2025 12:45</td>
                                         <td>
                                             <button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
                                             <button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
@@ -324,54 +300,55 @@ $auth->checkAccess([USER_ADMIN]);
                 </div>
             </div>
 
-            <!-- Dueños por Validar -->
+            <!-- Promociones Activas -->
             <div class="col-xl-6 col-lg-6">
                 <div class="card-dashboard card shadow mb-4">
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Dueños por Validar</h6>
-                        <a class="btn btn-sm btn-primary" href="#">Ver todos</a>
+                        <h6 class="m-0 font-weight-bold text-primary">Promociones Activas</h6>
+                        <a class="btn btn-sm btn-primary" href="#">Nueva</a>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre</th>
-                                        <th>Email</th>
-                                        <th>Local</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>María González</td>
-                                        <td>maria@fashionstore.com</td>
-                                        <td>Fashion Store</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
-                                            <button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Carlos López</td>
-                                        <td>carlos@shoesmore.com</td>
-                                        <td>Shoes & More</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
-                                            <button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Ana Martínez</td>
-                                        <td>ana@techworld.com</td>
-                                        <td>TechWorld</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
-                                            <button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="mb-3 p-3 border rounded">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="font-weight-bold">20% descuento en verano</h6>
+                                <span class="badge bg-success">Activa</span>
+                            </div>
+                            <p class="small mb-1">Válida: 01/08/2025 - 31/08/2025</p>
+                            <p class="small mb-2">Categoría: Inicial • Días: Lunes a Viernes</p>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">12 usos hoy</span>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 p-3 border rounded">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="font-weight-bold">15% en accesorios</h6>
+                                <span class="badge bg-success">Activa</span>
+                            </div>
+                            <p class="small mb-1">Válida: 05/08/2025 - 25/08/2025</p>
+                            <p class="small mb-2">Categoría: Medium • Días: Todos los días</p>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">8 usos hoy</span>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-3 border rounded">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="font-weight-bold">2x1 en jeans</h6>
+                                <span class="badge bg-success">Activa</span>
+                            </div>
+                            <p class="small mb-1">Válida: 10/08/2025 - 30/08/2025</p>
+                            <p class="small mb-2">Categoría: Premium • Días: Fin de semana</p>
+                            <div class="d-flex justify-content-between">
+                                <span class="small text-muted">5 usos hoy</span>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -380,41 +357,14 @@ $auth->checkAccess([USER_ADMIN]);
 
         <!-- Gráfico de Actividad -->
         <div class="row">
-            <div class="col-xl-8 col-lg-7">
+            <div class="col-12">
                 <div class="card-dashboard card shadow mb-4">
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Resumen de Actividad</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Actividad de Promociones</h6>
                     </div>
                     <div class="card-body">
                         <div class="chart-area">
-                            <canvas id="myAreaChart" height="300"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Novedades Recientes -->
-            <div class="col-xl-4 col-lg-5">
-                <div class="card-dashboard card shadow mb-4">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Novedades Recientes</h6>
-                        <a class="btn btn-sm btn-primary" href="#">Nueva</a>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <h6 class="font-weight-bold">Nueva colección de verano</h6>
-                            <p class="small text-muted">Publicado: 15/08/2025</p>
-                            <p class="small">Descubre las nuevas tendencias de verano en todos nuestros locales.</p>
-                        </div>
-                        <div class="mb-3">
-                            <h6 class="font-weight-bold">Horario extendido</h6>
-                            <p class="small text-muted">Publicado: 10/08/2025</p>
-                            <p class="small">A partir de esta semana, extendemos nuestro horario hasta las 22hs.</p>
-                        </div>
-                        <div>
-                            <h6 class="font-weight-bold">Promociones de fin de mes</h6>
-                            <p class="small text-muted">Publicado: 05/08/2025</p>
-                            <p class="small">Aprovecha las increíbles ofertas de fin de mes en todos los locales.</p>
+                            <canvas id="localActivityChart" height="100"></canvas>
                         </div>
                     </div>
                 </div>
@@ -425,27 +375,19 @@ $auth->checkAccess([USER_ADMIN]);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Script para el gráfico
-        var ctx = document.getElementById("myAreaChart").getContext('2d');
+        // Script para el gráfico de actividad del local
+        var ctx = document.getElementById("localActivityChart").getContext('2d');
         var myChart = new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
-                labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago"],
+                labels: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
                 datasets: [{
-                    label: "Promociones activas",
-                    data: [12, 19, 15, 17, 14, 16, 18, 20],
-                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
-                    borderColor: 'rgba(78, 115, 223, 1)',
-                    pointRadius: 3,
-                    pointBackgroundColor: 'rgba(78, 115, 223, 1)',
-                    pointBorderColor: 'rgba(78, 115, 223, 1)',
-                    pointHoverRadius: 3,
-                    pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
-                    pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
-                    pointHitRadius: 10,
-                    pointBorderWidth: 2,
-                    fill: true,
-                }],
+                    label: "Solicitudes de promociones",
+                    data: [18, 22, 15, 20, 25, 30, 28],
+                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 1
+                }]
             },
             options: {
                 maintainAspectRatio: false,

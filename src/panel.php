@@ -2,5 +2,7 @@
 require_once 'includes/auth.php';
 
 $auth = new Auth();
-$auth->logout();
+
+// Redirigir al usuario según su tipo
+$auth->redirectUser();
 ?>
