@@ -105,44 +105,8 @@
                 }
             });
         });
-
-        // Mostrar/ocultar contraseña
-        const togglePassword = document.querySelector('.toggle-password');
-        if (togglePassword) {
-            togglePassword.addEventListener('click', function () {
-                const passwordInput = document.querySelector(this.getAttribute('toggle'));
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                this.classList.toggle('fa-eye');
-                this.classList.toggle('fa-eye-slash');
-            });
-        }
     });
-
-    // Función para mostrar notificaciones
-    function showNotification(message, type = 'success') {
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-        notification.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-        document.body.appendChild(notification);
-
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 5000);
-    }
-        
-        // Mostrar notificación si existe en sesión
-        <?php if (isset($_SESSION['notification'])): ?>
-            showNotification('<?php echo $_SESSION['notification']['message']; ?>', '<?php echo $_SESSION['notification']['type']; ?>');
-            <?php unset($_SESSION['notification']); ?>
-        <?php endif; ?>
-    </script>
+</script>
 </body>
+
 </html>

@@ -9,7 +9,7 @@ require_once 'includes/header.php';
                 <div class="card-body">
                     <h2 class="text-center">Contacto</h2>
                     <p class="text-center">¿Tenés alguna consulta? Escribinos</p>
-                    
+
                     <form>
                         <div class="mb-3">
                             <label class="form-label">Nombre</label>
@@ -35,7 +35,7 @@ require_once 'includes/header.php';
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Enviar mensaje</button>
                     </form>
-                    
+
                     <div class="mt-4">
                         <h5>Información de contacto</h5>
                         <p>📍 Shopping Rosario - San Martín 1234</p>

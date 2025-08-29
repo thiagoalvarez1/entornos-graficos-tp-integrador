@@ -3,11 +3,10 @@ require_once '../includes/config.php';
 require_once '../includes/auth.php';
 
 $auth = new Auth();
-// Verificar que el usuario sea administrador
 $auth->checkAccess(['administrador']);
 
 $pageTitle = "Panel de Administrador";
-require_once '../includes/header.php';
+require_once '../includes/header-panel.php';  // ← Cambia aquí
 ?>
 <!-- Sidebar -->
 <div class="sidebar">
@@ -321,7 +320,6 @@ require_once '../includes/header.php';
         document.querySelector('.main-content').classList.toggle('collapsed');
     });
 </script>
-
 <?php
-require_once '../includes/footer.php';
+require_once __DIR__ . '/../includes/footer-panel.php';
 ?>

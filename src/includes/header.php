@@ -1,4 +1,6 @@
 <?php
+// includes/header.php - SOLO el código del header
+
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -245,10 +247,117 @@ $userEmail = $isLoggedIn ? $_SESSION['user_email'] : '';
             color: var(--primary) !important;
             border-color: white;
         }
+
+        /* ==================== */
+        /* ESTILOS PARA LOGIN   */
+        /* ==================== */
+        .login-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            margin: 2rem auto;
+        }
+
+        .login-header {
+            background: linear-gradient(rgba(44, 62, 80, 0.9), rgba(44, 62, 80, 0.9)), url('https://images.unsplash.com/photo-1563013546-72e6b2025c93?ixlib=rb-4.0.3') center/cover;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .login-form {
+            padding: 30px;
+        }
+
+        /* Asegurar que el body del login se vea bien */
+        body.login-page {
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ==================== */
+        /* ESTILOS PARA PANEL ADMIN */
+        /* ==================== */
+        .sidebar {
+            background-color: var(--primary);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding-top: 60px;
+            width: 250px;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            margin: 4px 0;
+            border-radius: 4px;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .admin-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        .card-dashboard {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-dashboard:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .stats-icon {
+            font-size: 2.5rem;
+            opacity: 0.2;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .badge-pendiente {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .badge-aprobado {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .badge-rechazado {
+            background-color: #e74c3c;
+            color: white;
+        }
     </style>
 </head>
 
-<body>
+<body class="<?php
+echo basename($_SERVER['PHP_SELF']) == 'login.php' ? 'login-page' : '';
+echo basename($_SERVER['PHP_SELF']) == 'registro.php' ? 'login-page' : '';
+?>">
     <!-- Navigation Header -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
