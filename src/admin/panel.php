@@ -693,7 +693,7 @@ require_once '../includes/header-panel.php';
     <nav class="sidebar-nav">
         <div class="nav-section">
             <div class="nav-section-title">Principal</div>
-            <a class="nav-link active" href="#">
+            <a class="nav-link active" href="panel.php">
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
             </a>
@@ -701,20 +701,20 @@ require_once '../includes/header-panel.php';
 
         <div class="nav-section">
             <div class="nav-section-title">Gestión</div>
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="gestion-locales.php">
                 <i class="fas fa-store"></i>
                 <span>Gestión de Locales</span>
             </a>
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="gestion_promociones.php">
                 <i class="fas fa-tags"></i>
                 <span>Gestión de Promociones</span>
             </a>
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="validar-duenos.php">
                 <i class="fas fa-user-check"></i>
                 <span>Validar Dueños</span>
                 <span class="badge">3</span>
             </a>
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="gestion_novedades.php">
                 <i class="fas fa-bullhorn"></i>
                 <span>Novedades</span>
             </a>
@@ -722,7 +722,7 @@ require_once '../includes/header-panel.php';
 
         <div class="nav-section">
             <div class="nav-section-title">Análisis</div>
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="reportes.php">
                 <i class="fas fa-chart-bar"></i>
                 <span>Reportes</span>
             </a>

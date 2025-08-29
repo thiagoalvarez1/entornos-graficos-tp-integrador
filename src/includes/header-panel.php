@@ -204,7 +204,7 @@ $panelType = $isAdminPanel ? 'admin' : ($isDuenoPanel ? 'dueno' : '');
         <ul class="nav flex-column">
             <!-- Menú común para ambos -->
             <li class="nav-item">
-                <a class="nav-link active" href="#">
+                <a class="nav-link active" href="panel.php">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
@@ -213,21 +213,38 @@ $panelType = $isAdminPanel ? 'admin' : ($isDuenoPanel ? 'dueno' : '');
             <?php if ($panelType === 'admin'): ?>
                 <!-- Menú específico para ADMIN -->
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-store"></i>
-                        <span>Gestión de Locales</span>
+                    <a class="nav-link" href="gestion-locales.php">
+                        <i class="fas fa-store"></i> Gestión de Locales
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-user-check"></i>
-                        <span>Validar Dueños</span>
+                    <a class="nav-link" href="validar-duenos.php">
+                        <i class="fas fa-user-check"></i> Validar Dueños
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="gestion_promociones.php">
+                        <i class="fas fa-tags"></i> Gestión de Promociones
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="gestion_novedades.php">
+                        <i class="fas fa-bullhorn"></i> Novedades
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="reportes.php">
+                        <i class="fas fa-chart-bar"></i> Reportes
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
                     <a class="nav-link" href="#">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Reportes</span>
+                        <i class="fas fa-cog"></i> Configuración
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../logout.php">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
                     </a>
                 </li>
             <?php endif; ?>
