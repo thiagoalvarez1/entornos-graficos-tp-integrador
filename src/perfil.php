@@ -13,24 +13,25 @@ require_once 'includes/header.php';
         <div class="col-lg-4">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
-                    <img src="https://via.placeholder.com/150/3498db/ffffff?text=<?= substr($_SESSION['usuario']['nombre'], 0, 1) ?>" 
-                         class="rounded-circle mb-3" alt="Avatar" style="width: 150px; height: 150px; object-fit: cover;">
+                    <img src="https://via.placeholder.com/150/3498db/ffffff?text=<?= substr($_SESSION['usuario']['nombre'], 0, 1) ?>"
+                        class="rounded-circle mb-3" alt="Avatar"
+                        style="width: 150px; height: 150px; object-fit: cover;">
                     <h4><?= htmlspecialchars($_SESSION['usuario']['nombre']) ?></h4>
                     <p class="text-muted"><?= htmlspecialchars($_SESSION['usuario']['email']) ?></p>
-                    
+
                     <div class="d-flex justify-content-center mb-3">
-                        <span class="badge bg-<?= 
-                            ($_SESSION['usuario']['rol'] == 'administrador') ? 'danger' : 
-                            (($_SESSION['usuario']['rol'] == 'dueno') ? 'warning' : 'info') 
-                        ?> fs-6">
-                            <i class="fas fa-<?= 
-                                ($_SESSION['usuario']['rol'] == 'administrador') ? 'cog' : 
-                                (($_SESSION['usuario']['rol'] == 'dueno') ? 'store' : 'user') 
-                            ?> me-1"></i>
+                        <span class="badge bg-<?=
+                            ($_SESSION['usuario']['rol'] == 'administrador') ? 'danger' :
+                            (($_SESSION['usuario']['rol'] == 'dueno') ? 'warning' : 'info')
+                            ?> fs-6">
+                            <i class="fas fa-<?=
+                                ($_SESSION['usuario']['rol'] == 'admin') ? 'cog' :
+                                (($_SESSION['usuario']['rol'] == 'dueno') ? 'store' : 'user')
+                                ?> me-1"></i>
                             <?= ucfirst($_SESSION['usuario']['rol']) ?>
                         </span>
                     </div>
-                    
+
                     <div class="d-grid gap-2">
                         <a href="logout.php" class="btn btn-outline-danger">
                             <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
@@ -39,7 +40,7 @@ require_once 'includes/header.php';
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-8">
             <div class="card shadow-sm">
                 <div class="card-header bg-transparent">
@@ -50,14 +51,16 @@ require_once 'includes/header.php';
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Nombre completo</label>
-                                <input type="text" class="form-control" value="<?= htmlspecialchars($_SESSION['usuario']['nombre']) ?>">
+                                <input type="text" class="form-control"
+                                    value="<?= htmlspecialchars($_SESSION['usuario']['nombre']) ?>">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Email</label>
-                                <input type="email" class="form-control" value="<?= htmlspecialchars($_SESSION['usuario']['email']) ?>">
+                                <input type="email" class="form-control"
+                                    value="<?= htmlspecialchars($_SESSION['usuario']['email']) ?>">
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Nueva contraseña</label>
@@ -68,7 +71,7 @@ require_once 'includes/header.php';
                                 <input type="password" class="form-control" placeholder="Confirmar nueva contraseña">
                             </div>
                         </div>
-                        
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save me-2"></i>Guardar Cambios
@@ -77,7 +80,7 @@ require_once 'includes/header.php';
                     </form>
                 </div>
             </div>
-            
+
             <!-- Estadísticas -->
             <div class="card shadow-sm mt-4">
                 <div class="card-header bg-transparent">

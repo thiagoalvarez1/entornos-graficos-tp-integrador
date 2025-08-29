@@ -1,111 +1,168 @@
 <?php
-session_start();
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'administrador') {
-    header('Location: ../login.php');
-    exit;
-}
+require_once '../includes/config.php';
+require_once '../includes/auth.php';
+require_once '../includes/database.php';
 
-require_once '../includes/header.php';
+$auth = new Auth();
+$auth->checkAccess(['administrador']);
+
+$database = new Database();
+$conn = $database->getConnection();
+
+// Obtener estadísticas
+$query = "SELECT 
+    (SELECT COUNT(*) FROM usuarios WHERE tipoUsuario = 'cliente') as total_clientes,
+    (SELECT COUNT(*) FROM usuarios WHERE tipoUsuario = 'dueño de local') as total_duenos,
+    (SELECT COUNT(*) FROM locales) as total_locales,
+    (SELECT COUNT(*) FROM promociones WHERE estadoPromo = 'aprobada' AND fechaHastaPromo >= CURDATE()) as promociones_activas,
+    (SELECT COUNT(*) FROM uso_promociones WHERE estado = 'aceptada' AND DATE(fechaUsoPromo) = CURDATE()) as usos_hoy";
+
+$stats = $conn->query($query)->fetch(PDO::FETCH_ASSOC);
+
+// Promociones más usadas
+$query = "SELECT p.textoPromo, l.nombreLocal, COUNT(up.codUso) as total_usos
+          FROM uso_promociones up
+          JOIN promociones p ON up.codPromo = p.codPromo
+          JOIN locales l ON p.codLocal = l.codLocal
+          WHERE up.estado = 'aceptada'
+          GROUP BY p.codPromo
+          ORDER BY total_usos DESC
+          LIMIT 5";
+$top_promociones = $conn->query($query)->fetchAll(PDO::FETCH_ASSOC);
+
+$pageTitle = "Reportes y Estadísticas";
+require_once '../includes/header-panel.php';
 ?>
 
-<div class="container mt-4">
-    <h2>Reportes y Estadísticas</h2>
-    
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Total Promociones</h5>
-                    <h2>47</h2>
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Reportes y Estadísticas</h1>
+
+    <!-- Estadísticas generales -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Clientes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $stats['total_clientes'] ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Promociones Activas</h5>
-                    <h2>32</h2>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Dueños de Locales</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $stats['total_duenos'] ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-store fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Total Clientes</h5>
-                    <h2>156</h2>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Promociones Activas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $stats['promociones_activas'] ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tags fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Usos Hoy</h5>
-                    <h2>18</h2>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Usos Hoy</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $stats['usos_hoy'] ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5>Promociones más utilizadas</h5>
+    <!-- Top promociones -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Top 5 Promociones Más Usadas</h6>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($top_promociones)): ?>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Promoción</th>
+                                    <th>Local</th>
+                                    <th>Usos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($top_promociones as $promo): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($promo['textoPromo']) ?></td>
+                                    <td><?= htmlspecialchars($promo['nombreLocal']) ?></td>
+                                    <td><span class="badge bg-primary"><?= $promo['total_usos'] ?></span></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php else: ?>
+                    <p class="text-muted">No hay datos de usos aún.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Promoción</th>
-                        <th>Local</th>
-                        <th>Usos totales</th>
-                        <th>Último uso</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>20% descuento en efectivo</td>
-                        <td>Tienda X</td>
-                        <td>45</td>
-                        <td>25/08/2025</td>
-                    </tr>
-                    <tr>
-                        <td>2x1 en productos seleccionados</td>
-                        <td>Tienda Y</td>
-                        <td>32</td>
-                        <td>24/08/2025</td>
-                    </tr>
-                    <tr>
-                        <td>30% off en segunda unidad</td>
-                        <td>Tienda Z</td>
-                        <td>28</td>
-                        <td>23/08/2025</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5>Distribución de clientes por categoría</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-secondary me-2">Inicial</span>
-                        <span>85 clientes (54%)</span>
-                    </div>
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Exportar Reportes</h6>
                 </div>
-                <div class="col-md-4">
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-info me-2">Medium</span>
-                        <span>45 clientes (29%)</span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-warning me-2">Premium</span>
-                        <span>26 clientes (17%)</span>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="exportar_reportes.php?tipo=promociones" class="list-group-item list-group-item-action">
+                            <i class="fas fa-download me-2"></i>Exportar Promociones
+                        </a>
+                        <a href="exportar_reportes.php?tipo=usuarios" class="list-group-item list-group-item-action">
+                            <i class="fas fa-download me-2"></i>Exportar Usuarios
+                        </a>
+                        <a href="exportar_reportes.php?tipo=locales" class="list-group-item list-group-item-action">
+                            <i class="fas fa-download me-2"></i>Exportar Locales
+                        </a>
+                        <a href="exportar_reportes.php?tipo=usos" class="list-group-item list-group-item-action">
+                            <i class="fas fa-download me-2"></i>Exportar Usos de Promociones
+                        </a>
                     </div>
                 </div>
             </div>
@@ -113,4 +170,4 @@ require_once '../includes/header.php';
     </div>
 </div>
 
-<?php require_once '../includes/footer.php'; ?>
+<?php require_once '../includes/footer-panel.php'; ?>

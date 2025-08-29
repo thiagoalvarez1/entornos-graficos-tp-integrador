@@ -26,20 +26,59 @@ $userEmail = $isLoggedIn ? $_SESSION['user_email'] : '';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Custom CSS -->
     <style>
         :root {
-            --primary: #2c3e50;
-            --secondary: #e74c3c;
-            --accent: #3498db;
-            --light: #ecf0f1;
-            --dark: #2c3e50;
-            --success: #27ae60;
-            --warning: #f39c12;
+            /* Sistema de Colores Moderno */
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #8b5cf6;
+            --secondary: #ec4899;
+            --secondary-dark: #be185d;
+            --accent: #f59e0b;
+            --accent-dark: #d97706;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+
+            /* Colores Neutros */
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+
+            /* Espaciado y Efectos */
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --border-radius-xl: 20px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+            /* Transiciones */
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Reset y Base */
         * {
             margin: 0;
             padding: 0;
@@ -47,425 +86,715 @@ $userEmail = $isLoggedIn ? $_SESSION['user_email'] : '';
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, #fefefe 100%);
+            color: var(--gray-800);
             line-height: 1.6;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Header Styles */
-        .navbar {
-            background: linear-gradient(135deg, var(--primary) 0%, #34495e 100%);
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-            padding: 0.8rem 1rem;
+        /* ==================== */
+        /* NAVBAR MODERNO       */
+        /* ==================== */
+        .navbar-modern {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 1rem 0;
+            transition: var(--transition);
+            position: sticky;
+            top: 0;
+            z-index: 1030;
         }
 
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: white !important;
+        .navbar-modern.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.12);
+            padding: 0.75rem 0;
         }
 
-        .navbar-brand i {
-            color: var(--secondary);
-            margin-right: 0.5rem;
+        .navbar-brand-modern {
+            font-weight: 800;
+            font-size: 1.75rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
         }
 
-        .nav-link {
-            color: rgba(255, 255, 255, 0.9) !important;
+        .navbar-brand-modern:hover {
+            transform: scale(1.05);
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-link-modern {
+            color: var(--gray-700) !important;
             font-weight: 500;
-            padding: 0.5rem 1rem !important;
-            margin: 0 0.2rem;
-            border-radius: 6px;
-            transition: all 0.3s ease;
+            padding: 0.75rem 1.25rem !important;
+            margin: 0 0.25rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            position: relative;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .nav-link:hover,
-        .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white !important;
+        .nav-link-modern::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: var(--transition);
+            transform: translateX(-50%);
+        }
+
+        .nav-link-modern:hover,
+        .nav-link-modern.active {
+            color: var(--primary) !important;
+            background: linear-gradient(135deg,
+                    rgba(99, 102, 241, 0.1),
+                    rgba(236, 72, 153, 0.05));
             transform: translateY(-2px);
         }
 
-        .navbar-toggler {
+        .nav-link-modern:hover::before,
+        .nav-link-modern.active::before {
+            width: 80%;
+        }
+
+        .navbar-toggler-modern {
             border: none;
-            color: white !important;
+            background: none;
+            color: var(--gray-700);
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            transition: var(--transition);
         }
 
-        .dropdown-menu {
-            border: none;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+        .navbar-toggler-modern:hover {
+            color: var(--primary);
+            transform: scale(1.1);
         }
 
-        .dropdown-item {
-            padding: 0.5rem 1rem;
+        .navbar-toggler-modern:focus {
+            box-shadow: none;
         }
 
-        .dropdown-item:hover {
-            background-color: var(--light);
+        /* Dropdown Mejorado */
+        .dropdown-menu-modern {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            padding: 0.75rem 0;
+            margin-top: 0.5rem;
+            min-width: 220px;
         }
 
-        .user-avatar {
-            width: 35px;
-            height: 35px;
+        .dropdown-item-modern {
+            color: var(--gray-700);
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .dropdown-item-modern:hover {
+            background: linear-gradient(135deg,
+                    rgba(99, 102, 241, 0.1),
+                    rgba(236, 72, 153, 0.05));
+            color: var(--primary);
+            padding-left: 2rem;
+        }
+
+        .dropdown-divider-modern {
+            margin: 0.5rem 0;
+            border-color: var(--gray-200);
+        }
+
+        /* User Avatar y Notificaciones */
+        .user-avatar-modern {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid var(--primary);
+            transition: var(--transition);
+            cursor: pointer;
         }
 
-        .badge-notification {
+        .user-avatar-modern:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+
+        .notification-badge {
             position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: var(--secondary);
+            top: -2px;
+            right: -2px;
+            background: linear-gradient(135deg, var(--danger), #dc2626);
             color: white;
             border-radius: 50%;
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             font-size: 0.7rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: 700;
+            border: 2px solid white;
+            animation: pulse-notification 2s infinite;
         }
 
-        /* Main Content */
-        .main-content {
-            min-height: calc(100vh - 160px);
-            padding: 2rem 0;
+        @keyframes pulse-notification {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
 
-        /* Footer Styles */
-        .footer {
-            background: linear-gradient(135deg, var(--dark) 0%, #2c3e50 100%);
-            color: white;
-            padding: 3rem 0 1.5rem;
-            margin-top: auto;
-        }
-
-        .footer h5 {
-            color: var(--secondary);
+        /* Botones Modernos */
+        .btn-modern {
             font-weight: 600;
-            margin-bottom: 1.2rem;
-            font-size: 1.1rem;
+            border-radius: var(--border-radius);
+            padding: 0.75rem 1.5rem;
+            transition: var(--transition);
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
         }
 
-        .footer-links {
+        .btn-primary-modern {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary-modern:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--secondary));
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-outline-modern {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline-modern:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Efectos de brillo */
+        .btn-modern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-modern:hover::before {
+            left: 100%;
+        }
+
+        /* ==================== */
+        /* FOOTER MODERNO       */
+        /* ==================== */
+        .footer-modern {
+            background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 100%);
+            color: var(--gray-300);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .footer-modern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+        }
+
+        .footer-content {
+            padding: 4rem 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-section h5 {
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .footer-section h5::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+
+        .footer-links-modern {
             list-style: none;
             padding: 0;
         }
 
-        .footer-links li {
-            margin-bottom: 0.6rem;
+        .footer-links-modern li {
+            margin-bottom: 0.75rem;
         }
 
-        .footer-links a {
-            color: rgba(255, 255, 255, 0.8);
+        .footer-link {
+            color: var(--gray-300);
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .footer-links a:hover {
-            color: var(--secondary);
+        .footer-link:hover {
+            color: var(--primary);
+            transform: translateX(5px);
         }
 
-        .social-links {
+        .footer-link i {
+            width: 16px;
+            color: var(--gray-500);
+            transition: var(--transition);
+        }
+
+        .footer-link:hover i {
+            color: var(--primary);
+        }
+
+        .social-links-modern {
             display: flex;
             gap: 1rem;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
         }
 
-        .social-links a {
-            display: inline-flex;
+        .social-link {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--gray-800), var(--gray-700));
+            border: 1px solid var(--gray-600);
+            color: var(--gray-300);
+            border-radius: var(--border-radius);
+            display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border-radius: 50%;
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
 
-        .social-links a:hover {
-            background: var(--secondary);
+        .social-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
             transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .social-link:hover::before {
+            opacity: 1;
+        }
+
+        .social-link:hover {
+            color: white;
+            border-color: transparent;
+        }
+
+        .social-link i {
+            position: relative;
+            z-index: 1;
+            font-size: 1.1rem;
         }
 
         .footer-bottom {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 1.5rem;
-            margin-top: 2rem;
+            border-top: 1px solid var(--gray-700);
+            padding: 2rem 0 1.5rem;
             text-align: center;
         }
 
-        /* Responsive */
+        .footer-bottom-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .footer-bottom-link {
+            color: var(--gray-400);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .footer-bottom-link:hover {
+            color: var(--primary);
+        }
+
+        /* ==================== */
+        /* MAIN CONTENT         */
+        /* ==================== */
+        .main-content {
+            min-height: calc(100vh - 200px);
+        }
+
+        /* ==================== */
+        /* LOGIN STYLES         */
+        /* ==================== */
+        .login-container {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-2xl);
+            overflow: hidden;
+            width: 100%;
+            max-width: 420px;
+            margin: 2rem auto;
+            border: 1px solid var(--gray-200);
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://images.unsplash.com/photo-1563013546-72e6b2025c93?ixlib=rb-4.0.3') center/cover;
+            opacity: 0.1;
+        }
+
+        .login-header h2 {
+            position: relative;
+            z-index: 1;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-form {
+            padding: 2.5rem 2rem;
+        }
+
+        body.login-page {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ==================== */
+        /* RESPONSIVE DESIGN    */
+        /* ==================== */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(20px);
+                margin: 1rem -1rem -1rem -1rem;
+                padding: 1rem;
+                border-radius: var(--border-radius-lg);
+                margin-top: 1rem;
+                box-shadow: var(--shadow-lg);
+            }
+        }
+
         @media (max-width: 768px) {
-            .navbar-nav {
-                padding: 1rem 0;
+            .navbar-brand-modern {
+                font-size: 1.5rem;
             }
 
-            .nav-link {
-                margin: 0.2rem 0;
+            .brand-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
             }
 
-            .footer {
+            .footer-content {
+                padding: 3rem 0 1.5rem;
                 text-align: center;
             }
 
-            .social-links {
+            .footer-bottom-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .social-links-modern {
                 justify-content: center;
             }
         }
 
-        /* Utility Classes */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--secondary) 0%, #c0392b 100%);
-            border: none;
-            padding: 0.6rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+        /* Clases Bootstrap corregidas */
+        .fw-bold {
+            font-weight: 700 !important;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        .text-gray-800 {
+            color: var(--gray-800) !important;
         }
 
-        .btn-outline-light {
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            padding: 0.5rem 1.2rem;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+        .me-2 {
+            margin-right: 0.5rem !important;
         }
 
-        .btn-outline-light:hover {
-            background-color: white;
-            color: var(--primary) !important;
-            border-color: white;
+        .ms-auto {
+            margin-left: auto !important;
         }
 
-        /* ==================== */
-        /* ESTILOS PARA LOGIN   */
-        /* ==================== */
-        .login-container {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            width: 100%;
-            max-width: 400px;
-            margin: 2rem auto;
+        .me-1 {
+            margin-right: 0.25rem !important;
         }
 
-        .login-header {
-            background: linear-gradient(rgba(44, 62, 80, 0.9), rgba(44, 62, 80, 0.9)), url('https://images.unsplash.com/photo-1563013546-72e6b2025c93?ixlib=rb-4.0.3') center/cover;
-            color: white;
-            padding: 30px;
-            text-align: center;
+        .fw-600 {
+            font-weight: 600;
         }
 
-        .login-form {
-            padding: 30px;
+        /* Focus states mejorados */
+        .btn-modern:focus,
+        .nav-link-modern:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
 
-        /* Asegurar que el body del login se vea bien */
-        body.login-page {
-            background-color: #f8f9fa;
-            height: 100vh;
-            display: flex;
-            align-items: center;
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
 
-        /* ==================== */
-        /* ESTILOS PARA PANEL ADMIN */
-        /* ==================== */
-        .sidebar {
-            background-color: var(--primary);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            padding-top: 60px;
-            width: 250px;
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
         }
 
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            padding: 12px 20px;
-            margin: 4px 0;
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             border-radius: 4px;
         }
 
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .sidebar .nav-link i {
-            margin-right: 10px;
-            width: 20px;
-            text-align: center;
-        }
-
-        .admin-content {
-            margin-left: 250px;
-            padding: 20px;
-        }
-
-        .card-dashboard {
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: none;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        }
-
-        .card-dashboard:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .stats-icon {
-            font-size: 2.5rem;
-            opacity: 0.2;
-            position: absolute;
-            right: 20px;
-            top: 20px;
-        }
-
-        .badge-pendiente {
-            background-color: #f39c12;
-            color: white;
-        }
-
-        .badge-aprobado {
-            background-color: #2ecc71;
-            color: white;
-        }
-
-        .badge-rechazado {
-            background-color: #e74c3c;
-            color: white;
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark));
         }
     </style>
 </head>
 
 <body class="<?php
-echo basename($_SERVER['PHP_SELF']) == 'login.php' ? 'login-page' : '';
-echo basename($_SERVER['PHP_SELF']) == 'registro.php' ? 'login-page' : '';
+$currentPage = basename($_SERVER['PHP_SELF']);
+echo ($currentPage == 'login.php' || $currentPage == 'registro.php') ? 'login-page' : '';
 ?>">
-    <!-- Navigation Header -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="<?php echo SITE_URL; ?>index.php">
-                <i class="fas fa-store"></i>PromoShopping
-            </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+    <?php if ($currentPage != 'login.php' && $currentPage != 'registro.php'): ?>
+        <!-- Navigation Header - Solo mostrar si NO es login o registro -->
+        <nav class="navbar navbar-expand-lg navbar-modern">
+            <div class="container">
+                <a class="navbar-brand-modern" href="<?php echo SITE_URL; ?>index.php">
+                    <div class="brand-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <span>PromoShopping</span>
+                </a>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>"
-                            href="<?php echo SITE_URL; ?>index.php">
-                            <i class="fas fa-home"></i> Inicio
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo SITE_URL; ?>index.php#promociones">
-                            <i class="fas fa-tags"></i> Promociones
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo SITE_URL; ?>index.php#locales">
-                            <i class="fas fa-store"></i> Locales
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'contacto.php' ? 'active' : ''; ?>"
-                            href="<?php echo SITE_URL; ?>contacto.php">
-                            <i class="fas fa-envelope"></i> Contacto
-                        </a>
-                    </li>
+                <button class="navbar-toggler-modern" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <i class="fas fa-bars"></i>
+                </button>
 
-                    <?php if ($isLoggedIn): ?>
-                        <!-- Menú para usuarios logueados -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                                data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> Mi Cuenta
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link-modern <?php echo $currentPage == 'index.php' ? 'active' : ''; ?>"
+                                href="<?php echo SITE_URL; ?>index.php">
+                                <i class="fas fa-home"></i>
+                                <span>Inicio</span>
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="<?php echo SITE_URL . $userType . '/panel.php'; ?>">
-                                        <i class="fas fa-tachometer-alt me-2"></i>Panel de Control
-                                    </a></li>
-                                <li><a class="dropdown-item" href="<?php echo SITE_URL; ?>perfil.php">
-                                        <i class="fas fa-user me-2"></i>Mi Perfil
-                                    </a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" href="<?php echo SITE_URL; ?>logout.php">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-                                    </a></li>
-                            </ul>
                         </li>
-                    <?php endif; ?>
-                </ul>
-
-                <div class="d-flex align-items-center">
-                    <?php if ($isLoggedIn): ?>
-                        <!-- Usuario logueado -->
-                        <div class="dropdown">
-                            <a href="#" class="dropdown-toggle text-white text-decoration-none d-flex align-items-center"
-                                id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userEmail); ?>&background=random&size=32"
-                                    class="user-avatar me-2">
-                                <span class="d-none d-md-inline"><?php echo explode('@', $userEmail)[0]; ?></span>
-                                <span class="badge-notification">3</span>
+                        <li class="nav-item">
+                            <a class="nav-link-modern" href="<?php echo SITE_URL; ?>index.php#promociones">
+                                <i class="fas fa-tags"></i>
+                                <span>Promociones</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><span class="dropdown-item-text">
-                                        <small>Conectado como</small><br>
-                                        <strong><?php echo $userEmail; ?></strong>
-                                    </span></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" href="<?php echo SITE_URL . $userType . '/panel.php'; ?>">
-                                        <i class="fas fa-tachometer-alt me-2"></i>Panel
-                                    </a></li>
-                                <li><a class="dropdown-item" href="<?php echo SITE_URL; ?>perfil.php">
-                                        <i class="fas fa-cog me-2"></i>Configuración
-                                    </a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" href="<?php echo SITE_URL; ?>logout.php">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-                                    </a></li>
-                            </ul>
-                        </div>
-                    <?php else: ?>
-                        <!-- Usuario no logueado -->
-                        <a href="<?php echo SITE_URL; ?>login.php" class="btn btn-outline-light me-2">
-                            <i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión
-                        </a>
-                        <a href="<?php echo SITE_URL; ?>registro.php" class="btn btn-primary">
-                            <i class="fas fa-user-plus me-1"></i> Registrarse
-                        </a>
-                    <?php endif; ?>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link-modern" href="<?php echo SITE_URL; ?>index.php#locales">
+                                <i class="fas fa-store"></i>
+                                <span>Locales</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link-modern <?php echo $currentPage == 'contacto.php' ? 'active' : ''; ?>"
+                                href="<?php echo SITE_URL; ?>contacto.php">
+                                <i class="fas fa-envelope"></i>
+                                <span>Contacto</span>
+                            </a>
+                        </li>
+
+                        <?php if ($isLoggedIn): ?>
+                            <!-- Menú para usuarios logueados -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link-modern dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                    data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>Mi Cuenta</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-modern">
+                                    <li><a class="dropdown-item-modern"
+                                            href="<?php echo SITE_URL . $userType . '/panel.php'; ?>">
+                                            <i class="fas fa-tachometer-alt"></i>Panel de Control
+                                        </a></li>
+                                    <li><a class="dropdown-item-modern" href="<?php echo SITE_URL; ?>perfil.php">
+                                            <i class="fas fa-user-edit"></i>Mi Perfil
+                                        </a></li>
+                                    <li>
+                                        <hr class="dropdown-divider-modern">
+                                    </li>
+                                    <li><a class="dropdown-item-modern" href="<?php echo SITE_URL; ?>logout.php">
+                                            <i class="fas fa-sign-out-alt"></i>Cerrar Sesión
+                                        </a></li>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <?php if ($isLoggedIn): ?>
+                            <!-- Usuario logueado -->
+                            <div class="dropdown">
+                                <a href="#"
+                                    class="dropdown-toggle d-flex align-items-center text-decoration-none position-relative"
+                                    id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                    <div class="position-relative">
+                                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userEmail); ?>&background=6366f1&color=fff&size=40&bold=true"
+                                            class="user-avatar-modern" alt="Avatar">
+                                        <span class="notification-badge">3</span>
+                                    </div>
+                                    <div class="ms-2 d-none d-md-block">
+                                        <div class="fw-600 text-dark"><?php echo explode('@', $userEmail)[0]; ?></div>
+                                        <small class="text-muted"><?php echo ucfirst($userType); ?></small>
+                                    </div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-modern dropdown-menu-end">
+                                    <li class="px-3 py-2">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userEmail); ?>&background=6366f1&color=fff&size=32&bold=true"
+                                                class="rounded-circle me-2" width="32" height="32">
+                                            <div>
+                                                <div class="fw-600 text-dark"><?php echo explode('@', $userEmail)[0]; ?></div>
+                                                <small class="text-muted"><?php echo $userEmail; ?></small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider-modern">
+                                    </li>
+                                    <li><a class="dropdown-item-modern"
+                                            href="<?php echo SITE_URL . $userType . '/panel.php'; ?>">
+                                            <i class="fas fa-tachometer-alt"></i>Panel de Control
+                                        </a></li>
+                                    <li><a class="dropdown-item-modern" href="<?php echo SITE_URL; ?>perfil.php">
+                                            <i class="fas fa-user-cog"></i>Configuración
+                                        </a></li>
+                                    <li><a class="dropdown-item-modern" href="#">
+                                            <i class="fas fa-bell"></i>Notificaciones
+                                            <span class="badge bg-danger ms-auto">3</span>
+                                        </a></li>
+                                    <li>
+                                        <hr class="dropdown-divider-modern">
+                                    </li>
+                                    <li><a class="dropdown-item-modern text-danger" href="<?php echo SITE_URL; ?>logout.php">
+                                            <i class="fas fa-sign-out-alt"></i>Cerrar Sesión
+                                        </a></li>
+                                </ul>
+                            </div>
+                        <?php else: ?>
+                            <!-- Usuario no logueado -->
+                            <a href="<?php echo SITE_URL; ?>login.php" class="btn btn-outline-modern">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Iniciar Sesión</span>
+                            </a>
+                            <a href="<?php echo SITE_URL; ?>registro.php" class="btn btn-primary-modern">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Registrarse</span>
+                            </a>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    <?php endif; ?>
 
     <!-- Main Content -->
     <main class="main-content">
-        <div class="container">
+        <?php if ($currentPage != 'login.php' && $currentPage != 'registro.php' && strpos($_SERVER['REQUEST_URI'], '/panel.php') === false): ?>
+            <div class="container">
+            <?php endif; ?>

@@ -1,104 +1,209 @@
 <?php
-session_start();
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'dueno') {
-    header('Location: ../login.php');
-    exit;
+require_once '../includes/config.php';
+require_once '../includes/auth.php';
+require_once '../includes/database.php';
+
+$auth = new Auth();
+$auth->checkAccess(['dueño de local']);
+
+$database = new Database();
+$conn = $database->getConnection();
+$user_id = $_SESSION['user_id'];
+
+// Obtener el local del dueño
+$query = "SELECT codLocal FROM locales WHERE codUsuario = :user_id";
+$stmt = $conn->prepare($query);
+$stmt->bindParam(':user_id', $user_id);
+$stmt->execute();
+$local = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$local_id = $local ? $local['codLocal'] : null;
+
+// Crear nueva promoción
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['crear_promocion']) && $local_id) {
+    $texto = trim($_POST['texto']);
+    $fecha_desde = $_POST['fecha_desde'];
+    $fecha_hasta = $_POST['fecha_hasta'];
+    $categoria = $_POST['categoria'];
+    $dias_semana = implode(',', $_POST['dias_semana'] ?? []);
+
+    $query = "INSERT INTO promociones (textoPromo, fechaDesdePromo, fechaHastaPromo, 
+              categoriaCliente, diasSemana, codLocal, estadoPromo) 
+              VALUES (:texto, :fecha_desde, :fecha_hasta, :categoria, :dias_semana, :local_id, 'pendiente')";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bindParam(':texto', $texto);
+    $stmt->bindParam(':fecha_desde', $fecha_desde);
+    $stmt->bindParam(':fecha_hasta', $fecha_hasta);
+    $stmt->bindParam(':categoria', $categoria);
+    $stmt->bindParam(':dias_semana', $dias_semana);
+    $stmt->bindParam(':local_id', $local_id);
+
+    if ($stmt->execute()) {
+        $success = "Promoción creada. Esperando aprobación del administrador.";
+    } else {
+        $error = "Error al crear la promoción";
+    }
 }
 
-require_once '../includes/header.php';
+// Obtener promociones del local
+$promociones = [];
+if ($local_id) {
+    $query = "SELECT * FROM promociones WHERE codLocal = :local_id ORDER BY fechaDesdePromo DESC";
+    $stmt = $conn->prepare($query);
+    $stmt->bindParam(':local_id', $local_id);
+    $stmt->execute();
+    $promociones = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+$pageTitle = "Mis Promociones";
+require_once '../includes/header-panel.php';
 ?>
 
-<div class="container mt-4">
-    <h2>Mis Promociones</h2>
-    <p class="text-muted">Gestiona las promociones de tu local</p>
-    
-    <div class="mb-3">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaPromoModal">
-            + Nueva Promoción
-        </button>
-    </div>
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Mis Promociones</h1>
 
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">20% descuento en efectivo</h5>
-                    <p class="card-text">Válido: 01/09/2025 - 30/09/2025</p>
-                    <p class="card-text">
-                        <span class="badge bg-secondary">Inicial</span>
-                        <span class="badge bg-success ms-1">Aprobada</span>
-                    </p>
-                    <p class="card-text">15 usos totales</p>
-                    <div class="mt-2">
-                        <button class="btn btn-sm btn-outline-danger">Eliminar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">2x1 en productos seleccionados</h5>
-                    <p class="card-text">Válido: 15/09/2025 - 15/10/2025</p>
-                    <p class="card-text">
-                        <span class="badge bg-info">Medium</span>
-                        <span class="badge bg-warning ms-1">Pendiente</span>
-                    </p>
-                    <p class="card-text">0 usos</p>
-                    <div class="mt-2">
-                        <button class="btn btn-sm btn-outline-danger">Eliminar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <?php if (!$local_id): ?>
+    <div class="alert alert-warning">
+        No tienes un local asignado. Contacta al administrador.
     </div>
-</div>
+    <?php else: ?>
 
-<!-- Modal Nueva Promoción (similar al de admin pero simplificado) -->
-<div class="modal fade" id="nuevaPromoModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Nueva Promoción</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form action="procesar_promocion.php" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label">Texto de promoción</label>
-                        <input type="text" class="form-control" name="textoPromo" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Categoría de cliente</label>
-                        <select class="form-select" name="categoriaCliente" required>
-                            <option value="Inicial">Inicial</option>
-                            <option value="Medium">Medium</option>
-                            <option value="Premium">Premium</option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Fecha desde</label>
-                            <input type="date" class="form-control" name="fechaDesde" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Fecha hasta</label>
-                            <input type="date" class="form-control" name="fechaHasta" required>
+    <!-- Formulario para crear promoción -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Crear Nueva Promoción</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Texto de la Promoción *</label>
+                            <textarea name="texto" class="form-control" rows="3" required 
+                                      placeholder="Ej: 20% de descuento en toda la colección de verano"></textarea>
                         </div>
                     </div>
-                    <div class="mb-3 mt-3">
-                        <label class="form-label">Días de la semana</label>
-                        <!-- Checkboxes de días igual que en admin -->
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Fecha Desde *</label>
+                            <input type="date" name="fecha_desde" class="form-control" required 
+                                   min="<?= date('Y-m-d') ?>">
+                        </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Crear Promoción</button>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Fecha Hasta *</label>
+                            <input type="date" name="fecha_hasta" class="form-control" required 
+                                   min="<?= date('Y-m-d') ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Categoría de Cliente *</label>
+                            <select name="categoria" class="form-control" required>
+                                <option value="Inicial">Inicial</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Premium">Premium</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Días de la Semana *</label>
+                            <select name="dias_semana[]" class="form-control" multiple required>
+                                <option value="1">Lunes</option>
+                                <option value="2">Martes</option>
+                                <option value="3">Miércoles</option>
+                                <option value="4">Jueves</option>
+                                <option value="5">Viernes</option>
+                                <option value="6">Sábado</option>
+                                <option value="7">Domingo</option>
+                            </select>
+                            <small class="form-text text-muted">Mantén Ctrl para seleccionar múltiples días</small>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" name="crear_promocion" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Crear Promoción
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de promociones -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Mis Promociones</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Promoción</th>
+                            <th>Vigencia</th>
+                            <th>Categoría</th>
+                            <th>Días</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($promociones as $promo): ?>
+                        <tr>
+                            <td><?= $promo['codPromo'] ?></td>
+                            <td><?= htmlspecialchars($promo['textoPromo']) ?></td>
+                            <td>
+                                <?= date('d/m/Y', strtotime($promo['fechaDesdePromo'])) ?> - 
+                                <?= date('d/m/Y', strtotime($promo['fechaHastaPromo'])) ?>
+                            </td>
+                            <td><?= $promo['categoriaCliente'] ?></td>
+                            <td>
+                                <?php
+                                $dias = explode(',', $promo['diasSemana']);
+                                $nombres_dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+                                foreach ($dias as $dia) {
+                                    if (isset($nombres_dias[$dia-1])) {
+                                        echo '<span class="badge bg-secondary me-1">' . $nombres_dias[$dia-1] . '</span>';
+                                    }
+                                }
+                                ?>
+                            </td>
+                            <td>
+                                <?php
+                                $badge_class = [
+                                    'pendiente' => 'warning',
+                                    'aprobada' => 'success',
+                                    'denegada' => 'danger'
+                                ][$promo['estadoPromo']] ?? 'secondary';
+                                ?>
+                                <span class="badge bg-<?= $badge_class ?>">
+                                    <?= ucfirst($promo['estadoPromo']) ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if ($promo['estadoPromo'] == 'pendiente'): ?>
+                                <a href="eliminar_promocion.php?id=<?= $promo['codPromo'] ?>" 
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('¿Eliminar esta promoción?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 
-<?php require_once '../includes/footer.php'; ?>
+<?php require_once '../includes/footer-panel.php'; ?>
