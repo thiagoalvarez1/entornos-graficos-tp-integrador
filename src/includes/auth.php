@@ -90,26 +90,31 @@ class Auth
     // includes/auth.php - Busca esta función y reemplázala:
 
     // Redirigir según tipo de usuario
+    // includes/auth.php - Busca la función redirectUser() y REEMPLÁZALA:
+
     public function redirectUser()
     {
         if ($this->isLoggedIn()) {
             $base_url = SITE_URL;
+            $user_type = $_SESSION['user_type'];
 
-            switch ($_SESSION['user_type']) {
+            // DEBUG: Mostrar información de redirección
+            echo "<script>console.log('Redirecting user type: " . $user_type . "');</script>";
+
+            switch ($user_type) {
                 case USER_ADMIN:
                     header('Location: ' . $base_url . 'admin/panel.php');
-                    break;
+                    exit;
                 case USER_OWNER:
                     header('Location: ' . $base_url . 'dueno/panel.php');
-                    break;
+                    exit;
                 case USER_CLIENT:
                     header('Location: ' . $base_url . 'cliente/panel.php');
-                    break;
+                    exit;
                 default:
                     header('Location: ' . $base_url . 'index.php');
-                    break;
+                    exit;
             }
-            exit;
         }
     }
 

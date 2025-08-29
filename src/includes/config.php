@@ -11,9 +11,10 @@ define('DB_PASS', 'TU_PASSWORD');     // ← Cambiar por cada instalación
 define('SITE_URL', 'http://localhost/shopping-promos/src/');
 
 // Tipos de usuario
-define('USER_ADMIN', 'administrador');
-define('USER_OWNER', 'dueño de local');
-define('USER_CLIENT', 'cliente');
+
+define('USER_ADMIN', 'administrador');      // ← Exactamente como en BD
+define('USER_OWNER', 'dueño de local');     // ← Exactamente como en BD  
+define('USER_CLIENT', 'cliente');           // ← Exactamente como en BD
 
 // Categorías de cliente
 define('CATEGORY_INITIAL', 'Inicial');
