@@ -1,17 +1,19 @@
 <?php
+session_start();
 require_once 'includes/auth.php';
+require_once 'includes/config.php';
+require_once 'includes/database.php';
 
 $auth = new Auth();
 
-// Si ya está logueado, redirigir al panel correspondiente
+// Si ya está logueado, redirigir según su tipo
 if ($auth->isLoggedIn()) {
     $auth->redirectUser();
 }
 
 $error = '';
 
-// Procesar formulario de login
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
 
@@ -24,6 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 ?>
+
+<!-- Tu formulario de login aquí -->
 
 <!DOCTYPE html>
 <html lang="es">
@@ -67,9 +71,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         /* Efectos de fondo animados */
@@ -80,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             left: 0;
             right: 0;
             bottom: 0;
-            background: 
+            background:
                 radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
                 radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
@@ -89,9 +101,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-30px) rotate(0.5deg); }
-            66% { transform: translateY(15px) rotate(-0.5deg); }
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            33% {
+                transform: translateY(-30px) rotate(0.5deg);
+            }
+
+            66% {
+                transform: translateY(15px) rotate(-0.5deg);
+            }
         }
 
         .login-container {
@@ -109,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: 24px;
-            box-shadow: 
+            box-shadow:
                 0 20px 40px rgba(0, 0, 0, 0.1),
                 0 0 0 1px rgba(255, 255, 255, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -139,8 +161,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         @keyframes logoFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
         }
 
         .logo-container i {
@@ -185,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .form-control:focus {
             background: rgba(255, 255, 255, 0.95);
             border-color: var(--primary-purple);
-            box-shadow: 
+            box-shadow:
                 0 0 0 3px rgba(99, 102, 241, 0.1),
                 0 4px 20px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
@@ -352,15 +381,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 max-width: none;
                 border-radius: 20px;
             }
-            
+
             .login-header {
                 padding: 2rem 1.5rem 1rem;
             }
-            
+
             .login-form {
                 padding: 1rem 1.5rem 2rem;
             }
-            
+
             .brand-name {
                 font-size: 1.75rem;
             }
@@ -380,12 +409,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 transform: translateY(100vh) rotate(0deg);
                 opacity: 0;
             }
+
             10% {
                 opacity: 1;
             }
+
             90% {
                 opacity: 1;
             }
+
             100% {
                 transform: translateY(-100px) rotate(360deg);
                 opacity: 0;
@@ -427,13 +459,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <form method="POST" action="">
                     <div class="form-floating">
                         <i class="fas fa-envelope input-icon"></i>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="tu@email.com" required>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="tu@email.com"
+                            required>
                         <label for="email">Correo electrónico</label>
                     </div>
 
                     <div class="form-floating">
                         <i class="fas fa-lock input-icon"></i>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña" required>
+                        <input type="password" class="form-control" id="password" name="password"
+                            placeholder="Contraseña" required>
                         <label for="password">Contraseña</label>
                     </div>
 
@@ -455,7 +489,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
 
                 <div class="auth-links">
-                    <p>¿No tienes una cuenta? 
+                    <p>¿No tienes una cuenta?
                         <a href="<?php echo SITE_URL; ?>registro.php">
                             <i class="fas fa-user-plus me-1"></i>Regístrate aquí
                         </a>
@@ -474,11 +508,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script>
         // Animación adicional para los campos de entrada
         document.querySelectorAll('.form-control').forEach(input => {
-            input.addEventListener('focus', function() {
+            input.addEventListener('focus', function () {
                 this.parentElement.classList.add('focused');
             });
-            
-            input.addEventListener('blur', function() {
+
+            input.addEventListener('blur', function () {
                 if (!this.value) {
                     this.parentElement.classList.remove('focused');
                 }

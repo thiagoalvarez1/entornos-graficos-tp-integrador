@@ -11,7 +11,6 @@ define('DB_PASS', 'TU_PASSWORD');     // ← Cambiar por cada instalación
 define('SITE_URL', 'http://localhost/shopping-promos/src/');
 
 // Tipos de usuario
-
 define('USER_ADMIN', 'administrador');      // ← Exactamente como en BD
 define('USER_OWNER', 'dueño de local');     // ← Exactamente como en BD  
 define('USER_CLIENT', 'cliente');           // ← Exactamente como en BD
@@ -21,6 +20,8 @@ define('CATEGORY_INITIAL', 'Inicial');
 define('CATEGORY_MEDIUM', 'Medium');
 define('CATEGORY_PREMIUM', 'Premium');
 
-// Iniciar sesión
-session_start();
+// Iniciar sesión de manera segura
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 ?>
