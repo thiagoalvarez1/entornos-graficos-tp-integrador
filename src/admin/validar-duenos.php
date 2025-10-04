@@ -1,9 +1,9 @@
 <?php
 // Conexión a la base de datos
 $servername = "localhost";
-$username = "root"; // Usuario por defecto de XAMPP
-$password = ""; // Contraseña por defecto de XAMPP
-$dbname = "shopping_promos"; // Nombre de tu base de datos
+$username = "root";
+$password = "";
+$dbname = "shopping_promos";
 
 // Crear conexión
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -13,30 +13,62 @@ if ($conn->connect_error) {
     die("Conexión fallida: " . $conn->connect_error);
 }
 
-// Inicializar variables para estadísticas
-$total = 0;
-$pendientes = 0;
-$aprobados = 0;
-$rechazados = 0;
+// Mensaje de éxito
+$mensaje_exito = '';
 
-// Consulta para obtener dueños pendientes de validación
-$sql_pendientes = "SELECT codUsuario, nombreUsuario, fechaRegistro, estado 
-                   FROM usuarios 
-                   WHERE tipoUsuario = 'dueño de local' AND estado = 'pendiente'";
-$result_pendientes = $conn->query($sql_pendientes);
+// Procesar acciones - ESTO DEBE IR AL PRINCIPIO DEL ARCHIVO
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['usuario_id']) && isset($_POST['accion'])) {
+    $usuario_id = intval($_POST['usuario_id']);
+    $accion = $_POST['accion'];
 
-// Consulta para obtener dueños aprobados
-$sql_aprobados = "SELECT codUsuario, nombreUsuario, fechaRegistro, estado 
-                  FROM usuarios 
-                  WHERE tipoUsuario = 'dueño de local' AND estado = 'activo'";
-$result_aprobados = $conn->query($sql_aprobados);
+    error_log("=== PROCESANDO FORMULARIO ===");
+    error_log("Usuario ID: $usuario_id, Acción: $accion");
+
+    // Validar que el usuario_id sea válido
+    if ($usuario_id <= 0) {
+        die("Error: ID de usuario inválido");
+    }
+
+    // Determinar el nuevo estado según la acción
+    if ($accion === 'aprobar') {
+        $nuevo_estado = 'activo';
+        $mensaje_exito = "Dueño aprobado correctamente";
+    } elseif ($accion === 'rechazar') {
+        $nuevo_estado = 'inactivo';
+        $mensaje_exito = "Dueño rechazado correctamente";
+    } elseif ($accion === 'revocar') {
+        $nuevo_estado = 'pendiente';
+        $mensaje_exito = "Aprobación revocada correctamente";
+    } else {
+        die("Error: Acción no válida");
+    }
+
+    // Actualizar en la base de datos
+    $sql = "UPDATE usuarios SET estado = '$nuevo_estado' WHERE codUsuario = $usuario_id AND tipoUsuario = 'dueño de local'";
+
+    error_log("Ejecutando SQL: $sql");
+
+    if ($conn->query($sql) === TRUE) {
+        error_log("✅ Actualización exitosa. Filas afectadas: " . $conn->affected_rows);
+
+        // Redirigir para evitar reenvío del formulario
+        header("Location: " . $_SERVER['PHP_SELF'] . "?success=1&mensaje=" . urlencode($mensaje_exito));
+        exit();
+    } else {
+        error_log("❌ Error en la consulta: " . $conn->error);
+        echo "<div class='alert alert-danger'>Error: " . $conn->error . "</div>";
+    }
+}
+
+// Consultas para mostrar datos (DESPUÉS del procesamiento del POST)
+$total = $pendientes = $aprobados = $rechazados = 0;
 
 // Consulta para estadísticas
 $sql_stats = "SELECT 
     COUNT(*) as total,
     SUM(estado = 'pendiente') as pendientes,
     SUM(estado = 'activo') as aprobados,
-    SUM(estado = 'rechazado') as rechazados
+    SUM(estado = 'inactivo') as rechazados
     FROM usuarios 
     WHERE tipoUsuario = 'dueño de local'";
 
@@ -49,34 +81,17 @@ if ($result_stats && $result_stats->num_rows > 0) {
     $rechazados = $stats['rechazados'];
 }
 
-// Procesar acciones (aprobar, rechazar, revocar)
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $usuario_id = $_POST['usuario_id'];
-    $accion = $_POST['accion'];
+// Consulta para obtener dueños pendientes de validación
+$sql_pendientes = "SELECT codUsuario, nombreUsuario, fechaRegistro, estado 
+                   FROM usuarios 
+                   WHERE tipoUsuario = 'dueño de local' AND estado = 'pendiente'";
+$result_pendientes = $conn->query($sql_pendientes);
 
-    // Agrega depuración para ver qué se está enviando
-    error_log("Usuario ID: $usuario_id, Acción: $accion");
-
-    if ($accion === 'aprobar') {
-        $sql = "UPDATE usuarios SET estado = 'activo' WHERE codUsuario = $usuario_id";
-    } elseif ($accion === 'rechazar') {
-        $sql = "UPDATE usuarios SET estado = 'rechazado' WHERE codUsuario = $usuario_id";
-    } elseif ($accion === 'revocar') {
-        $sql = "UPDATE usuarios SET estado = 'pendiente' WHERE codUsuario = $usuario_id";
-    }
-    // Agrega depuración para ver la consulta SQL
-    error_log("SQL: $sql");
-
-    if ($conn->query($sql) === TRUE) {
-        error_log("Actualización exitosa");
-        // Redirigir para evitar reenvío del formulario
-        header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
-        exit();
-    } else {
-        error_log("Error: " . $conn->error);
-        echo "Error: " . $sql . "<br>" . $conn->error;
-    }
-}
+// Consulta para obtener dueños aprobados
+$sql_aprobados = "SELECT codUsuario, nombreUsuario, fechaRegistro, estado 
+                  FROM usuarios 
+                  WHERE tipoUsuario = 'dueño de local' AND estado = 'activo'";
+$result_aprobados = $conn->query($sql_aprobados);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -217,20 +232,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: linear-gradient(135deg, #f8d7da, #f5c6cb);
             color: #721c24;
             border-left: 4px solid #dc3545;
-        }
-
-        .alert-info {
-            background: linear-gradient(135deg, #d1ecf1, #bee5eb);
-            color: #0c5460;
-            border-left: 4px solid #17a2b8;
-            text-align: center;
-            padding: 40px;
-        }
-
-        .alert-info i {
-            font-size: 3rem;
-            margin-bottom: 16px;
-            display: block;
         }
 
         .card {
@@ -470,7 +471,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </h1>
         </div>
 
-        <!-- Estadísticas -->
+        <!-- Mostrar mensaje de éxito -->
+        <?php if (isset($_GET['success']) && $_GET['success'] == '1'): ?>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <?php echo htmlspecialchars($_GET['mensaje'] ?? 'Operación realizada correctamente'); ?>
+            </div>
+        <?php endif; ?>
+
         <!-- Estadísticas -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -522,12 +530,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <!-- Alertas de ejemplo -->
-        <div class="alert alert-success" style="display: none;">
-            Usuario aprobado correctamente
-        </div>
-
-        <!-- Contenido principal -->
         <!-- Contenido principal -->
         <div class="card">
             <div class="card-header">
@@ -536,7 +538,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="card-body">
                 <?php if ($result_pendientes && $result_pendientes->num_rows > 0): ?>
-                    <div class="table-container" id="data-table">
+                    <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
@@ -571,6 +573,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             Pendiente
                                         </td>
                                         <td class="actions-cell">
+                                            <!-- FORMULARIOS QUE SÍ SE ENVIAN AL SERVIDOR -->
                                             <form method="POST" style="display: inline;">
                                                 <input type="hidden" name="usuario_id"
                                                     value="<?php echo $row['codUsuario']; ?>">
@@ -584,7 +587,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                     value="<?php echo $row['codUsuario']; ?>">
                                                 <input type="hidden" name="accion" value="rechazar">
                                                 <button type="submit" class="btn btn-danger"
-                                                    onclick="return confirm('¿Rechazar esta solicitud?')">
+                                                    onclick="return confirm('¿Estás seguro de rechazar este dueño?')">
                                                     <i class="fas fa-times"></i> Rechazar
                                                 </button>
                                             </form>
@@ -595,7 +598,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </table>
                     </div>
                 <?php else: ?>
-                    <div class="empty-state" id="empty-state">
+                    <div class="empty-state">
                         <div class="empty-icon">
                             <i class="fas fa-user-check"></i>
                         </div>
@@ -609,153 +612,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <!-- Estado vacío (oculto por defecto) -->
-        <div class="empty-state" id="empty-state" style="display: none;">
-            <div class="empty-icon">
-                <i class="fas fa-user-check"></i>
+        <!-- Sección de Dueños Aprobados -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-check-circle"></i>
+                Dueños Aprobados
             </div>
-            <div class="empty-title">¡Todo al día!</div>
-            <div class="empty-description">
-                No hay dueños pendientes de validación en este momento.<br>
-                Todas las solicitudes han sido procesadas.
-            </div>
-        </div>
-    </div>
-    </div>
-    </div>
-    <!-- Sección de Dueños Aprobados -->
-    <!-- Sección de Dueños Aprobados -->
-    <div class="card">
-        <div class="card-header">
-            <i class="fas fa-check-circle"></i>
-            Dueños Aprobados
-        </div>
-        <div class="card-body">
-            <?php if ($result_aprobados && $result_aprobados->num_rows > 0): ?>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Usuario</th>
-                                <th>Fecha de Registro</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while ($row = $result_aprobados->fetch_assoc()): ?>
+            <div class="card-body">
+                <?php if ($result_aprobados && $result_aprobados->num_rows > 0): ?>
+                    <div class="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <div class="user-info">
-                                            <div class="user-avatar">
-                                                <?php echo strtoupper(substr(explode('@', $row['nombreUsuario'])[0], 0, 2)); ?>
-                                            </div>
-                                            <div class="user-details">
-                                                <div class="user-email"><?php echo $row['nombreUsuario']; ?></div>
-                                                <div class="user-id">ID: <?php echo $row['codUsuario']; ?></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="date-badge">
-                                            <i class="fas fa-calendar-alt"></i>
-                                            <?php echo date('d/m/Y', strtotime($row['fechaRegistro'])); ?>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="status-indicator status-approved"></span>
-                                        Aprobado
-                                    </td>
-                                    <td class="actions-cell">
-                                        <form method="POST" style="display: inline;">
-                                            <input type="hidden" name="usuario_id" value="<?php echo $row['codUsuario']; ?>">
-                                            <input type="hidden" name="accion" value="revocar">
-                                            <button type="submit" class="btn btn-danger"
-                                                onclick="return confirm('¿Revocar aprobación de este dueño?')">
-                                                <i class="fas fa-undo"></i> Revocar
-                                            </button>
-                                        </form>
-                                    </td>
+                                    <th>Usuario</th>
+                                    <th>Fecha de Registro</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
                                 </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="fas fa-user-times"></i>
+                            </thead>
+                            <tbody>
+                                <?php while ($row = $result_aprobados->fetch_assoc()): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="user-info">
+                                                <div class="user-avatar">
+                                                    <?php echo strtoupper(substr(explode('@', $row['nombreUsuario'])[0], 0, 2)); ?>
+                                                </div>
+                                                <div class="user-details">
+                                                    <div class="user-email"><?php echo $row['nombreUsuario']; ?></div>
+                                                    <div class="user-id">ID: <?php echo $row['codUsuario']; ?></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="date-badge">
+                                                <i class="fas fa-calendar-alt"></i>
+                                                <?php echo date('d/m/Y', strtotime($row['fechaRegistro'])); ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="status-indicator status-approved"></span>
+                                            Aprobado
+                                        </td>
+                                        <td class="actions-cell">
+                                            <form method="POST" style="display: inline;">
+                                                <input type="hidden" name="usuario_id"
+                                                    value="<?php echo $row['codUsuario']; ?>">
+                                                <input type="hidden" name="accion" value="revocar">
+                                                <button type="submit" class="btn btn-danger"
+                                                    onclick="return confirm('¿Estás seguro de revocar la aprobación?')">
+                                                    <i class="fas fa-undo"></i> Revocar
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="empty-title">No hay dueños aprobados</div>
-                    <div class="empty-description">
-                        No hay dueños con aprobación en este momento.
+                <?php else: ?>
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                        <div class="empty-title">No hay dueños aprobados</div>
+                        <div class="empty-description">
+                            No hay dueños con aprobación en este momento.
+                        </div>
                     </div>
-                </div>
-            <?php endif; ?>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
+    <!-- SOLO JAVASCRIPT PARA ANIMACIONES, SIN BLOQUEAR FORMULARIOS -->
     <script>
-        // Simulación de funcionalidad de botones
-        document.querySelectorAll('button[type="submit"]').forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.preventDefault();
-                const action = this.parentElement.querySelector('input[name="accion"]').value;
-
-                if (action === 'rechazar') {
-                    if (!confirm('¿Rechazar esta solicitud?')) {
-                        return;
-                    }
-                }
-
-                // Mostrar alerta de éxito
-                const alert = document.querySelector('.alert-success');
-                alert.style.display = 'block';
-                alert.textContent = action === 'aprobar' ? 'Usuario aprobado correctamente' : 'Usuario rechazado correctamente';
-
-                // Ocultar la alerta después de 3 segundos
-                setTimeout(() => {
-                    alert.style.display = 'none';
-                }, 3000);
-
-                // Remover la fila de la tabla (simulación)
-                const row = this.closest('tr');
-                row.style.opacity = '0.5';
-
-                setTimeout(() => {
-                    row.remove();
-
-                    // Actualizar estadísticas
-                    updateStats(action);
-
-                    // Verificar si ya no hay filas
-                    const remainingRows = document.querySelectorAll('tbody tr').length;
-                    if (remainingRows === 0) {
-                        document.getElementById('data-table').style.display = 'none';
-                        document.getElementById('empty-state').style.display = 'block';
-                    }
-                }, 1000);
-            });
-        });
-
-        function updateStats(action) {
-            const pendingElement = document.querySelector('.stat-icon.pending').nextElementSibling.querySelector('.stat-number');
-            const currentPending = parseInt(pendingElement.textContent);
-            pendingElement.textContent = currentPending - 1;
-
-            if (action === 'aprobar') {
-                const approvedElement = document.querySelector('.stat-icon.approved').nextElementSibling.querySelector('.stat-number');
-                const currentApproved = parseInt(approvedElement.textContent);
-                approvedElement.textContent = currentApproved + 1;
-            } else {
-                const rejectedElement = document.querySelector('.stat-icon.rejected').nextElementSibling.querySelector('.stat-number');
-                const currentRejected = parseInt(rejectedElement.textContent);
-                rejectedElement.textContent = currentRejected + 1;
-            }
-        }
-
-
-        // Animación de entrada para las tarjetas
+        // Solo animaciones, no interferir con formularios
         document.addEventListener('DOMContentLoaded', function () {
             const cards = document.querySelectorAll('.stat-card');
             cards.forEach((card, index) => {
@@ -770,39 +702,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }, 100);
                 }, index * 150);
             });
-        });
 
-        // Efectos de hover mejorados
-        document.querySelectorAll('.user-info').forEach(userInfo => {
-            userInfo.addEventListener('mouseenter', function () {
-                this.querySelector('.user-avatar').style.transform = 'scale(1.1)';
+            // Efectos de hover mejorados
+            document.querySelectorAll('.user-info').forEach(userInfo => {
+                userInfo.addEventListener('mouseenter', function () {
+                    this.querySelector('.user-avatar').style.transform = 'scale(1.1)';
+                });
+
+                userInfo.addEventListener('mouseleave', function () {
+                    this.querySelector('.user-avatar').style.transform = 'scale(1)';
+                });
             });
 
-            userInfo.addEventListener('mouseleave', function () {
-                this.querySelector('.user-avatar').style.transform = 'scale(1)';
-            });
-        });
-
-        // Mostrar alerta si hay un parámetro de éxito en la URL
-        document.addEventListener('DOMContentLoaded', function () {
+            // Mostrar alerta si hay un parámetro de éxito en la URL
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('success') === '1') {
-                const alert = document.querySelector('.alert-success');
-                alert.style.display = 'block';
-                alert.textContent = 'Operación realizada correctamente';
-
-                setTimeout(() => {
-                    alert.style.display = 'none';
-                }, 3000);
+                // La alerta ya se muestra con PHP, este código es opcional
+                console.log('Operación exitosa detectada en URL');
             }
         });
     </script>
 </body>
 
 </html>
+
 <?php
 // Cerrar conexión
-if (isset($conn)) {
-    $conn->close();
-}
+$conn->close();
 ?>

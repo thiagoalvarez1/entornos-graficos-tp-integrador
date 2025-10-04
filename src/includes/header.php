@@ -680,13 +680,13 @@ echo ($currentPage == 'login.php' || $currentPage == 'registro.php') ? 'login-pa
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link-modern" href="<?php echo SITE_URL; ?>index.php#promociones">
+                            <a class="nav-link-modern" href="<?php echo SITE_URL; ?>promociones.php">
                                 <i class="fas fa-tags"></i>
                                 <span>Promociones</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link-modern" href="<?php echo SITE_URL; ?>index.php#locales">
+                            <a class="nav-link-modern" href="<?php echo SITE_URL; ?>locales.php">
                                 <i class="fas fa-store"></i>
                                 <span>Locales</span>
                             </a>

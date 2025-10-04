@@ -1,6 +1,6 @@
 <?php
 require_once 'database.php';
-require_once 'config.php'; // Asegúrate de incluir el archivo de configuraciones
+require_once 'config.php';
 
 class Auth
 {
@@ -48,23 +48,18 @@ class Auth
         }
     }
 
-    // Iniciar sesión
+    // Iniciar sesión - CORREGIDO
     public function login($email, $password)
     {
         try {
             $query = "SELECT codUsuario, nombreUsuario, claveUsuario, tipoUsuario, categoriaCliente, estado 
-                      FROM usuarios WHERE nombreUsuario = :email";
+                  FROM usuarios WHERE nombreUsuario = :email";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':email', $email);
             $stmt->execute();
 
             if ($stmt->rowCount() == 1) {
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                // Verificar si el usuario está activo
-                if ($user['estado'] !== 'activo' && $user['tipoUsuario'] !== USER_ADMIN) {
-                    return "Cuenta pendiente de aprobación";
-                }
 
                 // Verificar contraseña
                 if (password_verify($password, $user['claveUsuario'])) {
@@ -75,7 +70,8 @@ class Auth
                     $_SESSION['user_category'] = $user['categoriaCliente'];
                     $_SESSION['user_status'] = $user['estado'];
 
-                    return true;
+                    return true; // Devuelve true en lugar de redirigir inmediatamente
+
                 } else {
                     return "Contraseña incorrecta";
                 }
@@ -93,20 +89,21 @@ class Auth
         return isset($_SESSION['user_id']);
     }
 
-    // Redirigir según tipo de usuario
+    // Redirigir según tipo de usuario - CORREGIDO
     public function redirectUser()
     {
         if ($this->isLoggedIn()) {
             $base_url = SITE_URL;
             $user_type = $_SESSION['user_type'];
+            $user_status = $_SESSION['user_status'];
 
             switch ($user_type) {
                 case USER_ADMIN:
                     header('Location: ' . $base_url . 'admin/panel.php');
                     exit;
-                case USER_OWNER:
-                    // Verificar si el dueño está aprobado
-                    if ($_SESSION['user_status'] === 'activo') {
+                case 'dueño de local': // Agrega este caso
+                case USER_OWNER: // Mantén este también por compatibilidad
+                    if ($user_status === 'activo') {
                         header('Location: ' . $base_url . 'dueno/panel.php');
                     } else {
                         header('Location: ' . $base_url . 'pendiente.php');
@@ -131,21 +128,32 @@ class Auth
         exit;
     }
 
-    // Verificar acceso según tipo de usuario
+    // Verificar acceso según tipo de usuario - CORREGIDO
     public function checkAccess($allowedTypes)
     {
         if (!$this->isLoggedIn()) {
+            error_log("Usuario no logueado - Redirigiendo a login");
             header('Location: ' . SITE_URL . 'login.php');
             exit;
         }
 
+        error_log("Usuario logueado: Tipo=" . $_SESSION['user_type'] . ", Estado=" . $_SESSION['user_status']);
+        error_log("Tipos permitidos: " . implode(', ', $allowedTypes));
+
         if (!in_array($_SESSION['user_type'], $allowedTypes)) {
+            error_log("Tipo de usuario no permitido - Redirigiendo a acceso-denegado");
             header('Location: ' . SITE_URL . 'acceso-denegado.php');
             exit;
         }
 
-        // Para dueños, verificar que estén activos
-        if ($_SESSION['user_type'] === USER_OWNER && $_SESSION['user_status'] !== 'activo') {
+        // Para dueños, verificar que estén activos SOLO si intentan acceder a panel.php
+        $current_page = basename($_SERVER['PHP_SELF']);
+        if (
+            $_SESSION['user_type'] === USER_OWNER &&
+            $_SESSION['user_status'] !== 'activo' &&
+            $current_page === 'panel.php'
+        ) {
+            error_log("Dueño no activo intentando acceder a panel - Redirigiendo a pendiente.php");
             header('Location: ' . SITE_URL . 'pendiente.php');
             exit;
         }

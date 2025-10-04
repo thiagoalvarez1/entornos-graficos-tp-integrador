@@ -3,9 +3,9 @@ require_once '../includes/config.php';
 require_once '../includes/auth.php';
 
 $auth = new Auth();
-$auth->checkAccess(['administrador']);
+$auth->checkAccess(['dueño de local']); // Usa 'dueño de local'
 
-$pageTitle = "Panel de Administrador";
+$pageTitle = "Panel de Dueño";
 require_once '../includes/header-panel.php';
 ?>
 
@@ -796,6 +796,11 @@ require_once '../includes/header-panel.php';
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link" href="mi_local.php">
+                <i class="fas fa-tags"></i> Mi local
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link" href="#">
                 <i class="fas fa-clipboard-check"></i> Solicitudes
             </a>
@@ -811,7 +816,7 @@ require_once '../includes/header-panel.php';
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="../logout.php">
                 <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
             </a>
         </li>

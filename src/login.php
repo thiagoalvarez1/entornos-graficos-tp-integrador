@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once 'includes/auth.php';
 require_once 'includes/config.php';
+require_once 'includes/auth.php';
 require_once 'includes/database.php';
 
 $auth = new Auth();
@@ -13,6 +13,7 @@ if ($auth->isLoggedIn()) {
 
 $error = '';
 
+// En login.php, después del procesamiento del formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
@@ -20,12 +21,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $auth->login($email, $password);
 
     if ($result === true) {
+        // Redirigir según el tipo de usuario
         $auth->redirectUser();
+        exit; // Importante: salir después de redirigir
     } else {
         $error = $result;
     }
+    // Si no devuelve nada, es porque ya redirigió
 }
 ?>
+
+<!-- Mantén tu HTML del formulario de login -->
 
 <!-- Tu formulario de login aquí -->
 

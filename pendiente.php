@@ -1,7 +1,6 @@
 <?php
-session_start();
-require_once 'includes/auth.php';
 require_once 'includes/config.php';
+require_once 'includes/auth.php';
 
 $auth = new Auth();
 
@@ -16,6 +15,64 @@ if ($_SESSION['user_status'] === 'activo') {
     $auth->redirectUser();
 }
 ?>
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuenta Pendiente - PromoShopping</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .pending-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .pending-icon {
+            font-size: 4rem;
+            color: #f59e0b;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="pending-container">
+        <div class="pending-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h2 class="mb-3">Cuenta Pendiente de Aprobación</h2>
+        <p class="text-muted mb-4">
+            Tu cuenta como dueño de local está pendiente de aprobación por los administradores del sistema.
+            Recibirás un correo electrónico una vez que tu cuenta sea activada.
+        </p>
+        <div class="d-grid gap-2">
+            <a href="logout.php" class="btn btn-primary">
+                <i class="fas fa-sign-out-alt me-2"></i>
+                Cerrar Sesión
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>
 
 <!DOCTYPE html>
 <html lang="es">
