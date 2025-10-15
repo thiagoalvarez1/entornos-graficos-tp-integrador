@@ -1,10 +1,52 @@
 <?php
 require_once 'includes/config.php';
-$pageTitle = "Inicio - PromoShopping";
+require_once 'includes/database.php';
+$pageTitle = "Inicio - Bandera";
 require_once 'includes/header.php';
+
+// Obtener promociones destacadas de la base de datos
+$database = new Database();
+$conn = $database->getConnection();
+
+$query_promociones = "SELECT 
+    p.codPromo,
+    p.textoPromo,
+    p.categoriaCliente,
+    p.fechaDesdePromo,
+    p.fechaHastaPromo,
+    p.diasSemana,
+    l.nombreLocal,
+    l.ubicacionLocal,
+    l.rubroLocal,
+    u.nombreUsuario as nombreDueno
+    FROM promociones p
+    JOIN locales l ON p.codLocal = l.codLocal
+    JOIN usuarios u ON l.codUsuario = u.codUsuario
+    WHERE p.estadoPromo = 'aprobada' 
+    AND p.fechaHastaPromo >= CURDATE()
+    ORDER BY p.fechaCreacion DESC
+    LIMIT 3";
+
+$stmt_promociones = $conn->prepare($query_promociones);
+$stmt_promociones->execute();
+$promociones_destacadas = $stmt_promociones->fetchAll(PDO::FETCH_ASSOC);
+
+// Obtener novedades activas - CORREGIDO: solo filtrar por fechas
+$query_novedades = "SELECT 
+    textoNovedad, 
+    tipoUsuario, 
+    fechaHastaNovedad 
+    FROM novedades 
+    WHERE fechaHastaNovedad >= CURDATE() 
+    AND fechaDesdeNovedad <= CURDATE()
+    ORDER BY fechaCreacion DESC";
+
+$stmt_novedades = $conn->prepare($query_novedades);
+$stmt_novedades->execute();
+$novedades_activas = $stmt_novedades->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<!-- Hero Section Mejorado -->
+<!-- El resto del código HTML permanece igual -->
 <div class="hero-section position-relative overflow-hidden">
     <div class="hero-bg-gradient"></div>
     <div class="hero-particles"></div>
@@ -33,13 +75,13 @@ require_once 'includes/header.php';
                         <div class="row">
                             <div class="col-4">
                                 <div class="stat-item">
-                                    <h3 class="stat-number">500+</h3>
+                                    <h3 class="stat-number"><?= count($promociones_destacadas) * 100 ?>+</h3>
                                     <span class="stat-label">Promociones</span>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="stat-item">
-                                    <h3 class="stat-number">150+</h3>
+                                    <h3 class="stat-number">50+</h3>
                                     <span class="stat-label">Locales</span>
                                 </div>
                             </div>
@@ -56,27 +98,45 @@ require_once 'includes/header.php';
             <div class="col-lg-6">
                 <div class="hero-visual animate-fade-left">
                     <div class="floating-cards">
-                        <div class="floating-card card-1">
-                            <div class="card-icon">🛍️</div>
-                            <div class="card-content">
-                                <h4>50% OFF</h4>
-                                <p>Fashion Store</p>
+                        <?php if (!empty($promociones_destacadas)): ?>
+                            <?php foreach (array_slice($promociones_destacadas, 0, 3) as $index => $promo): ?>
+                                <div class="floating-card card-<?= $index + 1 ?>">
+                                    <div class="card-icon">
+                                        <?php
+                                        $iconos = ['🛍️', '🎯', '⚡'];
+                                        echo $iconos[$index] ?? '🎁';
+                                        ?>
+                                    </div>
+                                    <div class="card-content">
+                                        <h4><?= htmlspecialchars($promo['categoriaCliente']) ?></h4>
+                                        <p><?= htmlspecialchars($promo['nombreLocal']) ?></p>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <!-- Cards por defecto si no hay promociones -->
+                            <div class="floating-card card-1">
+                                <div class="card-icon">🛍️</div>
+                                <div class="card-content">
+                                    <h4>50% OFF</h4>
+                                    <p>Fashion Store</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="floating-card card-2">
-                            <div class="card-icon">🎯</div>
-                            <div class="card-content">
-                                <h4>2x1</h4>
-                                <p>Tech World</p>
+                            <div class="floating-card card-2">
+                                <div class="card-icon">🎯</div>
+                                <div class="card-content">
+                                    <h4>2x1</h4>
+                                    <p>Tech World</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="floating-card card-3">
-                            <div class="card-icon">⚡</div>
-                            <div class="card-content">
-                                <h4>30% OFF</h4>
-                                <p>Food Court</p>
+                            <div class="floating-card card-3">
+                                <div class="card-icon">⚡</div>
+                                <div class="card-content">
+                                    <h4>30% OFF</h4>
+                                    <p>Food Court</p>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -100,170 +160,414 @@ require_once 'includes/header.php';
             <p class="section-subtitle">Las mejores ofertas seleccionadas especialmente para ti</p>
         </div>
 
+        <!-- Sección de Novedades -->
+        <?php if (!empty($novedades_activas)): ?>
+            <section class="novedades-section py-4 bg-light">
+                <div class="container">
+                    <div class="novedades-container">
+                        <div class="novedades-header">
+                            <div class="novedades-icon">
+                                <i class="fas fa-bullhorn"></i>
+                            </div>
+                            <h3 class="novedades-title">Novedades Importantes</h3>
+                        </div>
+                        <div class="novedades-slider">
+                            <?php foreach ($novedades_activas as $novedad):
+                                $tipo_usuario = $novedad['tipoUsuario'];
+                                $badge_class = '';
+                                switch ($tipo_usuario) {
+                                    case 'todos':
+                                        $badge_class = 'badge-primary';
+                                        break;
+                                    case 'cliente':
+                                        $badge_class = 'badge-success';
+                                        break;
+                                    case 'dueño de local':
+                                        $badge_class = 'badge-warning';
+                                        break;
+                                    case 'administrador':
+                                        $badge_class = 'badge-danger';
+                                        break;
+                                }
+                                ?>
+                                <div class="novedad-item">
+                                    <div class="novedad-content">
+                                        <div class="novedad-text">
+                                            <?= htmlspecialchars($novedad['textoNovedad']) ?>
+                                        </div>
+                                        <div class="novedad-meta">
+                                            <span class="novedad-badge <?= $badge_class ?>">
+                                                <?= $tipo_usuario == 'todos' ? 'Para todos' : 'Para ' . $tipo_usuario ?>
+                                            </span>
+                                            <span class="novedad-fecha">
+                                                <i class="fas fa-calendar-alt me-1"></i>
+                                                Hasta <?= date('d/m/Y', strtotime($novedad['fechaHastaNovedad'])) ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <style>
+                .novedades-section {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                    color: white;
+                }
+
+                .novedades-container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                }
+
+                .novedades-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 1rem;
+                    margin-bottom: 1.5rem;
+                }
+
+                .novedades-icon {
+                    width: 50px;
+                    height: 50px;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.5rem;
+                }
+
+                .novedades-title {
+                    font-size: 1.8rem;
+                    font-weight: 700;
+                    margin: 0;
+                    text-align: center;
+                }
+
+                .novedades-slider {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                    max-height: 300px;
+                    overflow-y: auto;
+                    padding: 0 1rem;
+                }
+
+                .novedad-item {
+                    background: rgba(255, 255, 255, 0.95);
+                    border-radius: 12px;
+                    padding: 1.5rem;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                    transition: all 0.3s ease;
+                    border-left: 4px solid #6366f1;
+                }
+
+                .novedad-item:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                }
+
+                .novedad-content {
+                    color: #1f2937;
+                }
+
+                .novedad-text {
+                    font-size: 1.1rem;
+                    font-weight: 500;
+                    line-height: 1.5;
+                    margin-bottom: 1rem;
+                }
+
+                .novedad-meta {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 0.5rem;
+                }
+
+                .novedad-badge {
+                    padding: 0.4rem 0.8rem;
+                    border-radius: 20px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .badge-primary {
+                    background: #6366f1;
+                    color: white;
+                }
+
+                .badge-success {
+                    background: #10b981;
+                    color: white;
+                }
+
+                .badge-warning {
+                    background: #f59e0b;
+                    color: white;
+                }
+
+                .badge-danger {
+                    background: #ef4444;
+                    color: white;
+                }
+
+                .novedad-fecha {
+                    font-size: 0.9rem;
+                    color: #6b7280;
+                    display: flex;
+                    align-items: center;
+                }
+
+                /* Scrollbar personalizado */
+                .novedades-slider::-webkit-scrollbar {
+                    width: 6px;
+                }
+
+                .novedades-slider::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 10px;
+                }
+
+                .novedades-slider::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.3);
+                    border-radius: 10px;
+                }
+
+                .novedades-slider::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.5);
+                }
+
+                /* Responsive */
+                @media (max-width: 768px) {
+                    .novedades-title {
+                        font-size: 1.5rem;
+                    }
+
+                    .novedad-item {
+                        padding: 1rem;
+                    }
+
+                    .novedad-text {
+                        font-size: 1rem;
+                    }
+
+                    .novedad-meta {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 0.5rem;
+                    }
+                }
+            </style>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Auto-scroll para las novedades
+                    const slider = document.querySelector('.novedades-slider');
+                    if (slider) {
+                        let scrollPosition = 0;
+                        const scrollSpeed = 0.5; // Velocidad de scroll (píxeles por frame)
+
+                        function autoScroll() {
+                            if (scrollPosition >= slider.scrollHeight - slider.clientHeight) {
+                                scrollPosition = 0;
+                            } else {
+                                scrollPosition += scrollSpeed;
+                            }
+                            slider.scrollTop = scrollPosition;
+                            requestAnimationFrame(autoScroll);
+                        }
+
+                        // Iniciar auto-scroll después de 3 segundos
+                        setTimeout(autoScroll, 3000);
+                    }
+                });
+            </script>
+        <?php endif; ?>
+
+        <!-- Promociones Destacadas desde Base de Datos -->
         <div class="row g-4">
-            <!-- Tarjeta Premium -->
-            <div class="col-lg-4 col-md-6">
-                <div class="promo-card-modern card-premium" data-aos="fade-up" data-aos-delay="100">
-                    <div class="card-glow"></div>
-                    <div class="category-badge-modern badge-premium">
-                        <i class="fas fa-crown"></i> Premium
-                    </div>
-                    <div class="card-image-container">
-                        <img src="https://images.unsplash.com/photo-1556906781-2f0520405b71?ixlib=rb-4.0.3&w=500"
-                            class="card-img-modern" alt="TechWorld">
-                        <div class="card-overlay">
-                            <div class="discount-bubble">
-                                <span class="discount-text">30%+10%</span>
-                                <span class="discount-label">OFF</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-content-modern">
-                        <div class="store-info mb-3">
-                            <div class="store-avatar">
-                                <i class="fas fa-laptop"></i>
-                            </div>
-                            <div class="store-details">
-                                <h5 class="store-name">TechWorld</h5>
-                                <span class="store-category">Tecnología</span>
-                            </div>
-                            <div class="store-rating">
-                                <i class="fas fa-star"></i>
-                                <span>4.9</span>
-                            </div>
-                        </div>
-                        <h4 class="promo-title">30% + 10% off acumulable</h4>
-                        <p class="promo-description">Descuento especial con tarjeta de crédito. Válido en toda la
-                            tienda.</p>
-                        <div class="promo-details">
-                            <div class="detail-item">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Hasta 20/11/2025</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-clock"></i>
-                                <span>Todos los días</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-action">
-                        <button class="btn-claim-modern">
-                            <span>Obtener promoción</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <?php if (!empty($promociones_destacadas)): ?>
+                <?php foreach ($promociones_destacadas as $index => $promocion): ?>
+                    <?php
+                    $categoria = $promocion['categoriaCliente'];
+                    $card_class = '';
+                    $badge_class = '';
 
-            <!-- Tarjeta Medium -->
-            <div class="col-lg-4 col-md-6">
-                <div class="promo-card-modern card-medium" data-aos="fade-up" data-aos-delay="200">
-                    <div class="category-badge-modern badge-medium">
-                        <i class="fas fa-gem"></i> Medium
-                    </div>
-                    <div class="card-image-container">
-                        <img src="https://images.unsplash.com/photo-1605733513597-a8f8341084e6?ixlib=rb-4.0.3&w=500"
-                            class="card-img-modern" alt="Shoes & More">
-                        <div class="card-overlay">
-                            <div class="discount-bubble discount-bubble-medium">
-                                <span class="discount-text">2x1</span>
-                                <span class="discount-label">OFERTA</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-content-modern">
-                        <div class="store-info mb-3">
-                            <div class="store-avatar">
-                                <i class="fas fa-shoe-prints"></i>
-                            </div>
-                            <div class="store-details">
-                                <h5 class="store-name">Shoes & More</h5>
-                                <span class="store-category">Calzado</span>
-                            </div>
-                            <div class="store-rating">
-                                <i class="fas fa-star"></i>
-                                <span>4.7</span>
-                            </div>
-                        </div>
-                        <h4 class="promo-title">2x1 en calzado seleccionado</h4>
-                        <p class="promo-description">Segunda unidad sin costo en calzado seleccionado. No acumulable.
-                        </p>
-                        <div class="promo-details">
-                            <div class="detail-item">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Hasta 15/01/2026</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-clock"></i>
-                                <span>Solo Sábados</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-action">
-                        <button class="btn-claim-modern">
-                            <span>Obtener promoción</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
+                    switch ($categoria) {
+                        case 'Premium':
+                            $card_class = 'card-premium';
+                            $badge_class = 'badge-premium';
+                            $discount_class = '';
+                            break;
+                        case 'Medium':
+                            $card_class = 'card-medium';
+                            $badge_class = 'badge-medium';
+                            $discount_class = 'discount-bubble-medium';
+                            break;
+                        case 'Inicial':
+                            $card_class = 'card-inicial';
+                            $badge_class = 'badge-inicial';
+                            $discount_class = 'discount-bubble-inicial';
+                            break;
+                        default:
+                            $card_class = 'card-inicial';
+                            $badge_class = 'badge-inicial';
+                            $discount_class = 'discount-bubble-inicial';
+                    }
 
-            <!-- Tarjeta Inicial -->
-            <div class="col-lg-4 col-md-6">
-                <div class="promo-card-modern card-inicial" data-aos="fade-up" data-aos-delay="300">
-                    <div class="category-badge-modern badge-inicial">
-                        <i class="fas fa-star"></i> Inicial
-                    </div>
-                    <div class="card-image-container">
-                        <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-4.0.3&w=500"
-                            class="card-img-modern" alt="Fashion Store">
-                        <div class="card-overlay">
-                            <div class="discount-bubble discount-bubble-inicial">
-                                <span class="discount-text">20%</span>
-                                <span class="discount-label">OFF</span>
+                    // Icono según el rubro del local
+                    $icono = 'fas fa-store';
+                    $rubro = strtolower($promocion['rubroLocal']);
+                    if (strpos($rubro, 'tech') !== false || strpos($rubro, 'tecnolog') !== false) {
+                        $icono = 'fas fa-laptop';
+                    } elseif (strpos($rubro, 'shoe') !== false || strpos($rubro, 'calzado') !== false) {
+                        $icono = 'fas fa-shoe-prints';
+                    } elseif (strpos($rubro, 'fashion') !== false || strpos($rubro, 'moda') !== false || strpos($rubro, 'ropa') !== false) {
+                        $icono = 'fas fa-tshirt';
+                    } elseif (strpos($rubro, 'food') !== false || strpos($rubro, 'comida') !== false || strpos($rubro, 'restaurant') !== false) {
+                        $icono = 'fas fa-utensils';
+                    }
+                    ?>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="promo-card-modern <?= $card_class ?>" data-aos="fade-up"
+                            data-aos-delay="<?= ($index + 1) * 100 ?>">
+                            <?php if ($categoria == 'Premium'): ?>
+                                <div class="card-glow"></div>
+                            <?php endif; ?>
+                            <div class="category-badge-modern <?= $badge_class ?>">
+                                <i
+                                    class="fas <?= $categoria == 'Premium' ? 'fa-crown' : ($categoria == 'Medium' ? 'fa-gem' : 'fa-star') ?>"></i>
+                                <?= $categoria ?>
+                            </div>
+                            <div class="card-image-container">
+                                <!-- Imagen genérica basada en el rubro -->
+                                <img src="C:\Users\Thiago\OneDrive\Escritorio\Syloper\perfil\8c350103-0671-4d2b-9d20-27ff8fc1db7e_medium.png"
+                                    class="card-img-modern" alt="<?= htmlspecialchars($promocion['nombreLocal']) ?>">
+                                <div class="card-overlay">
+                                    <div class="discount-bubble <?= $discount_class ?>">
+                                        <span class="discount-text"><?= $categoria ?></span>
+                                        <span class="discount-label">OFERTA</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-content-modern">
+                                <div class="store-info mb-3">
+                                    <div class="store-avatar">
+                                        <i class="<?= $icono ?>"></i>
+                                    </div>
+                                    <div class="store-details">
+                                        <h5 class="store-name"><?= htmlspecialchars($promocion['nombreLocal']) ?></h5>
+                                        <span class="store-category"><?= htmlspecialchars($promocion['rubroLocal']) ?></span>
+                                    </div>
+                                    <div class="store-rating">
+                                        <i class="fas fa-star"></i>
+                                        <span>4.<?= rand(5, 9) ?></span>
+                                    </div>
+                                </div>
+                                <h4 class="promo-title"><?= htmlspecialchars($promocion['textoPromo']) ?></h4>
+                                <p class="promo-description">Promoción exclusiva disponible por tiempo limitado. No acumulable
+                                    con otras ofertas.</p>
+                                <div class="promo-details">
+                                    <div class="detail-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <span>Hasta <?= date('d/m/Y', strtotime($promocion['fechaHastaPromo'])) ?></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-clock"></i>
+                                        <span><?= htmlspecialchars($promocion['diasSemana']) ?></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span><?= htmlspecialchars($promocion['ubicacionLocal']) ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-action">
+                                <?php if (isset($_SESSION['user_id']) && $_SESSION['user_type'] == 'cliente'): ?>
+                                    <a href="cliente/solicitar_promocion.php?id=<?= $promocion['codPromo'] ?>"
+                                        class="btn-claim-modern">
+                                        <span>Obtener promoción</span>
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                <?php else: ?>
+                                    <a href="login.php" class="btn-claim-modern">
+                                        <span>Iniciar sesión</span>
+                                        <i class="fas fa-sign-in-alt"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
-                    <div class="card-content-modern">
-                        <div class="store-info mb-3">
-                            <div class="store-avatar">
-                                <i class="fas fa-tshirt"></i>
-                            </div>
-                            <div class="store-details">
-                                <h5 class="store-name">Fashion Store</h5>
-                                <span class="store-category">Moda</span>
-                            </div>
-                            <div class="store-rating">
-                                <i class="fas fa-star"></i>
-                                <span>4.5</span>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <!-- Tarjetas por defecto si no hay promociones -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="promo-card-modern card-premium" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-glow"></div>
+                        <div class="category-badge-modern badge-premium">
+                            <i class="fas fa-crown"></i> Premium
+                        </div>
+                        <div class="card-image-container">
+                            <img src="C:\Users\Thiago\OneDrive\Escritorio\Syloper\perfil\8c350103-0671-4d2b-9d20-27ff8fc1db7e_medium.png"
+                                class="card-img-modern" alt="TechWorld">
+                            <div class="card-overlay">
+                                <div class="discount-bubble">
+                                    <span class="discount-text">30%+10%</span>
+                                    <span class="discount-label">OFF</span>
+                                </div>
                             </div>
                         </div>
-                        <h4 class="promo-title">20% en colección verano</h4>
-                        <p class="promo-description">Descuento en toda la colección de verano. Encuentra tu estilo
-                            ideal.</p>
-                        <div class="promo-details">
-                            <div class="detail-item">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Hasta 30/12/2025</span>
+                        <div class="card-content-modern">
+                            <div class="store-info mb-3">
+                                <div class="store-avatar">
+                                    <i class="fas fa-laptop"></i>
+                                </div>
+                                <div class="store-details">
+                                    <h5 class="store-name">TechWorld</h5>
+                                    <span class="store-category">Tecnología</span>
+                                </div>
+                                <div class="store-rating">
+                                    <i class="fas fa-star"></i>
+                                    <span>4.9</span>
+                                </div>
                             </div>
-                            <div class="detail-item">
-                                <i class="fas fa-clock"></i>
-                                <span>Lunes a Viernes</span>
+                            <h4 class="promo-title">30% + 10% off acumulable</h4>
+                            <p class="promo-description">Descuento especial con tarjeta de crédito. Válido en toda la
+                                tienda.</p>
+                            <div class="promo-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Hasta 20/11/2025</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Todos los días</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-action">
-                        <button class="btn-claim-modern">
-                            <span>Obtener promoción</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </button>
+                        <div class="card-action">
+                            <a href="login.php" class="btn-claim-modern">
+                                <span>Iniciar sesión</span>
+                                <i class="fas fa-sign-in-alt"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
+                <!-- ... otras tarjetas por defecto ... -->
+            <?php endif; ?>
         </div>
 
         <div class="text-center mt-5">
-            <a href="#" class="btn btn-primary-modern btn-lg">
+            <a href="promociones.php" class="btn btn-primary-modern btn-lg">
                 <i class="fas fa-grid-3x3-gap me-2"></i>
                 Ver todas las promociones
                 <span class="btn-shine"></span>
@@ -271,6 +575,8 @@ require_once 'includes/header.php';
         </div>
     </div>
 </section>
+
+<!-- El resto del código (Cómo funciona y CTA) permanece igual -->
 
 <!-- Cómo funciona -->
 <section id="como-funciona" class="py-5 how-it-works-section">
@@ -325,7 +631,7 @@ require_once 'includes/header.php';
                         <div class="phone-screen">
                             <div class="app-interface">
                                 <div class="app-header">
-                                    <div class="app-title">PromoShopping</div>
+                                    <div class="app-title">Bandera</div>
                                     <div class="notification-dot"></div>
                                 </div>
                                 <div class="search-bar">
@@ -368,7 +674,7 @@ require_once 'includes/header.php';
                 <h2>¡No te pierdas ninguna promoción!</h2>
                 <p>Únete a más de 50,000 usuarios que ya están ahorrando con PromoShopping</p>
                 <div class="cta-actions">
-                    <a href="#" class="btn btn-white btn-lg me-3">
+                    <a href="registro.php" class="btn btn-white btn-lg me-3">
                         <i class="fas fa-user-plus me-2"></i>Registrarme gratis
                     </a>
                     <a href="#" class="btn btn-outline-white btn-lg">

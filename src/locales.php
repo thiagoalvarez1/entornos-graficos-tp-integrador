@@ -2,7 +2,7 @@
 require_once 'includes/config.php';
 require_once 'includes/database.php';
 
-$pageTitle = "Locales - PromoShopping";
+$pageTitle = "Locales - Bandera";
 require_once 'includes/header.php';
 
 // Conexión a la base de datos

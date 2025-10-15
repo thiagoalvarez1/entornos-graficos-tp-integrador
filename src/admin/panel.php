@@ -5,7 +5,7 @@ require_once '../includes/auth.php';
 $auth = new Auth();
 $auth->checkAccess(['administrador']);
 
-$pageTitle = "Panel de Administrador";
+$pageTitle = "Reportes y Estadísticas";
 require_once '../includes/header-panel.php';
 ?>
 
@@ -79,21 +79,6 @@ require_once '../includes/header-panel.php';
         z-index: 0;
     }
 
-    /* Sidebar Moderno */
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 280px;
-        height: 100vh;
-        background: rgba(15, 23, 42, 0.95);
-        backdrop-filter: blur(20px);
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
-        z-index: 1000;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        overflow-y: auto;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    }
 
     .sidebar.collapsed {
         transform: translateX(-280px);
@@ -680,71 +665,7 @@ require_once '../includes/header-panel.php';
     }
 </style>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <div class="sidebar-logo">
-            <i class="fas fa-store"></i>
-        </div>
-        <h2 class="sidebar-title">PromoShopping</h2>
-        <p class="sidebar-subtitle">Panel de Administración</p>
-    </div>
 
-    <nav class="sidebar-nav">
-        <div class="nav-section">
-            <div class="nav-section-title">Principal</div>
-            <a class="nav-link active" href="panel.php">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Dashboard</span>
-            </a>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-section-title">Gestión</div>
-            <a class="nav-link" href="gestion-locales.php">
-                <i class="fas fa-store"></i>
-                <span>Gestión de Locales</span>
-            </a>
-            <a class="nav-link" href="gestion_promociones.php">
-                <i class="fas fa-tags"></i>
-                <span>Gestión de Promociones</span>
-            </a>
-            <a class="nav-link" href="validar-duenos.php">
-                <i class="fas fa-user-check"></i>
-                <span>Validar Dueños</span>
-                <span class="badge">3</span>
-            </a>
-            <a class="nav-link" href="gestion_novedades.php">
-                <i class="fas fa-bullhorn"></i>
-                <span>Novedades</span>
-            </a>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-section-title">Análisis</div>
-            <a class="nav-link" href="reportes.php">
-                <i class="fas fa-chart-bar"></i>
-                <span>Reportes</span>
-            </a>
-            <a class="nav-link" href="#">
-                <i class="fas fa-analytics"></i>
-                <span>Estadísticas</span>
-            </a>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-section-title">Sistema</div>
-            <a class="nav-link" href="#">
-                <i class="fas fa-cog"></i>
-                <span>Configuración</span>
-            </a>
-            <a class="nav-link" href="../logout.php">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
-            </a>
-        </div>
-    </nav>
-</div>
 
 <!-- Main Content -->
 <div class="main-content" id="mainContent">
@@ -755,23 +676,6 @@ require_once '../includes/header-panel.php';
                 <i class="fas fa-bars"></i>
             </button>
 
-            <div class="dropdown">
-                <a href="#" class="user-dropdown" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=6366f1&color=fff&size=40"
-                        class="user-avatar" alt="Admin">
-                    <span>Admin User</span>
-                    <i class="fas fa-chevron-down"></i>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-user"></i>Perfil</a></li>
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i>Configuración</a></li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li><a class="dropdown-item" href="../logout.php"><i class="fas fa-sign-out-alt"></i>Cerrar
-                            Sesión</a></li>
-                </ul>
-            </div>
         </div>
     </nav>
 

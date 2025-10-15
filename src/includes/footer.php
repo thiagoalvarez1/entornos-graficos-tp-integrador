@@ -13,7 +13,7 @@
                     <div class="col-lg-4 col-md-6">
                         <div class="footer-section">
                             <h5>
-                                <i class="fas fa-store me-2"></i>PromoShopping
+                                <i class="fas fa-store me-2"></i>Bandera
                             </h5>
                             <p class="mb-4">
                                 El mejor lugar para encontrar promociones exclusivas en tu shopping favorito.

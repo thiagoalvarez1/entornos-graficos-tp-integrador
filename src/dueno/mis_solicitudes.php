@@ -114,111 +114,30 @@ require_once '../includes/header-panel.php';
 ?>
 
 <style>
-    :root {
-        --primary-purple: #8B5CF6;
-        --secondary-purple: #A855F7;
-        --accent-green: #10B981;
-        --accent-blue: #3B82F6;
-        --accent-orange: #F59E0B;
-        --accent-red: #EF4444;
-        --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --card-bg: rgba(255, 255, 255, 0.95);
-        --text-primary: #1F2937;
-        --text-secondary: #6B7280;
-        --border-color: rgba(255, 255, 255, 0.2);
-        --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.1);
-        --shadow-medium: 0 8px 30px rgba(0, 0, 0, 0.12);
-    }
-
-    body {
-        background: var(--bg-gradient);
-        min-height: 100vh;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    .dashboard-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-
-    .dashboard-header {
-        background: var(--card-bg);
-        border-radius: 24px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid var(--border-color);
-        backdrop-filter: blur(20px);
-    }
-
-    .store-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .store-icon {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    /* Solo estilos específicos de solicitudes */
+    .page-title {
         color: white;
-        font-size: 1.5rem;
-    }
-
-    .store-details h1 {
-        font-size: 1.5rem;
+        font-size: 2rem;
         font-weight: 700;
-        color: var(--text-primary);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         margin: 0;
-    }
-
-    .store-subtitle {
-        color: var(--text-secondary);
-        margin: 0.25rem 0 0 0;
-        font-size: 0.875rem;
-    }
-
-    .alert {
-        background: var(--card-bg);
-        border-radius: 16px;
-        padding: 1rem 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .alert-success {
-        border-left: 4px solid var(--accent-green);
-        background: rgba(16, 185, 129, 0.05);
-    }
-
-    .alert-danger {
-        border-left: 4px solid var(--accent-red);
-        background: rgba(239, 68, 68, 0.05);
     }
 
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
     }
 
     .stat-card {
-        background: var(--card-bg);
-        border-radius: 20px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: var(--shadow-medium);
+        transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
     }
@@ -230,23 +149,28 @@ require_once '../includes/header-panel.php';
         left: 0;
         right: 0;
         height: 4px;
-        border-radius: 20px 20px 0 0;
+        transition: all 0.3s ease;
     }
 
     .stat-card:nth-child(1)::before {
-        background: var(--accent-blue);
+        background: linear-gradient(90deg, var(--primary-purple), var(--secondary-purple));
     }
 
     .stat-card:nth-child(2)::before {
-        background: var(--accent-orange);
+        background: linear-gradient(90deg, var(--accent-orange), #d97706);
     }
 
     .stat-card:nth-child(3)::before {
-        background: var(--accent-green);
+        background: linear-gradient(90deg, var(--accent-green), #059669);
     }
 
     .stat-card:nth-child(4)::before {
-        background: var(--accent-red);
+        background: linear-gradient(90deg, var(--accent-blue), #0284c7);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-heavy);
     }
 
     .stat-header {
@@ -256,40 +180,81 @@ require_once '../includes/header-panel.php';
         margin-bottom: 1rem;
     }
 
-    .stat-label {
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-secondary);
-    }
-
     .stat-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 1.5rem;
         color: white;
-        font-size: 1.1rem;
+    }
+
+    .stat-icon:nth-child(1) {
+        background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
+    }
+
+    .stat-icon:nth-child(2) {
+        background: linear-gradient(135deg, var(--accent-orange), #d97706);
+    }
+
+    .stat-icon:nth-child(3) {
+        background: linear-gradient(135deg, var(--accent-green), #059669);
+    }
+
+    .stat-icon:nth-child(4) {
+        background: linear-gradient(135deg, var(--accent-blue), #0284c7);
     }
 
     .stat-number {
         font-size: 2.5rem;
         font-weight: 800;
         color: var(--text-primary);
-        line-height: 1;
+        margin-bottom: 0.5rem;
     }
 
-    .filter-section {
-        background: var(--card-bg);
-        border-radius: 20px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid var(--border-color);
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .content-section {
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-medium);
+        transition: all 0.3s ease;
+    }
+
+    .content-section:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-heavy);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
     }
 
     .filter-row {
@@ -297,6 +262,7 @@ require_once '../includes/header-panel.php';
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.5rem;
         align-items: end;
+        margin-bottom: 2rem;
     }
 
     .filter-group label {
@@ -311,98 +277,39 @@ require_once '../includes/header-panel.php';
     .filter-input {
         width: 100%;
         padding: 0.75rem 1rem;
-        border: 2px solid rgba(139, 92, 246, 0.1);
+        border: 2px solid rgba(99, 102, 241, 0.1);
         border-radius: 12px;
         background: white;
         font-size: 0.875rem;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
     }
 
     .filter-select:focus,
     .filter-input:focus {
         outline: none;
         border-color: var(--primary-purple);
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
     }
 
-    .btn-filter {
+    .btn-gradient {
         background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
-        color: white;
         border: none;
-        padding: 0.75rem 1.5rem;
         border-radius: 12px;
+        color: white;
+        padding: 0.75rem 1.5rem;
         font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-medium);
+        text-decoration: none;
+        display: inline-flex;
         align-items: center;
         gap: 0.5rem;
     }
 
-    .btn-filter:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-    }
-
-    .content-section {
-        background: var(--card-bg);
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid var(--border-color);
-        backdrop-filter: blur(20px);
-    }
-
-    .section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid rgba(139, 92, 246, 0.1);
-    }
-
-    .section-info {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .section-icon {
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-heavy);
         color: white;
-        font-size: 0.9rem;
-    }
-
-    .section-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin: 0;
-    }
-
-    .view-all-btn {
-        background: rgba(139, 92, 246, 0.1);
-        color: var(--primary-purple);
-        border: 1px solid rgba(139, 92, 246, 0.2);
-        padding: 0.5rem 1rem;
-        border-radius: 10px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-
-    .view-all-btn:hover {
-        background: var(--primary-purple);
-        color: white;
-        transform: translateY(-1px);
     }
 
     .solicitud-card {
@@ -410,8 +317,8 @@ require_once '../includes/header-panel.php';
         border-radius: 16px;
         padding: 1.5rem;
         margin-bottom: 1rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        border: 1px solid rgba(139, 92, 246, 0.1);
+        box-shadow: var(--shadow-light);
+        border: 1px solid rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
@@ -424,6 +331,9 @@ require_once '../includes/header-panel.php';
         top: 0;
         bottom: 0;
         width: 4px;
+    }
+
+    .solicitud-card.enviada::before {
         background: var(--accent-orange);
     }
 
@@ -437,7 +347,7 @@ require_once '../includes/header-panel.php';
 
     .solicitud-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--shadow-medium);
     }
 
     .solicitud-header {
@@ -447,55 +357,12 @@ require_once '../includes/header-panel.php';
         margin-bottom: 1rem;
     }
 
-    .solicitud-info h6 {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0 0 0.25rem 0;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .solicitud-info p {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .estado-badge {
-        padding: 0.375rem 0.875rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .estado-enviada {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--accent-orange);
-    }
-
-    .estado-aceptada {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--accent-green);
-    }
-
-    .estado-rechazada {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--accent-red);
-    }
-
     .solicitud-promocion {
-        background: rgba(139, 92, 246, 0.03);
+        background: rgba(99, 102, 241, 0.03);
         border-radius: 12px;
         padding: 1rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid rgba(139, 92, 246, 0.1);
+        margin-bottom: 1rem;
+        border: 1px solid rgba(99, 102, 241, 0.1);
     }
 
     .solicitud-promocion strong {
@@ -518,60 +385,34 @@ require_once '../includes/header-panel.php';
         flex-wrap: wrap;
     }
 
-    .solicitud-actions {
-        display: flex;
-        gap: 0.75rem;
-        justify-content: flex-end;
-    }
-
-    .btn-action {
-        padding: 0.625rem 1.25rem;
-        border: none;
-        border-radius: 10px;
-        font-size: 0.875rem;
+    .estado-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
         font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.25rem;
     }
 
-    .btn-aceptar {
-        background: linear-gradient(135deg, var(--accent-green), #059669);
-        color: white;
+    .estado-enviada {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--accent-orange);
+        border: 1px solid rgba(245, 158, 11, 0.2);
     }
 
-    .btn-aceptar:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    .estado-aceptada {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        border: 1px solid rgba(16, 185, 129, 0.2);
     }
 
-    .btn-rechazar {
-        background: linear-gradient(135deg, var(--accent-red), #dc2626);
-        color: white;
-    }
-
-    .btn-rechazar:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 3rem 2rem;
-        color: var(--text-secondary);
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-
-    .empty-state h4 {
-        margin-bottom: 0.5rem;
-        color: var(--text-primary);
+    .estado-rechazada {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--accent-red);
+        border: 1px solid rgba(239, 68, 68, 0.2);
     }
 
     .category-badge {
@@ -593,17 +434,71 @@ require_once '../includes/header-panel.php';
     }
 
     .category-premium {
-        background: rgba(139, 92, 246, 0.1);
+        background: rgba(99, 102, 241, 0.1);
         color: var(--primary-purple);
     }
 
-    @media (max-width: 768px) {
-        .dashboard-container {
-            padding: 1rem;
-        }
+    .solicitud-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
 
+    .btn-action {
+        padding: 0.625rem 1.25rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-aceptar {
+        background: linear-gradient(135deg, var(--accent-green), #059669);
+    }
+
+    .btn-aceptar:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        color: white;
+    }
+
+    .btn-rechazar {
+        background: linear-gradient(135deg, var(--accent-red), #dc2626);
+    }
+
+    .btn-rechazar:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h4 {
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    @media (max-width: 768px) {
         .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr;
         }
 
         .filter-row {
@@ -625,18 +520,12 @@ require_once '../includes/header-panel.php';
     }
 </style>
 
-<div class="dashboard-container">
-    <!-- Header -->
-    <div class="dashboard-header">
-        <div class="store-info">
-            <div class="store-icon">
-                <i class="fas fa-clipboard-list"></i>
-            </div>
-            <div class="store-details">
-                <h1>Solicitudes</h1>
-                <p class="store-subtitle"><?php echo htmlspecialchars($local_nombre); ?></p>
-            </div>
-        </div>
+<!-- Content Area -->
+<div class="content-area">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Solicitudes</h1>
+        <p class="text-muted">Gestiona las solicitudes de promociones de <?= htmlspecialchars($local_nombre) ?></p>
     </div>
 
     <!-- Alertas -->
@@ -659,7 +548,7 @@ require_once '../includes/header-panel.php';
         <div class="stat-card">
             <div class="stat-header">
                 <div class="stat-label">Total Solicitudes</div>
-                <div class="stat-icon" style="background: var(--accent-blue);">
+                <div class="stat-icon">
                     <i class="fas fa-clipboard-list"></i>
                 </div>
             </div>
@@ -668,8 +557,8 @@ require_once '../includes/header-panel.php';
 
         <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-label">Solicitudes Hoy</div>
-                <div class="stat-icon" style="background: var(--accent-orange);">
+                <div class="stat-label">Pendientes</div>
+                <div class="stat-icon">
                     <i class="fas fa-clock"></i>
                 </div>
             </div>
@@ -678,41 +567,37 @@ require_once '../includes/header-panel.php';
 
         <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-label">Tasa de Aceptación</div>
-                <div class="stat-icon" style="background: var(--accent-green);">
-                    <i class="fas fa-percentage"></i>
+                <div class="stat-label">Aceptadas</div>
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
                 </div>
             </div>
-            <div class="stat-number">
-                <?php
-                $tasa = $stats['total'] > 0 ? round(($stats['aceptadas'] / $stats['total']) * 100, 1) : 0;
-                echo $tasa;
-                ?>%
-            </div>
+            <div class="stat-number"><?= $stats['aceptadas'] ?></div>
         </div>
 
         <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-label">Clientes Únicos</div>
-                <div class="stat-icon" style="background: var(--primary-purple);">
-                    <i class="fas fa-users"></i>
+                <div class="stat-label">Rechazadas</div>
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
                 </div>
             </div>
-            <div class="stat-number">
-                <?php
-                // Calcular clientes únicos
-                $unique_clients = array_unique(array_column($solicitudes, 'codCliente'));
-                echo count($unique_clients);
-                ?>
-            </div>
+            <div class="stat-number"><?= $stats['rechazadas'] ?></div>
         </div>
     </div>
 
     <!-- Filtros -->
-    <div class="filter-section">
+    <div class="content-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-filter"></i>
+                Filtrar Solicitudes
+            </h3>
+        </div>
+
         <form method="GET" class="filter-row">
             <div class="filter-group">
-                <label>Filtrar por estado</label>
+                <label>Estado</label>
                 <select name="estado" class="filter-select">
                     <option value="todas" <?= $filtro_estado == 'todas' ? 'selected' : '' ?>>Todas las solicitudes</option>
                     <option value="enviada" <?= $filtro_estado == 'enviada' ? 'selected' : '' ?>>Pendientes</option>
@@ -728,13 +613,14 @@ require_once '../includes/header-panel.php';
             </div>
 
             <div class="filter-group">
-                <button type="submit" class="btn-filter">
+                <button type="submit" class="btn-gradient">
                     <i class="fas fa-filter"></i> Aplicar
                 </button>
             </div>
 
             <div class="filter-group">
-                <a href="mis_solicitudes.php" class="view-all-btn">
+                <a href="mis_solicitudes.php" class="btn-gradient"
+                    style="background: rgba(107, 114, 128, 0.1); color: var(--text-secondary);">
                     <i class="fas fa-times"></i> Limpiar
                 </a>
             </div>
@@ -744,20 +630,26 @@ require_once '../includes/header-panel.php';
     <!-- Lista de solicitudes -->
     <div class="content-section">
         <div class="section-header">
-            <div class="section-info">
-                <div class="section-icon">
-                    <i class="fas fa-list"></i>
-                </div>
-                <h3 class="section-title">Solicitudes Recientes</h3>
+            <h3 class="section-title">
+                <i class="fas fa-list"></i>
+                Solicitudes Recientes
+            </h3>
+            <div style="color: var(--text-secondary); font-size: 0.875rem;">
+                <?= count($solicitudes) ?> solicitudes
             </div>
-            <div class="view-all-btn"><?= count($solicitudes) ?> solicitudes</div>
         </div>
 
         <?php if (empty($solicitudes)): ?>
             <div class="empty-state">
                 <i class="fas fa-clipboard-list"></i>
                 <h4>No hay solicitudes</h4>
-                <p>No se encontraron solicitudes con los filtros aplicados</p>
+                <p>
+                    <?php if (!empty($busqueda) || $filtro_estado != 'todas'): ?>
+                        No se encontraron solicitudes con los filtros aplicados
+                    <?php else: ?>
+                        No hay solicitudes de promociones pendientes
+                    <?php endif; ?>
+                </p>
             </div>
         <?php else: ?>
             <?php foreach ($solicitudes as $solicitud): ?>
@@ -812,6 +704,25 @@ require_once '../includes/header-panel.php';
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Animación de números en estadísticas
+        const statNumbers = document.querySelectorAll('.stat-number');
+        statNumbers.forEach(stat => {
+            const finalValue = parseInt(stat.textContent);
+            if (!isNaN(finalValue) && finalValue > 0) {
+                let currentValue = 0;
+                const increment = Math.ceil(finalValue / 30);
+                const timer = setInterval(() => {
+                    currentValue += increment;
+                    if (currentValue >= finalValue) {
+                        stat.textContent = finalValue;
+                        clearInterval(timer);
+                    } else {
+                        stat.textContent = currentValue;
+                    }
+                }, 50);
+            }
+        });
+
         // Animación de entrada para las tarjetas
         const cards = document.querySelectorAll('.solicitud-card');
 
@@ -833,27 +744,6 @@ require_once '../includes/header-panel.php';
             observer.observe(card);
         });
 
-        // Animación de números en estadísticas
-        const statNumbers = document.querySelectorAll('.stat-number');
-        statNumbers.forEach(stat => {
-            const text = stat.textContent;
-            const finalValue = parseInt(text);
-
-            if (!isNaN(finalValue) && finalValue > 0) {
-                let currentValue = 0;
-                const increment = Math.ceil(finalValue / 30);
-                const timer = setInterval(() => {
-                    currentValue += increment;
-                    if (currentValue >= finalValue) {
-                        stat.textContent = text; // Mantener formato original (ej: porcentaje)
-                        clearInterval(timer);
-                    } else {
-                        stat.textContent = currentValue + (text.includes('%') ? '%' : '');
-                    }
-                }, 50);
-            }
-        });
-
         // Confirmación para rechazar solicitudes
         const rechazarBtns = document.querySelectorAll('button[name="rechazar_solicitud"]');
         rechazarBtns.forEach(btn => {
@@ -863,42 +753,7 @@ require_once '../includes/header-panel.php';
                 }
             });
         });
-
-        // Auto-refresh para solicitudes pendientes cada 30 segundos
-        if (window.location.search.includes('estado=enviada') || !window.location.search.includes('estado=')) {
-            setInterval(() => {
-                // Solo si hay solicitudes pendientes y no hay formularios siendo enviados
-                const pendingRequests = document.querySelectorAll('.estado-enviada').length;
-                if (pendingRequests > 0 && !document.querySelector('form[method="POST"]').classList.contains('submitting')) {
-                    // Actualizar silenciosamente
-                    fetch(window.location.href)
-                        .then(response => response.text())
-                        .then(html => {
-                            const parser = new DOMParser();
-                            const newDoc = parser.parseFromString(html, 'text/html');
-                            const newContent = newDoc.querySelector('.content-section');
-                            const currentContent = document.querySelector('.content-section');
-                            if (newContent && currentContent) {
-                                currentContent.innerHTML = newContent.innerHTML;
-                            }
-                        })
-                        .catch(() => {
-                            // Silenciar errores de red
-                        });
-                }
-            }, 30000);
-        }
-
-        // Marcar formulario como enviándose
-        document.querySelectorAll('form[method="POST"]').forEach(form => {
-            form.addEventListener('submit', function () {
-                this.classList.add('submitting');
-                const btn = this.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-            });
-        });
     });
 </script>
 
-<?php require_once '../includes/footer-panel.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer-panel.php'; ?>

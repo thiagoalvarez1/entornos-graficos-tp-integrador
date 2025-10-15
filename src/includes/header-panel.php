@@ -1,20 +1,43 @@
 <?php
-// includes/header-panel.php - Header especial para paneles de Admin y Dueño
+// includes/header-panel.php - Header optimizado para paneles
 
-// Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Determinar si el usuario está logueado
+// Determinar usuario y panel
 $isLoggedIn = isset($_SESSION['user_id']);
 $userType = $isLoggedIn ? $_SESSION['user_type'] : '';
 $userEmail = $isLoggedIn ? $_SESSION['user_email'] : '';
 
-// Determinar el tipo de panel
-$isAdminPanel = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
-$isDuenoPanel = strpos($_SERVER['REQUEST_URI'], '/dueno/') !== false;
+$currentUri = $_SERVER['REQUEST_URI'];
+$isAdminPanel = strpos($currentUri, '/admin/') !== false;
+$isDuenoPanel = strpos($currentUri, '/dueno/') !== false;
 $panelType = $isAdminPanel ? 'admin' : ($isDuenoPanel ? 'dueno' : '');
+
+// Configuración del panel
+$panelConfig = [
+    'admin' => [
+        'title' => 'Panel de Administración',
+        'menu' => [
+            ['icon' => 'fa-store', 'text' => 'Gestión de Locales', 'link' => 'gestion-locales.php'],
+            ['icon' => 'fa-user-check', 'text' => 'Validar Dueños', 'link' => 'validar-duenos.php'],
+            ['icon' => 'fa-tags', 'text' => 'Gestión de Promociones', 'link' => 'gestion_promociones.php'],
+            ['icon' => 'fa-bullhorn', 'text' => 'Novedades', 'link' => 'gestion_novedades.php'],
+            ['icon' => 'fa-chart-bar', 'text' => 'Reportes', 'link' => 'reportes.php']
+        ]
+    ],
+    'dueno' => [
+        'title' => 'Panel de Dueño',
+        'menu' => [
+            ['icon' => 'fa-tags', 'text' => 'Mis Promociones', 'link' => 'mis_promociones.php'],
+            ['icon' => 'fa-clipboard-check', 'text' => 'Solicitudes', 'link' => 'mis_solicitudes.php'],
+            ['icon' => 'fa-chart-line', 'text' => 'Estadísticas', 'link' => 'estadisticas.php']
+        ]
+    ]
+];
+
+$currentPage = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -22,284 +45,256 @@ $panelType = $isAdminPanel ? 'admin' : ($isDuenoPanel ? 'dueno' : '');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>PromoShopping</title>
+    <title><?= isset($pageTitle) ? "$pageTitle - " : '' ?>PromoShopping</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --primary: #2c3e50;
+            --primary-light: #34495e;
             --secondary: #e74c3c;
             --accent: #3498db;
-            --light: #ecf0f1;
-            --dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --text-muted: rgba(255, 255, 255, 0.7);
+            --hover-bg: rgba(255, 255, 255, 0.15);
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: #f8f9fa;
-            color: #333;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
         }
 
-        /* Panel Navbar */
+        /* Layout Principal */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
 
         /* Sidebar */
         .sidebar {
-            background: linear-gradient(135deg, var(--primary) 0%, #34495e 100%);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            padding-top: 80px;
             width: 250px;
-            left: 0;
-            top: 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: var(--text-light);
+            position: fixed;
+            height: 100vh;
             z-index: 1000;
-            transition: all 0.3s ease;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+            box-shadow: var(--shadow);
         }
 
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            padding: 0.75rem 1rem;
+            margin: 0.25rem 0.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: var(--hover-bg);
+            color: var(--text-light);
+            border-left-color: var(--accent);
+            transform: translateX(5px);
+        }
+
+        .nav-link i {
+            width: 20px;
+            margin-right: 0.75rem;
+            text-align: center;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 1rem 0.5rem;
+        }
+
+        /* Contenido Principal */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+            transition: var(--transition);
+            min-height: 100vh;
+        }
+
+        /* Estados del Sidebar */
         .sidebar.collapsed {
             width: 60px;
         }
 
-        .sidebar.collapsed .nav-link span {
+        .sidebar.collapsed .nav-link span,
+        .sidebar.collapsed .sidebar-subtitle {
             display: none;
         }
 
         .sidebar.collapsed .nav-link i {
             margin-right: 0;
-            font-size: 1.3rem;
-        }
-
-        .sidebar.collapsed .sidebar-brand-text {
-            display: none;
-        }
-
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            padding: 12px 15px;
-            margin: 5px 10px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.15);
-            color: white;
-            transform: translateX(5px);
-        }
-
-        .sidebar .nav-link i {
-            margin-right: 12px;
-            width: 20px;
-            text-align: center;
-            transition: margin-right 0.3s ease;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 250px;
-            padding: 30px;
-            padding-top: 90px;
-            transition: all 0.3s ease;
-            min-height: 100vh;
+            font-size: 1.1rem;
         }
 
         .sidebar.collapsed~.main-content {
             margin-left: 60px;
         }
 
-        /* Cards */
-        .card-dashboard {
-            transition: transform 0.3s, box-shadow 0.3s;
+        /* Componentes */
+        .card-panel {
             border: none;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
         }
 
-        .card-dashboard:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        .card-panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
-        /* Badges */
-        .badge-pendiente {
-            background-color: #f39c12;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 6px;
+        .badge-status {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
         }
 
-        .badge-aprobado {
-            background-color: #2ecc71;
+        .badge-pending {
+            background: #f39c12;
             color: white;
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
         }
 
-        .badge-rechazado {
-            background-color: #e74c3c;
+        .badge-approved {
+            background: #2ecc71;
             color: white;
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
+        }
+
+        .badge-rejected {
+            background: #e74c3c;
+            color: white;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
-                left: -250px;
+                transform: translateX(-100%);
             }
 
-            .sidebar.show {
-                left: 0;
-            }
-
-            .panel-navbar {
-                left: 0;
+            .sidebar.mobile-open {
+                transform: translateX(0);
             }
 
             .main-content {
                 margin-left: 0;
-                padding: 20px;
-                padding-top: 80px;
+                padding: 1rem;
             }
 
-            .sidebar.collapsed~.main-content {
-                margin-left: 0;
+            .mobile-toggle {
+                display: block !important;
             }
+        }
+
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 0.5rem;
         }
     </style>
 </head>
 
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="text-center mb-4 p-3">
-            <h5 class="text-white mb-1">PromoShopping</h5>
-            <p class="text-muted small sidebar-brand-text">
-                <?php echo $panelType === 'admin' ? 'Panel de Administración' : 'Panel de Dueño'; ?>
-            </p>
-        </div>
-        <ul class="nav flex-column">
-            <!-- Menú común para ambos -->
-            <li class="nav-item">
-                <a class="nav-link active" href="panel.php">
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">PromoShopping</div>
+                <?php if ($panelType && isset($panelConfig[$panelType])): ?>
+                    <div class="sidebar-subtitle"><?= $panelConfig[$panelType]['title'] ?></div>
+                <?php endif; ?>
+            </div>
+
+            <nav class="sidebar-menu">
+                <!-- Dashboard común -->
+                <a class="nav-link <?= $currentPage === 'panel.php' ? 'active' : '' ?>" href="panel.php">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
-            </li>
 
-            <?php if ($panelType === 'admin'): ?>
-                <!-- Menú específico para ADMIN -->
-                <li class="nav-item">
-                    <a class="nav-link" href="gestion-locales.php">
-                        <i class="fas fa-store"></i> Gestión de Locales
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="validar-duenos.php">
-                        <i class="fas fa-user-check"></i> Validar Dueños
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="gestion_promociones.php">
-                        <i class="fas fa-tags"></i> Gestión de Promociones
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="gestion_novedades.php">
-                        <i class="fas fa-bullhorn"></i> Novedades
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="reportes.php">
-                        <i class="fas fa-chart-bar"></i> Reportes
-                    </a>
-                </li>
-                <li class="nav-item mt-4">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-cog"></i> Configuración
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="../logout.php">
-                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                    </a>
-                </li>
-            <?php endif; ?>
+                <!-- Menú específico del panel -->
+                <?php if ($panelType && isset($panelConfig[$panelType])): ?>
+                    <?php foreach ($panelConfig[$panelType]['menu'] as $item): ?>
+                        <a class="nav-link <?= $currentPage === $item['link'] ? 'active' : '' ?>" href="<?= $item['link'] ?>">
+                            <i class="fas <?= $item['icon'] ?>"></i>
+                            <span><?= $item['text'] ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                <?php endif; ?>
 
-            <?php if ($panelType === 'dueno'): ?>
-                <!-- Menú específico para DUEÑO -->
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-tags"></i>
-                        <span>Mis Promociones</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-clipboard-check"></i>
-                        <span>Solicitudes</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Estadísticas</span>
-                    </a>
-                </li>
-            <?php endif; ?>
+                <div class="menu-divider"></div>
 
-            <!-- Menú común para ambos -->
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-bullhorn"></i>
-                    <span>Novedades</span>
-                </a>
-            </li>
-            <li class="nav-item">
+                <!-- Menú común -->
                 <a class="nav-link" href="#">
                     <i class="fas fa-cog"></i>
                     <span>Configuración</span>
                 </a>
-            </li>
 
-            <li class="nav-item mt-3">
-                <a class="nav-link" href="<?php echo SITE_URL; ?>index.php">
+                <a class="nav-link" href="<?= SITE_URL ?>index.php">
                     <i class="fas fa-home"></i>
                     <span>Volver al Sitio</span>
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<?php echo SITE_URL; ?>logout.php">
+
+                <a class="nav-link text-danger" href="<?= SITE_URL ?>logout.php">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Cerrar Sesión</span>
                 </a>
-            </li>
-        </ul>
-    </div>
+            </nav>
+        </aside>
 
-    <!-- Main Content -->
+        <!-- Botón móvil -->
+        <button class="mobile-toggle" id="mobileToggle">
+            <i class="fas fa-bars"></i>
+        </button>
 
-    <!-- Panel Navbar -->
+        <!-- Contenido Principal -->
+        <main class="main-content">

@@ -1,5 +1,17 @@
+<?php
+require_once '../includes/config.php';
+require_once '../includes/auth.php';
+
+$auth = new Auth();
+$auth->checkAccess(['administrador']);
+
+$pageTitle = "Reportes y Estadísticas";
+require_once '../includes/header-panel.php';
+?>
+
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -82,10 +94,21 @@
             background: var(--accent-color);
         }
 
-        .stat-card.clients::before { background: linear-gradient(135deg, #667eea, #764ba2); }
-        .stat-card.owners::before { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .stat-card.promos::before { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-        .stat-card.uses::before { background: linear-gradient(135deg, #fa709a, #fee140); }
+        .stat-card.clients::before {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .stat-card.owners::before {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .stat-card.promos::before {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+
+        .stat-card.uses::before {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+        }
 
         .stat-header {
             display: flex;
@@ -105,10 +128,21 @@
             color: white;
         }
 
-        .stat-icon.clients { background: linear-gradient(135deg, #667eea, #764ba2); }
-        .stat-icon.owners { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .stat-icon.promos { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-        .stat-icon.uses { background: linear-gradient(135deg, #fa709a, #fee140); }
+        .stat-icon.clients {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .stat-icon.owners {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .stat-icon.promos {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+
+        .stat-icon.uses {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+        }
 
         .stat-content {
             flex: 1;
@@ -304,24 +338,25 @@
             .container {
                 padding: 15px;
             }
-            
+
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .header h1 {
                 font-size: 1.8rem;
             }
-            
+
             .stat-number {
                 font-size: 2.2rem;
             }
-            
+
             .table-container {
                 font-size: 0.9rem;
             }
-            
-            th, td {
+
+            th,
+            td {
                 padding: 12px 8px;
             }
 
@@ -331,6 +366,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -355,7 +391,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="stat-card owners">
                 <div class="stat-header">
                     <div class="stat-content">
@@ -367,7 +403,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="stat-card promos">
                 <div class="stat-header">
                     <div class="stat-content">
@@ -379,7 +415,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="stat-card uses">
                 <div class="stat-header">
                     <div class="stat-content">
@@ -502,30 +538,33 @@
                             </div>
                             <div>
                                 <div style="font-weight: 600; margin-bottom: 4px;">Exportar Promociones</div>
-                                <div style="font-size: 0.85rem; color: #718096;">Lista completa de promociones del sistema</div>
+                                <div style="font-size: 0.85rem; color: #718096;">Lista completa de promociones del
+                                    sistema</div>
                             </div>
                         </a>
-                        
+
                         <a href="exportar_reportes.php?tipo=usuarios" class="export-item">
                             <div class="export-icon">
                                 <i class="fas fa-users"></i>
                             </div>
                             <div>
                                 <div style="font-weight: 600; margin-bottom: 4px;">Exportar Usuarios</div>
-                                <div style="font-size: 0.85rem; color: #718096;">Información de todos los usuarios registrados</div>
+                                <div style="font-size: 0.85rem; color: #718096;">Información de todos los usuarios
+                                    registrados</div>
                             </div>
                         </a>
-                        
+
                         <a href="exportar_reportes.php?tipo=locales" class="export-item">
                             <div class="export-icon">
                                 <i class="fas fa-store"></i>
                             </div>
                             <div>
                                 <div style="font-weight: 600; margin-bottom: 4px;">Exportar Locales</div>
-                                <div style="font-size: 0.85rem; color: #718096;">Datos de locales comerciales registrados</div>
+                                <div style="font-size: 0.85rem; color: #718096;">Datos de locales comerciales
+                                    registrados</div>
                             </div>
                         </a>
-                        
+
                         <a href="exportar_reportes.php?tipo=usos" class="export-item">
                             <div class="export-icon">
                                 <i class="fas fa-chart-bar"></i>
@@ -554,12 +593,12 @@
         // Animación de contadores
         function animateCounters() {
             const counters = document.querySelectorAll('.stat-number');
-            
+
             counters.forEach(counter => {
                 const target = parseInt(counter.textContent);
                 let current = 0;
                 const increment = target / 50;
-                
+
                 const updateCounter = () => {
                     if (current < target) {
                         current += increment;
@@ -569,43 +608,43 @@
                         counter.textContent = target;
                     }
                 };
-                
+
                 updateCounter();
             });
         }
 
         // Efectos de hover para las tarjetas de estadísticas
         document.querySelectorAll('.stat-card').forEach(card => {
-            card.addEventListener('mouseenter', function() {
+            card.addEventListener('mouseenter', function () {
                 this.style.transform = 'translateY(-8px) scale(1.02)';
             });
-            
-            card.addEventListener('mouseleave', function() {
+
+            card.addEventListener('mouseleave', function () {
                 this.style.transform = 'translateY(0) scale(1)';
             });
         });
 
         // Simulación de carga de datos
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             setTimeout(animateCounters, 500);
         });
 
         // Efecto de clic en enlaces de exportación
         document.querySelectorAll('.export-item').forEach(item => {
-            item.addEventListener('click', function(e) {
+            item.addEventListener('click', function (e) {
                 e.preventDefault();
-                
+
                 // Efecto visual de descarga
                 const originalText = this.innerHTML;
                 const icon = this.querySelector('.export-icon i');
-                
+
                 icon.className = 'fas fa-spinner fa-spin';
-                
+
                 setTimeout(() => {
                     icon.className = 'fas fa-check';
                     this.style.background = 'linear-gradient(135deg, #48bb78, #38a169)';
                 }, 1000);
-                
+
                 setTimeout(() => {
                     this.innerHTML = originalText;
                     this.style.background = '';
@@ -614,4 +653,5 @@
         });
     </script>
 </body>
+
 </html>

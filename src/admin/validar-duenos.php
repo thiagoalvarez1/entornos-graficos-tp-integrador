@@ -1,4 +1,15 @@
 <?php
+require_once '../includes/config.php';
+require_once '../includes/auth.php';
+
+$auth = new Auth();
+$auth->checkAccess(['administrador']);
+
+$pageTitle = "Reportes y Estadísticas";
+require_once '../includes/header-panel.php';
+?>
+
+<?php
 // Conexión a la base de datos
 $servername = "localhost";
 $username = "root";
@@ -28,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['usuario_id']) && isse
     if ($usuario_id <= 0) {
         die("Error: ID de usuario inválido");
     }
+    error_log("ID que se intentará actualizar: " . $usuario_id);
 
     // Determinar el nuevo estado según la acción
     if ($accion === 'aprobar') {
@@ -473,10 +485,10 @@ $result_aprobados = $conn->query($sql_aprobados);
 
         <!-- Mostrar mensaje de éxito -->
         <?php if (isset($_GET['success']) && $_GET['success'] == '1'): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?php echo htmlspecialchars($_GET['mensaje'] ?? 'Operación realizada correctamente'); ?>
-            </div>
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        <?php echo htmlspecialchars($_GET['mensaje'] ?? 'Operación realizada correctamente'); ?>
+                    </div>
         <?php endif; ?>
 
         <!-- Estadísticas -->
@@ -538,76 +550,76 @@ $result_aprobados = $conn->query($sql_aprobados);
             </div>
             <div class="card-body">
                 <?php if ($result_pendientes && $result_pendientes->num_rows > 0): ?>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Usuario</th>
-                                    <th>Fecha de Registro</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($row = $result_pendientes->fetch_assoc()): ?>
-                                    <tr>
-                                        <td>
-                                            <div class="user-info">
-                                                <div class="user-avatar">
-                                                    <?php echo strtoupper(substr(explode('@', $row['nombreUsuario'])[0], 0, 2)); ?>
-                                                </div>
-                                                <div class="user-details">
-                                                    <div class="user-email"><?php echo $row['nombreUsuario']; ?></div>
-                                                    <div class="user-id">ID: <?php echo $row['codUsuario']; ?></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="date-badge">
-                                                <i class="fas fa-calendar-alt"></i>
-                                                <?php echo date('d/m/Y', strtotime($row['fechaRegistro'])); ?>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="status-indicator status-pending"></span>
-                                            Pendiente
-                                        </td>
-                                        <td class="actions-cell">
-                                            <!-- FORMULARIOS QUE SÍ SE ENVIAN AL SERVIDOR -->
-                                            <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="usuario_id"
-                                                    value="<?php echo $row['codUsuario']; ?>">
-                                                <input type="hidden" name="accion" value="aprobar">
-                                                <button type="submit" class="btn btn-success">
-                                                    <i class="fas fa-check"></i> Aprobar
-                                                </button>
-                                            </form>
-                                            <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="usuario_id"
-                                                    value="<?php echo $row['codUsuario']; ?>">
-                                                <input type="hidden" name="accion" value="rechazar">
-                                                <button type="submit" class="btn btn-danger"
-                                                    onclick="return confirm('¿Estás seguro de rechazar este dueño?')">
-                                                    <i class="fas fa-times"></i> Rechazar
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Usuario</th>
+                                            <th>Fecha de Registro</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php while ($row = $result_pendientes->fetch_assoc()): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="user-info">
+                                                                <div class="user-avatar">
+                                                                    <?php echo strtoupper(substr(explode('@', $row['nombreUsuario'])[0], 0, 2)); ?>
+                                                                </div>
+                                                                <div class="user-details">
+                                                                    <div class="user-email"><?php echo $row['nombreUsuario']; ?></div>
+                                                                    <div class="user-id">ID: <?php echo $row['codUsuario']; ?></div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="date-badge">
+                                                                <i class="fas fa-calendar-alt"></i>
+                                                                <?php echo date('d/m/Y', strtotime($row['fechaRegistro'])); ?>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <span class="status-indicator status-pending"></span>
+                                                            Pendiente
+                                                        </td>
+                                                        <td class="actions-cell">
+                                                            <!-- FORMULARIOS QUE SÍ SE ENVIAN AL SERVIDOR -->
+                                                            <form method="POST" style="display: inline;">
+                                                                <input type="hidden" name="usuario_id"
+                                                                    value="<?php echo $row['codUsuario']; ?>">
+                                                                <input type="hidden" name="accion" value="aprobar">
+                                                                <button type="submit" class="btn btn-success">
+                                                                    <i class="fas fa-check"></i> Aprobar
+                                                                </button>
+                                                            </form>
+                                                            <form method="POST" style="display: inline;">
+                                                                <input type="hidden" name="usuario_id"
+                                                                    value="<?php echo $row['codUsuario']; ?>">
+                                                                <input type="hidden" name="accion" value="rechazar">
+                                                                <button type="submit" class="btn btn-danger"
+                                                                    onclick="return confirm('¿Estás seguro de rechazar este dueño?')">
+                                                                    <i class="fas fa-times"></i> Rechazar
+                                                                </button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                        <?php endwhile; ?>
+                                    </tbody>
+                                </table>
+                            </div>
                 <?php else: ?>
-                    <div class="empty-state">
-                        <div class="empty-icon">
-                            <i class="fas fa-user-check"></i>
-                        </div>
-                        <div class="empty-title">¡Todo al día!</div>
-                        <div class="empty-description">
-                            No hay dueños pendientes de validación en este momento.<br>
-                            Todas las solicitudes han sido procesadas.
-                        </div>
-                    </div>
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <div class="empty-title">¡Todo al día!</div>
+                                <div class="empty-description">
+                                    No hay dueños pendientes de validación en este momento.<br>
+                                    Todas las solicitudes han sido procesadas.
+                                </div>
+                            </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -620,66 +632,66 @@ $result_aprobados = $conn->query($sql_aprobados);
             </div>
             <div class="card-body">
                 <?php if ($result_aprobados && $result_aprobados->num_rows > 0): ?>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Usuario</th>
-                                    <th>Fecha de Registro</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($row = $result_aprobados->fetch_assoc()): ?>
-                                    <tr>
-                                        <td>
-                                            <div class="user-info">
-                                                <div class="user-avatar">
-                                                    <?php echo strtoupper(substr(explode('@', $row['nombreUsuario'])[0], 0, 2)); ?>
-                                                </div>
-                                                <div class="user-details">
-                                                    <div class="user-email"><?php echo $row['nombreUsuario']; ?></div>
-                                                    <div class="user-id">ID: <?php echo $row['codUsuario']; ?></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="date-badge">
-                                                <i class="fas fa-calendar-alt"></i>
-                                                <?php echo date('d/m/Y', strtotime($row['fechaRegistro'])); ?>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="status-indicator status-approved"></span>
-                                            Aprobado
-                                        </td>
-                                        <td class="actions-cell">
-                                            <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="usuario_id"
-                                                    value="<?php echo $row['codUsuario']; ?>">
-                                                <input type="hidden" name="accion" value="revocar">
-                                                <button type="submit" class="btn btn-danger"
-                                                    onclick="return confirm('¿Estás seguro de revocar la aprobación?')">
-                                                    <i class="fas fa-undo"></i> Revocar
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Usuario</th>
+                                            <th>Fecha de Registro</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php while ($row = $result_aprobados->fetch_assoc()): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="user-info">
+                                                                <div class="user-avatar">
+                                                                    <?php echo strtoupper(substr(explode('@', $row['nombreUsuario'])[0], 0, 2)); ?>
+                                                                </div>
+                                                                <div class="user-details">
+                                                                    <div class="user-email"><?php echo $row['nombreUsuario']; ?></div>
+                                                                    <div class="user-id">ID: <?php echo $row['codUsuario']; ?></div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="date-badge">
+                                                                <i class="fas fa-calendar-alt"></i>
+                                                                <?php echo date('d/m/Y', strtotime($row['fechaRegistro'])); ?>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <span class="status-indicator status-approved"></span>
+                                                            Aprobado
+                                                        </td>
+                                                        <td class="actions-cell">
+                                                            <form method="POST" style="display: inline;">
+                                                                <input type="hidden" name="usuario_id"
+                                                                    value="<?php echo $row['codUsuario']; ?>">
+                                                                <input type="hidden" name="accion" value="revocar">
+                                                                <button type="submit" class="btn btn-danger"
+                                                                    onclick="return confirm('¿Estás seguro de revocar la aprobación?')">
+                                                                    <i class="fas fa-undo"></i> Revocar
+                                                                </button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                        <?php endwhile; ?>
+                                    </tbody>
+                                </table>
+                            </div>
                 <?php else: ?>
-                    <div class="empty-state">
-                        <div class="empty-icon">
-                            <i class="fas fa-user-times"></i>
-                        </div>
-                        <div class="empty-title">No hay dueños aprobados</div>
-                        <div class="empty-description">
-                            No hay dueños con aprobación en este momento.
-                        </div>
-                    </div>
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fas fa-user-times"></i>
+                                </div>
+                                <div class="empty-title">No hay dueños aprobados</div>
+                                <div class="empty-description">
+                                    No hay dueños con aprobación en este momento.
+                                </div>
+                            </div>
                 <?php endif; ?>
             </div>
         </div>

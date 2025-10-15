@@ -833,12 +833,6 @@ require_once '../includes/header-panel.php';
             </button>
             <div class="d-flex align-items-center">
                 <div class="dropdown">
-                    <a href="#" class="dropdown-toggle text-dark text-decoration-none" id="userDropdown" role="button"
-                        data-bs-toggle="dropdown">
-                        <img src="https://ui-avatars.com/api/?name=Maria+Gonzalez&background=6366f1&color=fff&size=32"
-                            class="rounded-circle me-2" width="32" height="32">
-                        <span>María González</span>
-                    </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i> Perfil</a></li>
                         <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Configuración</a></li>
@@ -885,6 +879,7 @@ require_once '../includes/header-panel.php';
                 </div>
             </div>
         </div>
+
 
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card-dashboard card border-left-success shadow h-100 py-2">

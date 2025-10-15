@@ -1,3 +1,97 @@
+<?php
+require_once '../includes/config.php';
+require_once '../includes/auth.php';
+require_once '../includes/database.php';
+
+$auth = new Auth();
+$auth->checkAccess(['administrador']);
+
+$database = new Database();
+$conn = $database->getConnection();
+
+$pageTitle = "Gestión de Promociones";
+require_once '../includes/header-panel.php';
+
+// Procesar aprobación/rechazo de promociones
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['accion']) && isset($_POST['promocion_id'])) {
+        $codPromo = $_POST['promocion_id'];
+        $accion = $_POST['accion'];
+
+        if ($accion == 'aprobar') {
+            $estado = 'aprobada';
+            $mensaje = "Promoción aprobada correctamente";
+        } elseif ($accion == 'rechazar') {
+            $estado = 'denegada';
+            $mensaje = "Promoción rechazada correctamente";
+        }
+
+        $query = "UPDATE promociones SET estadoPromo = :estado WHERE codPromo = :codPromo";
+        $stmt = $conn->prepare($query);
+        $stmt->bindParam(':estado', $estado);
+        $stmt->bindParam(':codPromo', $codPromo);
+
+        if ($stmt->execute()) {
+            $success = $mensaje;
+        } else {
+            $error = "Error al procesar la promoción";
+        }
+    }
+}
+
+// Obtener estadísticas
+$query_stats = "SELECT 
+    COUNT(*) as total,
+    SUM(CASE WHEN estadoPromo = 'pendiente' THEN 1 ELSE 0 END) as pendientes,
+    SUM(CASE WHEN estadoPromo = 'aprobada' THEN 1 ELSE 0 END) as activas,
+    SUM(CASE WHEN estadoPromo = 'denegada' THEN 1 ELSE 0 END) as rechazadas
+    FROM promociones";
+$stmt_stats = $conn->prepare($query_stats);
+$stmt_stats->execute();
+$stats = $stmt_stats->fetch(PDO::FETCH_ASSOC);
+
+// Obtener promociones pendientes con información del local
+$query_pendientes = "SELECT 
+    p.codPromo,
+    p.textoPromo,
+    p.fechaDesdePromo,
+    p.fechaHastaPromo,
+    p.categoriaCliente,
+    p.diasSemana,
+    p.estadoPromo,
+    p.fechaCreacion,
+    l.nombreLocal,
+    l.ubicacionLocal,
+    u.nombreUsuario as email_dueno
+    FROM promociones p
+    JOIN locales l ON p.codLocal = l.codLocal
+    JOIN usuarios u ON l.codUsuario = u.codUsuario
+    WHERE p.estadoPromo = 'pendiente'
+    ORDER BY p.fechaCreacion DESC";
+$stmt_pendientes = $conn->prepare($query_pendientes);
+$stmt_pendientes->execute();
+$promociones_pendientes = $stmt_pendientes->fetchAll(PDO::FETCH_ASSOC);
+
+// Obtener promociones activas (últimas 20)
+$query_activas = "SELECT 
+    p.codPromo,
+    p.textoPromo,
+    p.fechaDesdePromo,
+    p.fechaHastaPromo,
+    p.categoriaCliente,
+    p.estadoPromo,
+    l.nombreLocal
+    FROM promociones p
+    JOIN locales l ON p.codLocal = l.codLocal
+    WHERE p.estadoPromo = 'aprobada' 
+    AND p.fechaHastaPromo >= CURDATE()
+    ORDER BY p.fechaCreacion DESC
+    LIMIT 20";
+$stmt_activas = $conn->prepare($query_activas);
+$stmt_activas->execute();
+$promociones_activas = $stmt_activas->fetchAll(PDO::FETCH_ASSOC);
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -253,6 +347,11 @@
             color: white;
         }
 
+        .badge-denied {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+        }
+
         .promo-text {
             max-width: 300px;
             overflow: hidden;
@@ -287,12 +386,31 @@
         }
 
         .category-tag {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
             padding: 4px 8px;
             border-radius: 6px;
             font-size: 0.8rem;
             font-weight: 500;
+        }
+
+        .category-inicial {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .category-medium {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .category-premium {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .dias-semana {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-top: 4px;
         }
 
         @media (max-width: 768px) {
@@ -331,6 +449,21 @@
             </h1>
         </div>
 
+        <!-- Alertas -->
+        <?php if (!empty($success)): ?>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <?php echo $success; ?>
+                </div>
+        <?php endif; ?>
+
+        <?php if (!empty($error)): ?>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <?php echo $error; ?>
+                </div>
+        <?php endif; ?>
+
         <!-- Estadísticas -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -339,7 +472,7 @@
                         <i class="fas fa-clock"></i>
                     </div>
                     <div>
-                        <div class="stat-number">5</div>
+                        <div class="stat-number"><?= $stats['pendientes'] ?></div>
                         <div class="stat-label">Pendientes</div>
                     </div>
                 </div>
@@ -351,7 +484,7 @@
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <div>
-                        <div class="stat-number">18</div>
+                        <div class="stat-number"><?= $stats['activas'] ?></div>
                         <div class="stat-label">Activas</div>
                     </div>
                 </div>
@@ -363,7 +496,7 @@
                         <i class="fas fa-times-circle"></i>
                     </div>
                     <div>
-                        <div class="stat-number">3</div>
+                        <div class="stat-number"><?= $stats['rechazadas'] ?></div>
                         <div class="stat-label">Rechazadas</div>
                     </div>
                 </div>
@@ -375,16 +508,11 @@
                         <i class="fas fa-chart-bar"></i>
                     </div>
                     <div>
-                        <div class="stat-number">26</div>
+                        <div class="stat-number"><?= $stats['total'] ?></div>
                         <div class="stat-label">Total</div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Alertas de ejemplo -->
-        <div class="alert alert-success" style="display: none;">
-            Promoción aprobada correctamente
         </div>
 
         <!-- Promociones Pendientes -->
@@ -404,124 +532,68 @@
                                 <th>Dueño</th>
                                 <th>Vigencia</th>
                                 <th>Categoría</th>
+                                <th>Días</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td><strong>001</strong></td>
-                                <td>
-                                    <div class="promo-text">
-                                        20% descuento en toda la colección de invierno
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="local-info">
-                                        <div class="local-name">Fashion Store</div>
-                                        <div class="local-location">Planta Baja, Local 12</div>
-                                    </div>
-                                </td>
-                                <td class="owner-info">maria@fashionstore.com</td>
-                                <td class="date-range">
-                                    15/08/2025 - 30/08/2025
-                                </td>
-                                <td>
-                                    <div class="category-tag">Premium</div>
-                                </td>
-                                <td>
-                                    <form style="display: inline;">
-                                        <input type="hidden" name="promocion_id" value="001">
-                                        <input type="hidden" name="accion" value="aprobar">
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fas fa-check"></i> Aprobar
-                                        </button>
-                                    </form>
-                                    <form style="display: inline;">
-                                        <input type="hidden" name="promocion_id" value="001">
-                                        <input type="hidden" name="accion" value="rechazar">
-                                        <button type="submit" class="btn btn-danger"
-                                            onclick="return confirm('¿Rechazar esta promoción?')">
-                                            <i class="fas fa-times"></i> Rechazar
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>002</strong></td>
-                                <td>
-                                    <div class="promo-text">
-                                        Compra 2 pares y lleva el tercero gratis
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="local-info">
-                                        <div class="local-name">Shoes & More</div>
-                                        <div class="local-location">Primer Piso, Local 5</div>
-                                    </div>
-                                </td>
-                                <td class="owner-info">carlos@shoesmore.com</td>
-                                <td class="date-range">
-                                    20/08/2025 - 10/09/2025
-                                </td>
-                                <td>
-                                    <div class="category-tag">Standard</div>
-                                </td>
-                                <td>
-                                    <form style="display: inline;">
-                                        <input type="hidden" name="promocion_id" value="002">
-                                        <input type="hidden" name="accion" value="aprobar">
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fas fa-check"></i> Aprobar
-                                        </button>
-                                    </form>
-                                    <form style="display: inline;">
-                                        <input type="hidden" name="promocion_id" value="002">
-                                        <input type="hidden" name="accion" value="rechazar">
-                                        <button type="submit" class="btn btn-danger"
-                                            onclick="return confirm('¿Rechazar esta promoción?')">
-                                            <i class="fas fa-times"></i> Rechazar
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>003</strong></td>
-                                <td>
-                                    <div class="promo-text">
-                                        Descuento especial en productos Apple
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="local-info">
-                                        <div class="local-name">TechWorld</div>
-                                        <div class="local-location">Segundo Piso, Local 8</div>
-                                    </div>
-                                </td>
-                                <td class="owner-info">ana@techworld.com</td>
-                                <td class="date-range">
-                                    01/09/2025 - 15/09/2025
-                                </td>
-                                <td>
-                                    <div class="category-tag">Premium</div>
-                                </td>
-                                <td>
-                                    <form style="display: inline;">
-                                        <input type="hidden" name="promocion_id" value="003">
-                                        <input type="hidden" name="accion" value="aprobar">
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fas fa-check"></i> Aprobar
-                                        </button>
-                                    </form>
-                                    <form style="display: inline;">
-                                        <input type="hidden" name="promocion_id" value="003">
-                                        <input type="hidden" name="accion" value="rechazar">
-                                        <button type="submit" class="btn btn-danger"
-                                            onclick="return confirm('¿Rechazar esta promoción?')">
-                                            <i class="fas fa-times"></i> Rechazar
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
+                            <?php if (empty($promociones_pendientes)): ?>
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; padding: 40px; color: #718096;">
+                                            <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                            <br>
+                                            No hay promociones pendientes de aprobación
+                                        </td>
+                                    </tr>
+                            <?php else: ?>
+                                    <?php foreach ($promociones_pendientes as $promo): ?>
+                                            <tr>
+                                                <td><strong><?= $promo['codPromo'] ?></strong></td>
+                                                <td>
+                                                    <div class="promo-text" title="<?= htmlspecialchars($promo['textoPromo']) ?>">
+                                                        <?= htmlspecialchars($promo['textoPromo']) ?>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="local-info">
+                                                        <div class="local-name"><?= htmlspecialchars($promo['nombreLocal']) ?></div>
+                                                        <div class="local-location"><?= htmlspecialchars($promo['ubicacionLocal']) ?></div>
+                                                    </div>
+                                                </td>
+                                                <td class="owner-info"><?= htmlspecialchars($promo['email_dueno']) ?></td>
+                                                <td class="date-range">
+                                                    <?= date('d/m/Y', strtotime($promo['fechaDesdePromo'])) ?> - 
+                                                    <?= date('d/m/Y', strtotime($promo['fechaHastaPromo'])) ?>
+                                                </td>
+                                                <td>
+                                                    <div class="category-tag category-<?= strtolower($promo['categoriaCliente']) ?>">
+                                                        <?= $promo['categoriaCliente'] ?>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="dias-semana">
+                                                        <?= $promo['diasSemana'] ?>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <form method="POST" style="display: inline;">
+                                                        <input type="hidden" name="promocion_id" value="<?= $promo['codPromo'] ?>">
+                                                        <input type="hidden" name="accion" value="aprobar">
+                                                        <button type="submit" class="btn btn-success">
+                                                            <i class="fas fa-check"></i> Aprobar
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" style="display: inline;">
+                                                        <input type="hidden" name="promocion_id" value="<?= $promo['codPromo'] ?>">
+                                                        <input type="hidden" name="accion" value="rechazar">
+                                                        <button type="submit" class="btn btn-danger" onclick="return confirm('¿Rechazar esta promoción?')">
+                                                            <i class="fas fa-times"></i> Rechazar
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                    <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -543,61 +615,45 @@
                                 <th>Promoción</th>
                                 <th>Local</th>
                                 <th>Vigencia</th>
+                                <th>Categoría</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td><strong>004</strong></td>
-                                <td>
-                                    <div class="promo-text">
-                                        30% descuento en accesorios de temporada
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="local-info">
-                                        <div class="local-name">Fashion Store</div>
-                                    </div>
-                                </td>
-                                <td class="date-range">
-                                    Hasta 31/08/2025
-                                </td>
-                                <td><span class="badge badge-success">Activa</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>005</strong></td>
-                                <td>
-                                    <div class="promo-text">
-                                        Promoción especial en laptops gaming
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="local-info">
-                                        <div class="local-name">TechWorld</div>
-                                    </div>
-                                </td>
-                                <td class="date-range">
-                                    Hasta 15/09/2025
-                                </td>
-                                <td><span class="badge badge-success">Activa</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>006</strong></td>
-                                <td>
-                                    <div class="promo-text">
-                                        Descuento en calzado deportivo
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="local-info">
-                                        <div class="local-name">Shoes & More</div>
-                                    </div>
-                                </td>
-                                <td class="date-range">
-                                    Hasta 10/09/2025
-                                </td>
-                                <td><span class="badge badge-success">Activa</span></td>
-                            </tr>
+                            <?php if (empty($promociones_activas)): ?>
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 40px; color: #718096;">
+                                            <i class="fas fa-fire" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                            <br>
+                                            No hay promociones activas
+                                        </td>
+                                    </tr>
+                            <?php else: ?>
+                                    <?php foreach ($promociones_activas as $promo): ?>
+                                            <tr>
+                                                <td><strong><?= $promo['codPromo'] ?></strong></td>
+                                                <td>
+                                                    <div class="promo-text" title="<?= htmlspecialchars($promo['textoPromo']) ?>">
+                                                        <?= htmlspecialchars($promo['textoPromo']) ?>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="local-info">
+                                                        <div class="local-name"><?= htmlspecialchars($promo['nombreLocal']) ?></div>
+                                                    </div>
+                                                </td>
+                                                <td class="date-range">
+                                                    Hasta <?= date('d/m/Y', strtotime($promo['fechaHastaPromo'])) ?>
+                                                </td>
+                                                <td>
+                                                    <div class="category-tag category-<?= strtolower($promo['categoriaCliente']) ?>">
+                                                        <?= $promo['categoriaCliente'] ?>
+                                                    </div>
+                                                </td>
+                                                <td><span class="badge badge-success">Activa</span></td>
+                                            </tr>
+                                    <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -606,35 +662,36 @@
     </div>
 
     <script>
-        // Simulación de funcionalidad de botones
+        // Confirmación para rechazar promociones
         document.querySelectorAll('button[type="submit"]').forEach(button => {
             button.addEventListener('click', function (e) {
-                e.preventDefault();
-                const action = this.querySelector('input[name="accion"]') ?
-                    this.parentElement.querySelector('input[name="accion"]').value : 'unknown';
-
+                const action = this.parentElement.querySelector('input[name="accion"]').value;
+                
                 if (action === 'rechazar') {
-                    if (!confirm('¿Rechazar esta promoción?')) {
-                        return;
+                    if (!confirm('¿Estás seguro de que quieres rechazar esta promoción?')) {
+                        e.preventDefault();
                     }
                 }
+            });
+        });
 
-                // Mostrar alerta de éxito
-                const alert = document.querySelector('.alert-success');
-                alert.style.display = 'block';
-                alert.textContent = action === 'aprobar' ? 'Promoción aprobada correctamente' : 'Promoción rechazada correctamente';
-
-                // Ocultar la alerta después de 3 segundos
-                setTimeout(() => {
-                    alert.style.display = 'none';
-                }, 3000);
-
-                // Remover la fila de la tabla (simulación)
-                if (action !== 'unknown') {
-                    this.closest('tr').style.opacity = '0.5';
-                    setTimeout(() => {
-                        this.closest('tr').remove();
-                    }, 1000);
+        // Animación de números en estadísticas
+        document.addEventListener('DOMContentLoaded', function () {
+            const statNumbers = document.querySelectorAll('.stat-number');
+            statNumbers.forEach(stat => {
+                const finalValue = parseInt(stat.textContent);
+                if (!isNaN(finalValue) && finalValue > 0) {
+                    let currentValue = 0;
+                    const increment = Math.ceil(finalValue / 30);
+                    const timer = setInterval(() => {
+                        currentValue += increment;
+                        if (currentValue >= finalValue) {
+                            stat.textContent = finalValue;
+                            clearInterval(timer);
+                        } else {
+                            stat.textContent = currentValue;
+                        }
+                    }, 50);
                 }
             });
         });

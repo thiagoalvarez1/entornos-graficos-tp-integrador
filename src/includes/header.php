@@ -17,7 +17,7 @@ $userEmail = $isLoggedIn ? $_SESSION['user_email'] : '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>PromoShopping</title>
+    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>Bandera</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -104,7 +104,7 @@ $userEmail = $isLoggedIn ? $_SESSION['user_email'] : '';
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            padding: 1rem 0;
+            padding: 0.5rem 0;
             transition: var(--transition);
             position: sticky;
             top: 0;
@@ -114,12 +114,12 @@ $userEmail = $isLoggedIn ? $_SESSION['user_email'] : '';
         .navbar-modern.scrolled {
             background: rgba(255, 255, 255, 0.98);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.12);
-            padding: 0.75rem 0;
+            padding: 0.4rem 0;
         }
 
         .navbar-brand-modern {
             font-weight: 800;
-            font-size: 1.75rem;
+            font-size: 1.3rem;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -127,39 +127,41 @@ $userEmail = $isLoggedIn ? $_SESSION['user_email'] : '';
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             transition: var(--transition);
+            white-space: nowrap;
         }
 
         .navbar-brand-modern:hover {
-            transform: scale(1.05);
+            transform: scale(1.02);
         }
 
         .brand-icon {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             border-radius: var(--border-radius);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.2rem;
+            font-size: 1rem;
             box-shadow: var(--shadow-md);
         }
 
         .nav-link-modern {
             color: var(--gray-700) !important;
             font-weight: 500;
-            padding: 0.75rem 1.25rem !important;
-            margin: 0 0.25rem;
+            padding: 0.5rem 0.9rem !important;
+            margin: 0 0.1rem;
             border-radius: var(--border-radius);
             transition: var(--transition);
             position: relative;
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.3rem;
+            font-size: 0.95rem;
         }
 
         .nav-link-modern::before {
@@ -596,6 +598,46 @@ $userEmail = $isLoggedIn ? $_SESSION['user_email'] : '';
             .social-links-modern {
                 justify-content: center;
             }
+
+            .nav-link-modern {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.95rem;
+            }
+
+            .navbar-brand-modern {
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .navbar-brand-modern {
+                font-size: 1.1rem;
+            }
+
+            .brand-icon {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+
+            .nav-link-modern {
+                padding: 0.5rem !important;
+                font-size: 0.9rem;
+            }
+
+            .btn-modern {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .footer-section h5 {
+                font-size: 1.1rem;
+            }
+
+            .user-avatar-modern {
+                width: 35px;
+                height: 35px;
+            }
         }
 
         /* Clases Bootstrap corregidas */
@@ -663,10 +705,11 @@ echo ($currentPage == 'login.php' || $currentPage == 'registro.php') ? 'login-pa
                     <div class="brand-icon">
                         <i class="fas fa-store"></i>
                     </div>
-                    <span>PromoShopping</span>
+                    <span>Bandera</span>
                 </a>
 
-                <button class="navbar-toggler-modern" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <button class="navbar-toggler-modern d-md-none" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav">
                     <i class="fas fa-bars"></i>
                 </button>
 
@@ -692,8 +735,7 @@ echo ($currentPage == 'login.php' || $currentPage == 'registro.php') ? 'login-pa
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link-modern <?php echo $currentPage == 'contacto.php' ? 'active' : ''; ?>"
-                                href="<?php echo SITE_URL; ?>contacto.php">
+                            <a class="nav-link-modern" href="<?php echo SITE_URL; ?>contacto.php">
                                 <i class="fas fa-envelope"></i>
                                 <span>Contacto</span>
                             </a>
@@ -729,51 +771,8 @@ echo ($currentPage == 'login.php' || $currentPage == 'registro.php') ? 'login-pa
                         <?php if ($isLoggedIn): ?>
                             <!-- Usuario logueado -->
                             <div class="dropdown">
-                                <a href="#"
-                                    class="dropdown-toggle d-flex align-items-center text-decoration-none position-relative"
-                                    id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                    <div class="position-relative">
-                                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userEmail); ?>&background=6366f1&color=fff&size=40&bold=true"
-                                            class="user-avatar-modern" alt="Avatar">
-                                        <span class="notification-badge">3</span>
-                                    </div>
-                                    <div class="ms-2 d-none d-md-block">
-                                        <div class="fw-600 text-dark"><?php echo explode('@', $userEmail)[0]; ?></div>
-                                        <small class="text-muted"><?php echo ucfirst($userType); ?></small>
-                                    </div>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-modern dropdown-menu-end">
-                                    <li class="px-3 py-2">
-                                        <div class="d-flex align-items-center">
-                                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($userEmail); ?>&background=6366f1&color=fff&size=32&bold=true"
-                                                class="rounded-circle me-2" width="32" height="32">
-                                            <div>
-                                                <div class="fw-600 text-dark"><?php echo explode('@', $userEmail)[0]; ?></div>
-                                                <small class="text-muted"><?php echo $userEmail; ?></small>
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <hr class="dropdown-divider-modern">
-                                    </li>
-                                    <li><a class="dropdown-item-modern"
-                                            href="<?php echo SITE_URL . $userType . '/panel.php'; ?>">
-                                            <i class="fas fa-tachometer-alt"></i>Panel de Control
-                                        </a></li>
-                                    <li><a class="dropdown-item-modern" href="<?php echo SITE_URL; ?>perfil.php">
-                                            <i class="fas fa-user-cog"></i>Configuración
-                                        </a></li>
-                                    <li><a class="dropdown-item-modern" href="#">
-                                            <i class="fas fa-bell"></i>Notificaciones
-                                            <span class="badge bg-danger ms-auto">3</span>
-                                        </a></li>
-                                    <li>
-                                        <hr class="dropdown-divider-modern">
-                                    </li>
-                                    <li><a class="dropdown-item-modern text-danger" href="<?php echo SITE_URL; ?>logout.php">
-                                            <i class="fas fa-sign-out-alt"></i>Cerrar Sesión
-                                        </a></li>
-                                </ul>
+
+
                             </div>
                         <?php else: ?>
                             <!-- Usuario no logueado -->
