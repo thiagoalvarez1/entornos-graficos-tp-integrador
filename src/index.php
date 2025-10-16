@@ -96,42 +96,42 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
             <div class="col-lg-6">
                 <div class="floating-cards">
                     <?php if (!empty($promociones_destacadas)): ?>
-                            <?php foreach (array_slice($promociones_destacadas, 0, 3) as $index => $promo): ?>
-                                    <div class="floating-card">
-                                        <div class="card-icon">
-                                            <?php
-                                            $iconos = ['🛍️', '🎯', '⚡'];
-                                            echo $iconos[$index] ?? '🎁';
-                                            ?>
-                                        </div>
-                                        <div class="card-content">
-                                            <h4><?= htmlspecialchars($promo['categoriaCliente']) ?></h4>
-                                            <p><?= htmlspecialchars($promo['nombreLocal']) ?></p>
-                                        </div>
-                                    </div>
-                            <?php endforeach; ?>
+                        <?php foreach (array_slice($promociones_destacadas, 0, 3) as $index => $promo): ?>
+                            <div class="floating-card">
+                                <div class="card-icon">
+                                    <?php
+                                    $iconos = ['🛍️', '🎯', '⚡'];
+                                    echo $iconos[$index] ?? '🎁';
+                                    ?>
+                                </div>
+                                <div class="card-content">
+                                    <h4><?= htmlspecialchars($promo['categoriaCliente']) ?></h4>
+                                    <p><?= htmlspecialchars($promo['nombreLocal']) ?></p>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     <?php else: ?>
-                            <div class="floating-card">
-                                <div class="card-icon">🛍️</div>
-                                <div class="card-content">
-                                    <h4>Premium</h4>
-                                    <p>Fashion Store</p>
-                                </div>
+                        <div class="floating-card">
+                            <div class="card-icon">🛍️</div>
+                            <div class="card-content">
+                                <h4>Premium</h4>
+                                <p>Fashion Store</p>
                             </div>
-                            <div class="floating-card">
-                                <div class="card-icon">🎯</div>
-                                <div class="card-content">
-                                    <h4>Medium</h4>
-                                    <p>Tech World</p>
-                                </div>
+                        </div>
+                        <div class="floating-card">
+                            <div class="card-icon">🎯</div>
+                            <div class="card-content">
+                                <h4>Medium</h4>
+                                <p>Tech World</p>
                             </div>
-                            <div class="floating-card">
-                                <div class="card-icon">⚡</div>
-                                <div class="card-content">
-                                    <h4>Inicial</h4>
-                                    <p>Food Court</p>
-                                </div>
+                        </div>
+                        <div class="floating-card">
+                            <div class="card-icon">⚡</div>
+                            <div class="card-content">
+                                <h4>Inicial</h4>
+                                <p>Food Court</p>
                             </div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -139,7 +139,9 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
     </div>
     <div class="hero-wave">
         <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V120Z" fill="white"/>
+            <path
+                d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V120Z"
+                fill="white" />
         </svg>
     </div>
 </section>
@@ -166,20 +168,20 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
                             default => 'badge-primary'
                         };
                         ?>
-                            <div class="novedad-item">
-                                <div class="novedad-text">
-                                    <?= htmlspecialchars($novedad['textoNovedad']) ?>
-                                </div>
-                                <div class="novedad-meta">
-                                    <span class="novedad-badge <?= $badge_class ?>">
-                                        <?= $tipo_usuario == 'todos' ? 'Para todos' : 'Para ' . $tipo_usuario ?>
-                                    </span>
-                                    <span class="novedad-fecha">
-                                        <i class="fas fa-calendar-alt"></i>
-                                        Hasta <?= date('d/m/Y', strtotime($novedad['fechaHastaNovedad'])) ?>
-                                    </span>
-                                </div>
+                        <div class="novedad-item">
+                            <div class="novedad-text">
+                                <?= htmlspecialchars($novedad['textoNovedad']) ?>
                             </div>
+                            <div class="novedad-meta">
+                                <span class="novedad-badge <?= $badge_class ?>">
+                                    <?= $tipo_usuario == 'todos' ? 'Para todos' : 'Para ' . $tipo_usuario ?>
+                                </span>
+                                <span class="novedad-fecha">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    Hasta <?= date('d/m/Y', strtotime($novedad['fechaHastaNovedad'])) ?>
+                                </span>
+                            </div>
+                        </div>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -198,144 +200,147 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
 
         <div class="row g-4">
             <?php if (!empty($promociones_destacadas)): ?>
-                    <?php foreach ($promociones_destacadas as $index => $promo):
-                        $categoria = $promo['categoriaCliente'];
-                        $card_class = match ($categoria) {
-                            'Premium' => 'card-premium',
-                            'Medium' => 'card-medium',
-                            default => 'card-inicial'
-                        };
-                        $badge_class = match ($categoria) {
-                            'Premium' => 'badge-premium',
-                            'Medium' => 'badge-medium',
-                            default => 'badge-inicial'
-                        };
-                        $discount_class = match ($categoria) {
-                            'Premium' => '',
-                            'Medium' => 'discount-badge-medium',
-                            default => 'discount-badge-inicial'
-                        };
+                <?php foreach ($promociones_destacadas as $index => $promo):
+                    $categoria = $promo['categoriaCliente'];
+                    $card_class = match ($categoria) {
+                        'Premium' => 'card-premium',
+                        'Medium' => 'card-medium',
+                        default => 'card-inicial'
+                    };
+                    $badge_class = match ($categoria) {
+                        'Premium' => 'badge-premium',
+                        'Medium' => 'badge-medium',
+                        default => 'badge-inicial'
+                    };
+                    $discount_class = match ($categoria) {
+                        'Premium' => '',
+                        'Medium' => 'discount-badge-medium',
+                        default => 'discount-badge-inicial'
+                    };
 
-                        // Icono según rubro
-                        $icono = 'fas fa-store';
-                        $rubro = strtolower($promo['rubroLocal']);
-                        if (str_contains($rubro, 'tech') || str_contains($rubro, 'tecnolog')) {
-                            $icono = 'fas fa-laptop';
-                        } elseif (str_contains($rubro, 'calzado') || str_contains($rubro, 'shoe')) {
-                            $icono = 'fas fa-shoe-prints';
-                        } elseif (str_contains($rubro, 'moda') || str_contains($rubro, 'ropa') || str_contains($rubro, 'fashion')) {
-                            $icono = 'fas fa-tshirt';
-                        } elseif (str_contains($rubro, 'comida') || str_contains($rubro, 'food') || str_contains($rubro, 'restaurant')) {
-                            $icono = 'fas fa-utensils';
-                        }
-                        ?>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="promo-card <?= $card_class ?>" data-aos="fade-up" data-aos-delay="<?= ($index + 1) * 100 ?>">
-                                    <span class="category-badge <?= $badge_class ?>">
-                                        <i class="fas <?= $categoria == 'Premium' ? 'fa-crown' : ($categoria == 'Medium' ? 'fa-gem' : 'fa-star') ?>"></i>
-                                        <?= $categoria ?>
-                                    </span>
-                                    <div class="card-image">
-                                        <img src="https://via.placeholder.com/400x200/6366f1/ffffff?text=<?= urlencode($promo['nombreLocal']) ?>" alt="<?= htmlspecialchars($promo['nombreLocal']) ?>">
-                                        <div class="discount-badge <?= $discount_class ?>">
-                                            <span class="discount-text"><?= $categoria ?></span>
-                                            <span class="discount-label">OFERTA</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="store-info">
-                                            <div class="store-avatar">
-                                                <i class="<?= $icono ?>"></i>
-                                            </div>
-                                            <div class="store-details">
-                                                <h5 class="store-name"><?= htmlspecialchars($promo['nombreLocal']) ?></h5>
-                                                <span class="store-category"><?= htmlspecialchars($promo['rubroLocal']) ?></span>
-                                            </div>
-                                            <div class="store-rating">
-                                                <i class="fas fa-star"></i>
-                                                <span>4.<?= rand(5, 9) ?></span>
-                                            </div>
-                                        </div>
-                                        <h4 class="promo-title"><?= htmlspecialchars($promo['textoPromo']) ?></h4>
-                                        <p class="promo-description">
-                                            Promoción exclusiva disponible por tiempo limitado. No acumulable con otras ofertas.
-                                        </p>
-                                        <div class="promo-details">
-                                            <div class="detail-item">
-                                                <i class="fas fa-calendar-alt"></i>
-                                                <span>Hasta <?= date('d/m/Y', strtotime($promo['fechaHastaPromo'])) ?></span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <i class="fas fa-clock"></i>
-                                                <span><?= htmlspecialchars($promo['diasSemana']) ?></span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <i class="fas fa-map-marker-alt"></i>
-                                                <span><?= htmlspecialchars($promo['ubicacionLocal']) ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card-footer">
-                                        <?php if (isset($_SESSION['user_id']) && $_SESSION['user_type'] == 'cliente'): ?>
-                                                <a href="cliente/solicitar_promocion.php?id=<?= $promo['codPromo'] ?>" class="btn-claim">
-                                                    <span>Obtener promoción</span>
-                                                    <i class="fas fa-arrow-right"></i>
-                                                </a>
-                                        <?php else: ?>
-                                                <a href="login.php" class="btn-claim">
-                                                    <span>Iniciar sesión</span>
-                                                    <i class="fas fa-sign-in-alt"></i>
-                                                </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                    <?php endforeach; ?>
-            <?php else: ?>
-                    <!-- Tarjeta ejemplo si no hay promociones -->
+                    // Icono según rubro
+                    $icono = 'fas fa-store';
+                    $rubro = strtolower($promo['rubroLocal']);
+                    if (str_contains($rubro, 'tech') || str_contains($rubro, 'tecnolog')) {
+                        $icono = 'fas fa-laptop';
+                    } elseif (str_contains($rubro, 'calzado') || str_contains($rubro, 'shoe')) {
+                        $icono = 'fas fa-shoe-prints';
+                    } elseif (str_contains($rubro, 'moda') || str_contains($rubro, 'ropa') || str_contains($rubro, 'fashion')) {
+                        $icono = 'fas fa-tshirt';
+                    } elseif (str_contains($rubro, 'comida') || str_contains($rubro, 'food') || str_contains($rubro, 'restaurant')) {
+                        $icono = 'fas fa-utensils';
+                    }
+                    ?>
                     <div class="col-lg-4 col-md-6">
-                        <div class="promo-card card-premium">
-                            <span class="category-badge badge-premium">
-                                <i class="fas fa-crown"></i> Premium
+                        <div class="promo-card <?= $card_class ?>" data-aos="fade-up"
+                            data-aos-delay="<?= ($index + 1) * 100 ?>">
+                            <span class="category-badge <?= $badge_class ?>">
+                                <i
+                                    class="fas <?= $categoria == 'Premium' ? 'fa-crown' : ($categoria == 'Medium' ? 'fa-gem' : 'fa-star') ?>"></i>
+                                <?= $categoria ?>
                             </span>
                             <div class="card-image">
-                                <img src="https://via.placeholder.com/400x200/6366f1/ffffff?text=Ejemplo" alt="Ejemplo">
-                                <div class="discount-badge">
-                                    <span class="discount-text">30% OFF</span>
+                                <img src="https://via.placeholder.com/400x200/6366f1/ffffff?text=<?= urlencode($promo['nombreLocal']) ?>"
+                                    alt="<?= htmlspecialchars($promo['nombreLocal']) ?>">
+                                <div class="discount-badge <?= $discount_class ?>">
+                                    <span class="discount-text"><?= $categoria ?></span>
                                     <span class="discount-label">OFERTA</span>
                                 </div>
                             </div>
                             <div class="card-body">
                                 <div class="store-info">
                                     <div class="store-avatar">
-                                        <i class="fas fa-store"></i>
+                                        <i class="<?= $icono ?>"></i>
                                     </div>
                                     <div class="store-details">
-                                        <h5 class="store-name">Nombre del Local</h5>
-                                        <span class="store-category">Categoría</span>
+                                        <h5 class="store-name"><?= htmlspecialchars($promo['nombreLocal']) ?></h5>
+                                        <span class="store-category"><?= htmlspecialchars($promo['rubroLocal']) ?></span>
                                     </div>
                                     <div class="store-rating">
                                         <i class="fas fa-star"></i>
-                                        <span>4.8</span>
+                                        <span>4.<?= rand(5, 9) ?></span>
                                     </div>
                                 </div>
-                                <h4 class="promo-title">Título de la promoción</h4>
-                                <p class="promo-description">Descripción de la promoción disponible.</p>
+                                <h4 class="promo-title"><?= htmlspecialchars($promo['textoPromo']) ?></h4>
+                                <p class="promo-description">
+                                    Promoción exclusiva disponible por tiempo limitado. No acumulable con otras ofertas.
+                                </p>
                                 <div class="promo-details">
                                     <div class="detail-item">
                                         <i class="fas fa-calendar-alt"></i>
-                                        <span>Hasta 31/12/2025</span>
+                                        <span>Hasta <?= date('d/m/Y', strtotime($promo['fechaHastaPromo'])) ?></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-clock"></i>
+                                        <span><?= htmlspecialchars($promo['diasSemana']) ?></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span><?= htmlspecialchars($promo['ubicacionLocal']) ?></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="card-footer">
-                                <a href="login.php" class="btn-claim">
-                                    <span>Iniciar sesión</span>
-                                    <i class="fas fa-sign-in-alt"></i>
-                                </a>
+                                <?php if (isset($_SESSION['user_id']) && $_SESSION['user_type'] == 'cliente'): ?>
+                                    <a href="cliente/solicitar_promocion.php?id=<?= $promo['codPromo'] ?>" class="btn-claim">
+                                        <span>Obtener promoción</span>
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                <?php else: ?>
+                                    <a href="login.php" class="btn-claim">
+                                        <span>Iniciar sesión</span>
+                                        <i class="fas fa-sign-in-alt"></i>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <!-- Tarjeta ejemplo si no hay promociones -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="promo-card card-premium">
+                        <span class="category-badge badge-premium">
+                            <i class="fas fa-crown"></i> Premium
+                        </span>
+                        <div class="card-image">
+                            <img src="https://via.placeholder.com/400x200/6366f1/ffffff?text=Ejemplo" alt="Ejemplo">
+                            <div class="discount-badge">
+                                <span class="discount-text">30% OFF</span>
+                                <span class="discount-label">OFERTA</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="store-info">
+                                <div class="store-avatar">
+                                    <i class="fas fa-store"></i>
+                                </div>
+                                <div class="store-details">
+                                    <h5 class="store-name">Nombre del Local</h5>
+                                    <span class="store-category">Categoría</span>
+                                </div>
+                                <div class="store-rating">
+                                    <i class="fas fa-star"></i>
+                                    <span>4.8</span>
+                                </div>
+                            </div>
+                            <h4 class="promo-title">Título de la promoción</h4>
+                            <p class="promo-description">Descripción de la promoción disponible.</p>
+                            <div class="promo-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Hasta 31/12/2025</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="login.php" class="btn-claim">
+                                <span>Iniciar sesión</span>
+                                <i class="fas fa-sign-in-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -453,26 +458,26 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
 </section>
 
 <script>
-// Auto-scroll novedades
-document.addEventListener('DOMContentLoaded', function() {
-    const slider = document.querySelector('.novedades-slider');
-    if (slider) {
-        let scrollPos = 0;
-        const scrollSpeed = 0.3;
-        
-        function autoScroll() {
-            if (scrollPos >= slider.scrollHeight - slider.clientHeight) {
-                scrollPos = 0;
-            } else {
-                scrollPos += scrollSpeed;
+    // Auto-scroll novedades
+    document.addEventListener('DOMContentLoaded', function () {
+        const slider = document.querySelector('.novedades-slider');
+        if (slider) {
+            let scrollPos = 0;
+            const scrollSpeed = 0.3;
+
+            function autoScroll() {
+                if (scrollPos >= slider.scrollHeight - slider.clientHeight) {
+                    scrollPos = 0;
+                } else {
+                    scrollPos += scrollSpeed;
+                }
+                slider.scrollTop = scrollPos;
+                requestAnimationFrame(autoScroll);
             }
-            slider.scrollTop = scrollPos;
-            requestAnimationFrame(autoScroll);
+
+            setTimeout(autoScroll, 3000);
         }
-        
-        setTimeout(autoScroll, 3000);
-    }
-});
+    });
 </script>
 
 <?php require_once 'includes/footer.php'; ?>

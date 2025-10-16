@@ -459,46 +459,46 @@ $currentPage = 'registro.php';
             <!-- Formulario -->
             <div class="registro-form">
                 <?php if (!empty($error)): ?>
-                        <div class="alert alert-danger" role="alert">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <span><?php echo htmlspecialchars($error); ?></span>
-                        </div>
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span><?php echo htmlspecialchars($error); ?></span>
+                    </div>
                 <?php endif; ?>
 
                 <?php if (!empty($success) && !str_contains($success, '<div')): ?>
-                        <div class="alert alert-success" role="alert">
-                            <i class="fas fa-check-circle"></i>
-                            <span><?php echo htmlspecialchars($success); ?></span>
-                        </div>
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-check-circle"></i>
+                        <span><?php echo htmlspecialchars($success); ?></span>
+                    </div>
                 <?php elseif (!empty($success)): ?>
-                        <?php echo $success; ?>
+                    <?php echo $success; ?>
                 <?php endif; ?>
                 <?php if (isset($successHTML) && isset($verificationData)): ?>
-                        <div class="alert alert-success" role="alert">
-                            <i class="fas fa-check-circle"></i>
-                            <strong>¡Registro exitoso!</strong> Tu cuenta ha sido creada correctamente.
-                        </div>
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>¡Registro exitoso!</strong> Tu cuenta ha sido creada correctamente.
+                    </div>
 
-                        <div class='alert alert-info' style='border-left: 4px solid #17a2b8;'>
-                            <h5><i class='fas fa-envelope'></i> Verificación Requerida</h5>
-                            <p><strong>Email registrado:</strong> <?php echo htmlspecialchars($verificationData['email']); ?>
-                            </p>
-                            <p><strong>Para activar tu cuenta, haz clic en este botón:</strong></p>
-                            <div class='mt-2 p-3 bg-light rounded text-center'>
-                                <a href='<?php echo $verificationData['url']; ?>' class='btn btn-success btn-lg fw-bold'
-                                    style='word-break: break-all; white-space: normal;'>
-                                    <i class='fas fa-check-circle'></i> VERIFICAR MI EMAIL AHORA
-                                </a>
-                            </div>
-                            <p class='mt-3 mb-1'><strong>O copia esta URL en tu navegador:</strong></p>
-                            <div class='p-2 bg-white border rounded small'
-                                style='word-break: break-all; font-family: monospace;'>
-                                <?php echo $verificationData['url']; ?>
-                            </div>
-                            <p class='mt-2 small text-muted'>
-                                <i class='fas fa-clock'></i> Este link expirará en 24 horas.
-                            </p>
+                    <div class='alert alert-info' style='border-left: 4px solid #17a2b8;'>
+                        <h5><i class='fas fa-envelope'></i> Verificación Requerida</h5>
+                        <p><strong>Email registrado:</strong> <?php echo htmlspecialchars($verificationData['email']); ?>
+                        </p>
+                        <p><strong>Para activar tu cuenta, haz clic en este botón:</strong></p>
+                        <div class='mt-2 p-3 bg-light rounded text-center'>
+                            <a href='<?php echo $verificationData['url']; ?>' class='btn btn-success btn-lg fw-bold'
+                                style='word-break: break-all; white-space: normal;'>
+                                <i class='fas fa-check-circle'></i> VERIFICAR MI EMAIL AHORA
+                            </a>
                         </div>
+                        <p class='mt-3 mb-1'><strong>O copia esta URL en tu navegador:</strong></p>
+                        <div class='p-2 bg-white border rounded small'
+                            style='word-break: break-all; font-family: monospace;'>
+                            <?php echo $verificationData['url']; ?>
+                        </div>
+                        <p class='mt-2 small text-muted'>
+                            <i class='fas fa-clock'></i> Este link expirará en 24 horas.
+                        </p>
+                    </div>
                 <?php endif; ?>
 
                 <form method="POST" action="" novalidate>

@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['crear_novedad'])) {
     }
 }
 
+
 // Obtener novedades
 $query = "SELECT * FROM novedades ORDER BY fechaDesdeNovedad DESC";
 $novedades = $conn->query($query)->fetchAll(PDO::FETCH_ASSOC);

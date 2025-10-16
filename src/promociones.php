@@ -61,10 +61,11 @@ try {
                                         class="fas fa-map-marker-alt me-1"></i><?= htmlspecialchars($promo['ubicacionLocal']) ?>
                                 </li>
                                 <li class="text-muted"><i class="far fa-calendar-alt me-1"></i>Válido hasta:
-                                    <?= date('d/m/Y', strtotime($promo['fechaHastaPromo'])) ?></li>
+                                    <?= date('d/m/Y', strtotime($promo['fechaHastaPromo'])) ?>
+                                </li>
                             </ul>
                             <div class="d-grid mt-3">
-                                <a href="solicitar_promo.php?id=<?= $promo['codPromo'] ?>" class="btn btn-primary-modern">
+                                <a href="login.php?id=<?= $promo['codPromo'] ?>" class="btn btn-primary-modern">
                                     Solicitar Promoción <i class="fas fa-arrow-right ms-1"></i>
                                 </a>
                             </div>
