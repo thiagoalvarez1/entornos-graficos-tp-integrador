@@ -128,33 +128,33 @@ if (isset($_GET['eliminar']) && $local_id) {
     }
 }
 
-// Obtener promociones del local con filtros
+// Obtener promociones del local con filtros (SIN estadísticas de uso)
 $filtro_estado = $_GET['estado'] ?? 'todos';
 $filtro_categoria = $_GET['categoria'] ?? 'todas';
 $busqueda = $_GET['busqueda'] ?? '';
 
 $promociones = [];
 if ($local_id) {
-    $query = "SELECT * FROM promociones WHERE codLocal = :local_id";
+    $query = "SELECT p.* FROM promociones p WHERE p.codLocal = :local_id";
     $params = [':local_id' => $local_id];
 
     // Aplicar filtros
     if ($filtro_estado != 'todos') {
-        $query .= " AND estadoPromo = :estado";
+        $query .= " AND p.estadoPromo = :estado";
         $params[':estado'] = $filtro_estado;
     }
 
     if ($filtro_categoria != 'todas') {
-        $query .= " AND categoriaCliente = :categoria";
+        $query .= " AND p.categoriaCliente = :categoria";
         $params[':categoria'] = $filtro_categoria;
     }
 
     if (!empty($busqueda)) {
-        $query .= " AND textoPromo LIKE :busqueda";
+        $query .= " AND p.textoPromo LIKE :busqueda";
         $params[':busqueda'] = "%$busqueda%";
     }
 
-    $query .= " ORDER BY fechaCreacion DESC";
+    $query .= " ORDER BY p.fechaCreacion DESC";
 
     $stmt = $conn->prepare($query);
     foreach ($params as $key => $value) {
@@ -200,6 +200,7 @@ require_once '../includes/header-panel.php';
         </div>
     <?php else: ?>
 
+        <!-- Estadísticas -->
         <!-- Estadísticas -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -497,6 +498,35 @@ require_once '../includes/header-panel.php';
                                             }
                                         }
                                         ?>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECCIÓN SIMPLIFICADA: Información básica -->
+                            <div class="detail-item">
+                                <div class="detail-label">Estado</div>
+                                <div class="detail-value">
+                                    <div class="status-info">
+                                        <div class="status-item">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span class="status-text"><?= ucfirst($promo['estadoPromo']) ?></span>
+                                        </div>
+                                        <?php if ($promo['estadoPromo'] == 'aprobada'): ?>
+                                            <div class="status-item">
+                                                <i class="fas fa-eye"></i>
+                                                <span class="status-text">Visible al público</span>
+                                            </div>
+                                        <?php elseif ($promo['estadoPromo'] == 'pendiente'): ?>
+                                            <div class="status-item">
+                                                <i class="fas fa-clock"></i>
+                                                <span class="status-text">En revisión</span>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="status-item">
+                                                <i class="fas fa-ban"></i>
+                                                <span class="status-text">No visible</span>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>

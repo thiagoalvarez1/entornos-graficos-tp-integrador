@@ -64,7 +64,7 @@ require_once '../includes/header-panel.php';
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-1">Panel de Administración</h1>
-            <p class="text-muted mb-0">Gestión completa del sistema PromoShopping</p>
+            <p class="text-muted mb-0">Gestión completa del sistema Bandera Shopping</p>
         </div>
         <a href="generar_reporte.php" class="btn btn-primary">
             <i class="fas fa-download me-2"></i>Generar Reporte

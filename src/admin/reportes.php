@@ -79,7 +79,7 @@ require_once '../includes/header-panel.php';
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-1">Reportes y Estadísticas</h1>
-            <p class="text-muted mb-0">Análisis completo del sistema PromoShopping</p>
+            <p class="text-muted mb-0">Análisis completo del sistema Bandera Shopping</p>
         </div>
     </div>
 

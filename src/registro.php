@@ -444,6 +444,7 @@ $currentPage = 'registro.php';
     </style>
 </head>
 
+
 <body>
     <div class="registro-wrapper">
         <div class="registro-card">
@@ -549,6 +550,13 @@ $currentPage = 'registro.php';
                         Registrarse
                     </button>
                 </form>
+            </div>
+            <!-- Botón Volver al Inicio -->
+            <div class="text-center mb-4">
+                <a href="index.php" class="btn-back-home">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver al Inicio
+                </a>
             </div>
 
             <!-- Footer -->

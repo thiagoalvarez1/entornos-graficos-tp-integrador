@@ -6,7 +6,6 @@ require_once '../includes/auth.php';
 require_once '../includes/database.php';
 
 $auth = new Auth();
-// Asegúrate de que solo el administrador pueda acceder
 $auth->checkAccess([USER_ADMIN]);
 
 $database = new Database();
@@ -14,9 +13,9 @@ $conn = $database->getConnection();
 
 $pageTitle = "Gestión de Locales";
 
-$success = $_SESSION['success'] ?? '';
-$error = $_SESSION['error'] ?? '';
-unset($_SESSION['success'], $_SESSION['error']);
+// Manejar mensajes de SweetAlert desde la sesión
+$swal_data = $_SESSION['swal'] ?? '';
+unset($_SESSION['swal']);
 
 // --- 1. Lógica para obtener Locales y Dueños ---
 
@@ -39,7 +38,6 @@ try {
     $locales = $stmt_locales->fetchAll(PDO::FETCH_ASSOC);
 
     // B. Obtener lista de Dueños disponibles (usuarios con rol de dueño de local)
-    // Se recomienda filtrar por dueños que aún no tienen un local asignado si la relación es 1:1
     $query_duenos = "
         SELECT 
             codUsuario, 
@@ -59,6 +57,8 @@ try {
 
 require_once '../includes/header-panel.php';
 ?>
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <div class="main-content-panel">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -67,20 +67,6 @@ require_once '../includes/header-panel.php';
             <i class="fas fa-plus-circle me-1"></i> Nuevo Local
         </button>
     </div>
-
-    <?php if ($success): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i><?php echo htmlspecialchars($success); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-    <?php endif; ?>
-
-    <?php if ($error): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i><?php echo htmlspecialchars($error); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-    <?php endif; ?>
 
     <div class="card shadow-sm mb-5">
         <div class="card-header bg-white border-bottom">
@@ -102,49 +88,50 @@ require_once '../includes/header-panel.php';
                     </thead>
                     <tbody>
                         <?php if (count($locales) > 0): ?>
-                                <?php foreach ($locales as $local): ?>
-                                        <tr>
-                                            <td class="text-center"><?php echo htmlspecialchars($local['codLocal']); ?></td>
-                                            <td><?php echo htmlspecialchars($local['nombreLocal']); ?></td>
-                                            <td><?php echo htmlspecialchars($local['ubicacionLocal']); ?></td>
-                                            <td><?php echo htmlspecialchars($local['rubroLocal']); ?></td>
-                                            <td>
-                                                <?php echo htmlspecialchars($local['email_dueno']); ?>
-                                                <?php if ($local['estado_dueno'] !== 'activo'): ?>
-                                                        <span class="badge bg-danger ms-1"
-                                                            title="El dueño está Inactivo o Pendiente. El local no aparecerá al público.">⚠️</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="text-center">
-                                                <?php
-                                                $badge_class = $local['estado'] == 'activo' ? 'success' : 'danger';
-                                                $estado_texto = ucfirst($local['estado']);
-                                                echo "<span class='badge bg-{$badge_class}'>{$estado_texto}</span>";
-                                                ?>
-                                            </td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-outline-info me-1 edit-local-btn"
-                                                    data-bs-toggle="modal" data-bs-target="#editarLocalModal"
-                                                    data-id="<?php echo $local['codLocal']; ?>"
-                                                    data-nombre="<?php echo htmlspecialchars($local['nombreLocal']); ?>"
-                                                    data-ubicacion="<?php echo htmlspecialchars($local['ubicacionLocal']); ?>"
-                                                    data-rubro="<?php echo htmlspecialchars($local['rubroLocal']); ?>"
-                                                    data-usuario="<?php echo htmlspecialchars($local['codUsuario']); ?>"
-                                                    data-estado="<?php echo htmlspecialchars($local['estado']); ?>">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-
-                                                <button class="btn btn-sm btn-outline-danger delete-local-btn"
-                                                    data-id="<?php echo $local['codLocal']; ?>">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                <?php endforeach; ?>
-                        <?php else: ?>
+                            <?php foreach ($locales as $local): ?>
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted">No se encontraron locales.</td>
+                                    <td class="text-center"><?php echo htmlspecialchars($local['codLocal']); ?></td>
+                                    <td><?php echo htmlspecialchars($local['nombreLocal']); ?></td>
+                                    <td><?php echo htmlspecialchars($local['ubicacionLocal']); ?></td>
+                                    <td><?php echo htmlspecialchars($local['rubroLocal']); ?></td>
+                                    <td>
+                                        <?php echo htmlspecialchars($local['email_dueno']); ?>
+                                        <?php if ($local['estado_dueno'] !== 'activo'): ?>
+                                            <span class="badge bg-danger ms-1"
+                                                title="El dueño está Inactivo o Pendiente. El local no aparecerá al público.">⚠️</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <?php
+                                        $badge_class = $local['estado'] == 'activo' ? 'success' : 'danger';
+                                        $estado_texto = ucfirst($local['estado']);
+                                        echo "<span class='badge bg-{$badge_class}'>{$estado_texto}</span>";
+                                        ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-info me-1 edit-local-btn"
+                                            data-bs-toggle="modal" data-bs-target="#editarLocalModal"
+                                            data-id="<?php echo $local['codLocal']; ?>"
+                                            data-nombre="<?php echo htmlspecialchars($local['nombreLocal']); ?>"
+                                            data-ubicacion="<?php echo htmlspecialchars($local['ubicacionLocal']); ?>"
+                                            data-rubro="<?php echo htmlspecialchars($local['rubroLocal']); ?>"
+                                            data-usuario="<?php echo htmlspecialchars($local['codUsuario']); ?>"
+                                            data-estado="<?php echo htmlspecialchars($local['estado']); ?>">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+
+                                        <button class="btn btn-sm btn-outline-danger delete-local-btn"
+                                            data-id="<?php echo $local['codLocal']; ?>"
+                                            data-nombre="<?php echo htmlspecialchars($local['nombreLocal']); ?>">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
                                 </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">No se encontraron locales.</td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -153,24 +140,29 @@ require_once '../includes/header-panel.php';
     </div>
 </div>
 
+<!-- Modal Crear Local -->
 <div class="modal fade" id="crearLocalModal" tabindex="-1" aria-labelledby="crearLocalModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="crearLocalModalLabel"><i class="fas fa-plus-circle me-2"></i>Crear Nuevo Local</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="crearLocalModalLabel"><i class="fas fa-plus-circle me-2"></i>Crear Nuevo
+                    Local</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
-            <form action="procesar_local.php" method="POST">
+            <form id="crearLocalForm" action="procesar_local.php" method="POST">
                 <div class="modal-body">
                     <input type="hidden" name="action" value="crear">
-                    
+
                     <div class="mb-3">
                         <label for="crear_nombre" class="form-label">Nombre del Local</label>
-                        <input type="text" class="form-control" id="crear_nombre" name="nombre" required maxlength="100">
+                        <input type="text" class="form-control" id="crear_nombre" name="nombre" required
+                            maxlength="100">
                     </div>
                     <div class="mb-3">
                         <label for="crear_ubicacion" class="form-label">Ubicación (Ej: Planta Baja, Local 123)</label>
-                        <input type="text" class="form-control" id="crear_ubicacion" name="ubicacion" required maxlength="50">
+                        <input type="text" class="form-control" id="crear_ubicacion" name="ubicacion" required
+                            maxlength="50">
                     </div>
                     <div class="mb-3">
                         <label for="crear_rubro" class="form-label">Rubro (Ej: Tecnología, Comida)</label>
@@ -180,21 +172,18 @@ require_once '../includes/header-panel.php';
                         <label for="crear_dueno_id" class="form-label">Dueño Asignado</label>
                         <select class="form-select" id="crear_dueno_id" name="dueno_id" required>
                             <option value="" selected disabled>Seleccione un dueño</option>
-                            <?php
-                            if (!empty($duenos)):
-                                foreach ($duenos as $dueno):
-                                    ?>
-                                        <option value="<?php echo $dueno['codUsuario']; ?>">
-                                            <?php echo htmlspecialchars($dueno['nombreUsuario']); ?>
-                                        </option>
-                                <?php
-                                endforeach;
-                            else:
-                                ?>
-                                    <option disabled>No hay dueños activos sin local asignado</option>
+                            <?php if (!empty($duenos)): ?>
+                                <?php foreach ($duenos as $dueno): ?>
+                                    <option value="<?php echo $dueno['codUsuario']; ?>">
+                                        <?php echo htmlspecialchars($dueno['nombreUsuario']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <option disabled>No hay dueños activos sin local asignado</option>
                             <?php endif; ?>
                         </select>
-                        <small class="form-text text-muted">Solo se muestran dueños activos que aún no tienen un local.</small>
+                        <small class="form-text text-muted">Solo se muestran dueños activos que aún no tienen un
+                            local.</small>
                     </div>
                     <div class="mb-3">
                         <label for="crear_estado" class="form-label">Estado</label>
@@ -206,32 +195,37 @@ require_once '../includes/header-panel.php';
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Guardar Local</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Guardar Local
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Modal Editar Local -->
 <div class="modal fade" id="editarLocalModal" tabindex="-1" aria-labelledby="editarLocalModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-info text-white">
                 <h5 class="modal-title" id="editarLocalModalLabel"><i class="fas fa-edit me-2"></i>Editar Local</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
-            <form action="procesar_local.php" method="POST">
+            <form id="editarLocalForm" action="procesar_local.php" method="POST">
                 <div class="modal-body">
                     <input type="hidden" name="action" value="editar">
                     <input type="hidden" name="codLocal" id="edit_codLocal">
-                    
+
                     <div class="mb-3">
                         <label for="edit_nombre" class="form-label">Nombre del Local</label>
                         <input type="text" class="form-control" id="edit_nombre" name="nombre" required maxlength="100">
                     </div>
                     <div class="mb-3">
                         <label for="edit_ubicacion" class="form-label">Ubicación</label>
-                        <input type="text" class="form-control" id="edit_ubicacion" name="ubicacion" required maxlength="50">
+                        <input type="text" class="form-control" id="edit_ubicacion" name="ubicacion" required
+                            maxlength="50">
                     </div>
                     <div class="mb-3">
                         <label for="edit_rubro" class="form-label">Rubro</label>
@@ -241,8 +235,6 @@ require_once '../includes/header-panel.php';
                         <label for="edit_dueno_id" class="form-label">Dueño Asignado</label>
                         <select class="form-select" id="edit_dueno_id" name="dueno_id" required>
                             <?php
-                            // Lista combinada de dueños: todos los dueños activos y los que no tienen local asignado.
-                            // Para simplificar, listaremos a todos los dueños activos.
                             $query_all_duenos = "
                                 SELECT 
                                     codUsuario, 
@@ -257,12 +249,13 @@ require_once '../includes/header-panel.php';
 
                             foreach ($all_duenos as $dueno):
                                 ?>
-                                    <option value="<?php echo $dueno['codUsuario']; ?>">
-                                        <?php echo htmlspecialchars($dueno['nombreUsuario']); ?>
-                                    </option>
+                                <option value="<?php echo $dueno['codUsuario']; ?>">
+                                    <?php echo htmlspecialchars($dueno['nombreUsuario']); ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
-                        <small class="form-text text-muted">Asegúrese de que solo un local tenga el mismo dueño asignado.</small>
+                        <small class="form-text text-muted">Asegúrese de que solo un local tenga el mismo dueño
+                            asignado.</small>
                     </div>
                     <div class="mb-3">
                         <label for="edit_estado" class="form-label">Estado</label>
@@ -274,56 +267,189 @@ require_once '../includes/header-panel.php';
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-info text-white"><i class="fas fa-save me-1"></i> Guardar Cambios</button>
+                    <button type="submit" class="btn btn-info text-white">
+                        <i class="fas fa-save me-1"></i> Guardar Cambios
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<form id="deleteForm" action="procesar_local.php" method="POST" style="display: none;">
-    <input type="hidden" name="action" value="eliminar">
-    <input type="hidden" name="codLocal" id="delete_codLocal">
-</form>
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // 1. Lógica para llenar el modal de edición
-    document.querySelectorAll('.edit-local-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const codLocal = this.getAttribute('data-id');
-            const nombre = this.getAttribute('data-nombre');
-            const ubicacion = this.getAttribute('data-ubicacion');
-            const rubro = this.getAttribute('data-rubro');
-            const codUsuario = this.getAttribute('data-usuario');
-            const estado = this.getAttribute('data-estado');
+    document.addEventListener('DOMContentLoaded', function () {
+        // Mostrar SweetAlert desde sesión PHP
+        <?php if (!empty($swal_data)): ?>
+            Swal.fire({
+                icon: '<?php echo $swal_data['icon']; ?>',
+                title: '<?php echo $swal_data['title']; ?>',
+                text: '<?php echo $swal_data['text']; ?>',
+                confirmButtonColor: '#6366f1',
+                confirmButtonText: 'Aceptar',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        <?php endif; ?>
 
-            document.getElementById('edit_codLocal').value = codLocal;
-            document.getElementById('edit_nombre').value = nombre;
-            document.getElementById('edit_ubicacion').value = ubicacion;
-            document.getElementById('edit_rubro').value = rubro;
-            
-            // Seleccionar el dueño
-            document.getElementById('edit_dueno_id').value = codUsuario;
-            
-            // Seleccionar el estado
-            document.getElementById('edit_estado').value = estado;
+        // 1. Lógica para llenar el modal de edición
+        document.querySelectorAll('.edit-local-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const codLocal = this.getAttribute('data-id');
+                const nombre = this.getAttribute('data-nombre');
+                const ubicacion = this.getAttribute('data-ubicacion');
+                const rubro = this.getAttribute('data-rubro');
+                const codUsuario = this.getAttribute('data-usuario');
+                const estado = this.getAttribute('data-estado');
+
+                document.getElementById('edit_codLocal').value = codLocal;
+                document.getElementById('edit_nombre').value = nombre;
+                document.getElementById('edit_ubicacion').value = ubicacion;
+                document.getElementById('edit_rubro').value = rubro;
+                document.getElementById('edit_dueno_id').value = codUsuario;
+                document.getElementById('edit_estado').value = estado;
+            });
         });
-    });
 
-    // 2. Lógica para la eliminación
-    document.querySelectorAll('.delete-local-btn').forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-            const codLocal = this.getAttribute('data-id');
+        // 2. Lógica para la eliminación con SweetAlert
+        document.querySelectorAll('.delete-local-btn').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const codLocal = this.getAttribute('data-id');
+                const nombreLocal = this.getAttribute('data-nombre');
 
-            if (confirm('⚠️ ¿Estás seguro de ELIMINAR este Local? Esta acción es irreversible y afectará a sus promociones asociadas.')) {
-                document.getElementById('delete_codLocal').value = codLocal;
-                document.getElementById('deleteForm').submit();
-            }
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    html: `Vas a eliminar el local: <strong>"${nombreLocal}"</strong><br><br>
+                      <span class="text-danger">⚠️ Esta acción es irreversible</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                    backdrop: true,
+                    allowOutsideClick: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Crear y enviar formulario de eliminación
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = 'procesar_local.php';
+
+                        const actionInput = document.createElement('input');
+                        actionInput.type = 'hidden';
+                        actionInput.name = 'action';
+                        actionInput.value = 'eliminar';
+                        form.appendChild(actionInput);
+
+                        const idInput = document.createElement('input');
+                        idInput.type = 'hidden';
+                        idInput.name = 'codLocal';
+                        idInput.value = codLocal;
+                        form.appendChild(idInput);
+
+                        const nameInput = document.createElement('input');
+                        nameInput.type = 'hidden';
+                        nameInput.name = 'nombre';
+                        nameInput.value = nombreLocal;
+                        form.appendChild(nameInput);
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            });
         });
+
+        // 3. Validación de formularios con SweetAlert
+        const crearForm = document.getElementById('crearLocalForm');
+        const editarForm = document.getElementById('editarLocalForm');
+
+        if (crearForm) {
+            crearForm.addEventListener('submit', function (e) {
+                const nombre = document.getElementById('crear_nombre').value.trim();
+                const ubicacion = document.getElementById('crear_ubicacion').value.trim();
+                const rubro = document.getElementById('crear_rubro').value.trim();
+                const dueno = document.getElementById('crear_dueno_id').value;
+
+                if (!nombre || !ubicacion || !rubro || !dueno) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Campos incompletos',
+                        text: 'Por favor, complete todos los campos requeridos.',
+                        confirmButtonColor: '#6366f1'
+                    });
+                    return false;
+                }
+
+                // Mostrar confirmación de creación
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Crear Local',
+                    text: `¿Estás seguro de crear el local "${nombre}"?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#6366f1',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Sí, crear',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        crearForm.submit();
+                    }
+                });
+            });
+        }
+
+        if (editarForm) {
+            editarForm.addEventListener('submit', function (e) {
+                const nombre = document.getElementById('edit_nombre').value.trim();
+                const ubicacion = document.getElementById('edit_ubicacion').value.trim();
+                const rubro = document.getElementById('edit_rubro').value.trim();
+
+                if (!nombre || !ubicacion || !rubro) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Campos incompletos',
+                        text: 'Por favor, complete todos los campos requeridos.',
+                        confirmButtonColor: '#6366f1'
+                    });
+                    return false;
+                }
+
+                // Mostrar confirmación de edición
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Guardar Cambios',
+                    text: `¿Estás seguro de guardar los cambios en el local "${nombre}"?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#6366f1',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Sí, guardar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        editarForm.submit();
+                    }
+                });
+            });
+        }
+
+        // 4. Limpiar formulario de creación al cerrar modal
+        const crearModal = document.getElementById('crearLocalModal');
+        if (crearModal) {
+            crearModal.addEventListener('hidden.bs.modal', function () {
+                document.getElementById('crearLocalForm').reset();
+            });
+        }
     });
-});
 </script>
 
 <?php require_once '../includes/footer-panel.php'; ?>

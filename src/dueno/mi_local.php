@@ -17,24 +17,6 @@ $stmt_local->bindParam(':user_id', $user_id);
 $stmt_local->execute();
 $local = $stmt_local->fetch(PDO::FETCH_ASSOC);
 
-// Obtener estadísticas del local si existe
-$stats = null;
-if ($local) {
-    $query_stats = "SELECT 
-        COUNT(p.codPromo) as total_promociones,
-        COUNT(CASE WHEN p.estadoPromo = 'aprobada' THEN 1 END) as promociones_activas,
-        COUNT(up.codUso) as total_solicitudes,
-        COUNT(CASE WHEN up.estado = 'aceptada' THEN 1 END) as descuentos_otorgados
-        FROM promociones p
-        LEFT JOIN uso_promociones up ON p.codPromo = up.codPromo
-        WHERE p.codLocal = :local_id";
-
-    $stmt_stats = $conn->prepare($query_stats);
-    $stmt_stats->bindParam(':local_id', $local['codLocal']);
-    $stmt_stats->execute();
-    $stats = $stmt_stats->fetch(PDO::FETCH_ASSOC);
-}
-
 $success = '';
 $error = '';
 
@@ -43,9 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nombre = trim($_POST['nombre']);
     $ubicacion = trim($_POST['ubicacion']);
     $rubro = trim($_POST['rubro']);
-    $direccion = trim($_POST['direccion']);
-    $telefono = trim($_POST['telefono']);
-    $descripcion = trim($_POST['descripcion']);
+
 
     // Validaciones
     if (empty($nombre) || empty($ubicacion) || empty($rubro)) {
@@ -59,18 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                       nombreLocal = :nombre, 
                       ubicacionLocal = :ubicacion, 
                       rubroLocal = :rubro, 
-                      direccion = :direccion,
-                      telefono = :telefono,
-                      descripcion = :descripcion,
+                    
                       estado = 'pendiente'
                       WHERE codLocal = :local_id";
             $stmt = $conn->prepare($query);
             $stmt->bindParam(':nombre', $nombre);
             $stmt->bindParam(':ubicacion', $ubicacion);
             $stmt->bindParam(':rubro', $rubro);
-            $stmt->bindParam(':direccion', $direccion);
-            $stmt->bindParam(':telefono', $telefono);
-            $stmt->bindParam(':descripcion', $descripcion);
+
             $stmt->bindParam(':local_id', $local['codLocal']);
 
             if ($stmt->execute()) {
@@ -79,24 +55,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $local['nombreLocal'] = $nombre;
                 $local['ubicacionLocal'] = $ubicacion;
                 $local['rubroLocal'] = $rubro;
-                $local['direccion'] = $direccion;
-                $local['telefono'] = $telefono;
-                $local['descripcion'] = $descripcion;
+
+
                 $local['estado'] = 'pendiente';
             } else {
                 $error = "Error al actualizar el local";
             }
         } else {
             // Si no existe, crear uno nuevo
-            $query = "INSERT INTO locales (nombreLocal, ubicacionLocal, rubroLocal, direccion, telefono, descripcion, codUsuario, estado, fechaCreacion) 
-                      VALUES (:nombre, :ubicacion, :rubro, :direccion, :telefono, :descripcion, :user_id, 'pendiente', NOW())";
+            $query = "INSERT INTO locales (nombreLocal, ubicacionLocal, rubroLocal, codUsuario, estado, fechaCreacion) 
+                      VALUES (:nombre, :ubicacion, :rubro,  :user_id, 'pendiente', NOW())";
             $stmt = $conn->prepare($query);
             $stmt->bindParam(':nombre', $nombre);
             $stmt->bindParam(':ubicacion', $ubicacion);
             $stmt->bindParam(':rubro', $rubro);
-            $stmt->bindParam(':direccion', $direccion);
-            $stmt->bindParam(':telefono', $telefono);
-            $stmt->bindParam(':descripcion', $descripcion);
+
             $stmt->bindParam(':user_id', $user_id);
 
             if ($stmt->execute()) {
@@ -115,10 +88,415 @@ $pageTitle = "Mi Local";
 require_once '../includes/header-panel.php';
 ?>
 
+<style>
+    :root {
+        --primary-purple: #8B5CF6;
+        --secondary-purple: #A855F7;
+        --accent-green: #10B981;
+        --accent-blue: #3B82F6;
+        --accent-orange: #F59E0B;
+        --accent-red: #EF4444;
+        --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --card-bg: rgba(255, 255, 255, 0.95);
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-color: rgba(255, 255, 255, 0.2);
+        --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.1);
+        --shadow-medium: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
 
-<link rel="stylesheet" href="../css/mis_local.css">
+    body {
+        background: var(--bg-gradient);
+        min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
 
-<div class="dashboard-container">
+    .main-content-panel {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        background: var(--card-bg);
+        border-radius: 24px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(20px);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .header-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .header-text h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .header-text p {
+        color: var(--text-secondary);
+        margin: 0.25rem 0 0 0;
+        font-size: 0.875rem;
+    }
+
+    .alert {
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 500;
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .alert-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--accent-red);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .alert-info {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .alert-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--accent-orange);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .content-section {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(20px);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+    }
+
+    .section-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.9rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-pendiente {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--accent-orange);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .status-activo {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-rechazado {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--accent-red);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .info-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 1rem;
+        background: rgba(139, 92, 246, 0.03);
+        border-radius: 12px;
+        border: 1px solid rgba(139, 92, 246, 0.1);
+    }
+
+    .info-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    .info-label i {
+        color: var(--primary-purple);
+        width: 16px;
+    }
+
+    .info-value {
+        color: var(--text-secondary);
+        text-align: right;
+        max-width: 60%;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+
+    .welcome-message {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .welcome-message i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: var(--primary-purple);
+        opacity: 0.7;
+    }
+
+    .welcome-message h3 {
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .form-instructions {
+        background: rgba(139, 92, 246, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(139, 92, 246, 0.1);
+    }
+
+    .form-instructions h6 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .form-instructions ul {
+        color: var(--text-secondary);
+        padding-left: 1.5rem;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .form-instructions li {
+        margin-bottom: 0.5rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .form-group label i {
+        color: var(--primary-purple);
+        width: 16px;
+    }
+
+    .required-indicator {
+        color: var(--accent-red);
+    }
+
+    .form-control {
+        padding: 0.75rem 1rem;
+        border: 2px solid rgba(139, 92, 246, 0.1);
+        border-radius: 12px;
+        background: white;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        font-family: inherit;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-purple);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .is-valid {
+        border-color: var(--accent-green) !important;
+    }
+
+    .is-invalid {
+        border-color: var(--accent-red) !important;
+    }
+
+    .char-counter {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-align: right;
+        margin-top: 0.25rem;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .modal-content {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: var(--shadow-medium);
+        border: 1px solid var(--border-color);
+        backdrop-filter: blur(20px);
+    }
+
+    @media (max-width: 768px) {
+        .main-content-panel {
+            padding: 1rem;
+        }
+
+        .page-header {
+            padding: 1.5rem;
+        }
+
+        .content-section {
+            padding: 1.5rem;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .info-item {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .info-value {
+            max-width: 100%;
+            text-align: left;
+        }
+
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+    }
+</style>
+
+<div class="main-content-panel">
     <!-- Header -->
     <div class="page-header">
         <div class="header-content">
@@ -153,8 +531,6 @@ require_once '../includes/header-panel.php';
             Para poder crear promociones, primero debes registrar la información de tu local.
         </div>
     <?php endif; ?>
-
-
 
     <!-- Contenido principal -->
     <div class="content-section">
@@ -207,34 +583,9 @@ require_once '../includes/header-panel.php';
                     <span class="info-value"><?= htmlspecialchars($local['rubroLocal']) ?></span>
                 </div>
 
-                <?php if (!empty($local['direccion'])): ?>
-                    <div class="info-item">
-                        <span class="info-label">
-                            <i class="fas fa-building"></i> Dirección
-                        </span>
-                        <span class="info-value"><?= htmlspecialchars($local['direccion']) ?></span>
-                    </div>
-                <?php endif; ?>
 
-                <?php if (!empty($local['telefono'])): ?>
-                    <div class="info-item">
-                        <span class="info-label">
-                            <i class="fas fa-phone"></i> Teléfono
-                        </span>
-                        <span class="info-value"><?= htmlspecialchars($local['telefono']) ?></span>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (!empty($local['descripcion'])): ?>
-                    <div class="info-item">
-                        <span class="info-label">
-                            <i class="fas fa-align-left"></i> Descripción
-                        </span>
-                        <span class="info-value"><?= htmlspecialchars($local['descripcion']) ?></span>
-                    </div>
-                <?php endif; ?>
             </div>
-
+            <!--
             <div
                 style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid rgba(139, 92, 246, 0.1);">
                 <p style="color: var(--text-secondary); margin-bottom: 1rem;">
@@ -245,9 +596,10 @@ require_once '../includes/header-panel.php';
                     <i class="fas fa-edit"></i> Solicitar Modificación
                 </button>
             </div>
+            -->
 
         <?php else: ?>
-            <!-- Formulario para crear local -->
+                <!-- Formulario para crear local -->
             <div class="section-header">
                 <div class="section-info">
                     <div class="section-icon">
@@ -314,29 +666,7 @@ require_once '../includes/header-panel.php';
                             placeholder="Ej: Planta Baja, Local 15">
                     </div>
 
-                    <div class="form-group">
-                        <label for="direccion">
-                            <i class="fas fa-building"></i> Dirección Completa
-                        </label>
-                        <input type="text" name="direccion" id="direccion" class="form-control"
-                            placeholder="Ej: Av. Principal 123, Centro Comercial">
-                    </div>
 
-                    <div class="form-group">
-                        <label for="telefono">
-                            <i class="fas fa-phone"></i> Teléfono de Contacto
-                        </label>
-                        <input type="tel" name="telefono" id="telefono" class="form-control"
-                            placeholder="Ej: +54 291 123-4567">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="descripcion">
-                            <i class="fas fa-align-left"></i> Descripción del Local
-                        </label>
-                        <textarea name="descripcion" id="descripcion" class="form-control" rows="4"
-                            placeholder="Describe brevemente tu local, productos o servicios que ofreces..."></textarea>
-                    </div>
                 </div>
 
                 <div style="text-align: center; margin-top: 2rem;">
@@ -349,9 +679,8 @@ require_once '../includes/header-panel.php';
     </div>
 
     <!-- Modal para solicitar modificación -->
-    <div id="editRequestModal"
-        style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: var(--card-bg); border-radius: 20px; padding: 2rem; max-width: 500px; margin: 2rem;">
+    <div id="editRequestModal" class="modal-overlay">
+        <div class="modal-content">
             <div class="section-header" style="margin-bottom: 1rem; padding-bottom: 1rem;">
                 <div class="section-info">
                     <div class="section-icon">
@@ -362,82 +691,59 @@ require_once '../includes/header-panel.php';
             </div>
 
             <form method="POST" id="editRequestForm">
-                <div class="form-group">
-                    <label for="edit_nombre">
-                        <i class="fas fa-store"></i> Nombre del Local
-                        <span class="required-indicator">*</span>
-                    </label>
-                    <input type="text" name="nombre" id="edit_nombre" class="form-control" required
-                        value="<?= htmlspecialchars($local['nombreLocal'] ?? '') ?>">
-                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit_nombre">
+                            <i class="fas fa-store"></i> Nombre del Local
+                            <span class="required-indicator">*</span>
+                        </label>
+                        <input type="text" name="nombre" id="edit_nombre" class="form-control" required
+                            value="<?= htmlspecialchars($local['nombreLocal'] ?? '') ?>">
+                    </div>
 
-                <div class="form-group">
-                    <label for="edit_rubro">
-                        <i class="fas fa-tags"></i> Rubro
-                        <span class="required-indicator">*</span>
-                    </label>
-                    <select name="rubro" id="edit_rubro" class="form-control" required>
-                        <option value="">Selecciona un rubro</option>
-                        <option value="Indumentaria" <?= ($local['rubroLocal'] ?? '') == 'Indumentaria' ? 'selected' : '' ?>>Indumentaria</option>
-                        <option value="Calzado" <?= ($local['rubroLocal'] ?? '') == 'Calzado' ? 'selected' : '' ?>>Calzado
-                        </option>
-                        <option value="Electrónica" <?= ($local['rubroLocal'] ?? '') == 'Electrónica' ? 'selected' : '' ?>>
-                            Electrónica</option>
-                        <option value="Comida" <?= ($local['rubroLocal'] ?? '') == 'Comida' ? 'selected' : '' ?>>Comida
-                        </option>
-                        <option value="Perfumería" <?= ($local['rubroLocal'] ?? '') == 'Perfumería' ? 'selected' : '' ?>>
-                            Perfumería</option>
-                        <option value="Óptica" <?= ($local['rubroLocal'] ?? '') == 'Óptica' ? 'selected' : '' ?>>Óptica
-                        </option>
-                        <option value="Hogar" <?= ($local['rubroLocal'] ?? '') == 'Hogar' ? 'selected' : '' ?>>Hogar
-                        </option>
-                        <option value="Deportes" <?= ($local['rubroLocal'] ?? '') == 'Deportes' ? 'selected' : '' ?>>
-                            Deportes</option>
-                        <option value="Libros" <?= ($local['rubroLocal'] ?? '') == 'Libros' ? 'selected' : '' ?>>Libros
-                        </option>
-                        <option value="Juguetes" <?= ($local['rubroLocal'] ?? '') == 'Juguetes' ? 'selected' : '' ?>>
-                            Juguetes</option>
-                        <option value="Otros" <?= ($local['rubroLocal'] ?? '') == 'Otros' ? 'selected' : '' ?>>Otros
-                        </option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="edit_rubro">
+                            <i class="fas fa-tags"></i> Rubro
+                            <span class="required-indicator">*</span>
+                        </label>
+                        <select name="rubro" id="edit_rubro" class="form-control" required>
+                            <option value="">Selecciona un rubro</option>
+                            <option value="Indumentaria" <?= ($local['rubroLocal'] ?? '') == 'Indumentaria' ? 'selected' : '' ?>>Indumentaria</option>
+                            <option value="Calzado" <?= ($local['rubroLocal'] ?? '') == 'Calzado' ? 'selected' : '' ?>>
+                                Calzado</option>
+                            <option value="Electrónica" <?= ($local['rubroLocal'] ?? '') == 'Electrónica' ? 'selected' : '' ?>>Electrónica</option>
+                            <option value="Comida" <?= ($local['rubroLocal'] ?? '') == 'Comida' ? 'selected' : '' ?>>Comida
+                            </option>
+                            <option value="Perfumería" <?= ($local['rubroLocal'] ?? '') == 'Perfumería' ? 'selected' : '' ?>>Perfumería</option>
+                            <option value="Óptica" <?= ($local['rubroLocal'] ?? '') == 'Óptica' ? 'selected' : '' ?>>Óptica
+                            </option>
+                            <option value="Hogar" <?= ($local['rubroLocal'] ?? '') == 'Hogar' ? 'selected' : '' ?>>Hogar
+                            </option>
+                            <option value="Deportes" <?= ($local['rubroLocal'] ?? '') == 'Deportes' ? 'selected' : '' ?>>
+                                Deportes</option>
+                            <option value="Libros" <?= ($local['rubroLocal'] ?? '') == 'Libros' ? 'selected' : '' ?>>Libros
+                            </option>
+                            <option value="Juguetes" <?= ($local['rubroLocal'] ?? '') == 'Juguetes' ? 'selected' : '' ?>>
+                                Juguetes</option>
+                            <option value="Otros" <?= ($local['rubroLocal'] ?? '') == 'Otros' ? 'selected' : '' ?>>Otros
+                            </option>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label for="edit_ubicacion">
-                        <i class="fas fa-map-marker-alt"></i> Ubicación en el Shopping
-                        <span class="required-indicator">*</span>
-                    </label>
-                    <input type="text" name="ubicacion" id="edit_ubicacion" class="form-control" required
-                        value="<?= htmlspecialchars($local['ubicacionLocal'] ?? '') ?>">
-                </div>
+                    <div class="form-group">
+                        <label for="edit_ubicacion">
+                            <i class="fas fa-map-marker-alt"></i> Ubicación en el Shopping
+                            <span class="required-indicator">*</span>
+                        </label>
+                        <input type="text" name="ubicacion" id="edit_ubicacion" class="form-control" required
+                            value="<?= htmlspecialchars($local['ubicacionLocal'] ?? '') ?>">
+                    </div>
 
-                <div class="form-group">
-                    <label for="edit_direccion">
-                        <i class="fas fa-building"></i> Dirección Completa
-                    </label>
-                    <input type="text" name="direccion" id="edit_direccion" class="form-control"
-                        value="<?= htmlspecialchars($local['direccion'] ?? '') ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="edit_telefono">
-                        <i class="fas fa-phone"></i> Teléfono de Contacto
-                    </label>
-                    <input type="tel" name="telefono" id="edit_telefono" class="form-control"
-                        value="<?= htmlspecialchars($local['telefono'] ?? '') ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="edit_descripcion">
-                        <i class="fas fa-align-left"></i> Descripción del Local
-                    </label>
-                    <textarea name="descripcion" id="edit_descripcion" class="form-control"
-                        rows="4"><?= htmlspecialchars($local['descripcion'] ?? '') ?></textarea>
                 </div>
 
                 <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                    <button type="button" onclick="toggleEditMode()"
-                        style="background: rgba(107, 114, 128, 0.1); color: var(--text-secondary);" class="btn-primary">
+                    <button type="button" onclick="toggleEditMode()" class="btn-primary"
+                        style="background: rgba(107, 114, 128, 0.1); color: var(--text-secondary);">
                         <i class="fas fa-times"></i> Cancelar
                     </button>
                     <button type="submit" class="btn-primary">
@@ -451,25 +757,6 @@ require_once '../includes/header-panel.php';
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Animación de números en estadísticas
-        const statNumbers = document.querySelectorAll('.stat-number');
-        statNumbers.forEach(stat => {
-            const finalValue = parseInt(stat.textContent);
-            if (!isNaN(finalValue) && finalValue > 0) {
-                let currentValue = 0;
-                const increment = Math.ceil(finalValue / 30);
-                const timer = setInterval(() => {
-                    currentValue += increment;
-                    if (currentValue >= finalValue) {
-                        stat.textContent = finalValue;
-                        clearInterval(timer);
-                    } else {
-                        stat.textContent = currentValue;
-                    }
-                }, 50);
-            }
-        });
-
         // Validación en tiempo real para formularios
         const forms = document.querySelectorAll('form');
         forms.forEach(form => {
@@ -518,58 +805,9 @@ require_once '../includes/header-panel.php';
         });
 
         // Función de validación
-        function validateField(field) {
-            const value = field.value.trim();
-            let isValid = true;
 
-            // Limpiar estados previos
-            field.classList.remove('is-valid', 'is-invalid');
 
-            // Validar campos requeridos
-            if (field.hasAttribute('required') && !value) {
-                isValid = false;
-            }
 
-            // Validaciones específicas
-            if (field.name === 'nombre' && value && value.length < 3) {
-                isValid = false;
-            }
-
-            if (field.name === 'telefono' && value && !/^[\+\d\s\-\(\)]+$/.test(value)) {
-                isValid = false;
-            }
-
-            // Aplicar clases CSS
-            if (value) { // Solo validar si hay contenido
-                field.classList.add(isValid ? 'is-valid' : 'is-invalid');
-            }
-
-            return isValid;
-        }
-
-        // Auto-resize para textareas
-        const textareas = document.querySelectorAll('textarea');
-        textareas.forEach(textarea => {
-            function adjustHeight() {
-                textarea.style.height = 'auto';
-                textarea.style.height = textarea.scrollHeight + 'px';
-            }
-
-            textarea.addEventListener('input', adjustHeight);
-            adjustHeight(); // Inicializar
-        });
-
-        // Efectos hover para tarjetas
-        const hoverCards = document.querySelectorAll('.stat-card, .info-card');
-        hoverCards.forEach(card => {
-            card.addEventListener('mouseenter', function () {
-                this.style.transform = 'translateY(-4px) scale(1.02)';
-            });
-
-            card.addEventListener('mouseleave', function () {
-                this.style.transform = 'translateY(0) scale(1)';
-            });
-        });
 
         // Auto-focus en el primer campo
         const firstInput = document.querySelector('#nombre, #edit_nombre');

@@ -9,6 +9,36 @@ $auth->checkAccess(['administrador']);
 $database = new Database();
 $conn = $database->getConnection();
 
+// Manejar mensajes de éxito/error de la sesión
+$success = $_SESSION['success'] ?? '';
+$error = $_SESSION['error'] ?? '';
+// Limpiar mensajes de la sesión después de mostrarlos
+unset($_SESSION['success'], $_SESSION['error']);
+
+// ... el resto de tu código ...
+
+if (isset($_GET['error'])) {
+    switch($_GET['error']) {
+        case 'novedad_no_encontrada':
+            $error = 'La novedad no fue encontrada';
+            break;
+        case 'eliminacion_fallida':
+            $error = 'Error al eliminar la novedad';
+            break;
+        case 'error_basedatos':
+            $error = 'Error de base de datos';
+            break;
+        case 'metodo_no_permitido':
+            $error = 'Método no permitido';
+            break;
+        case 'id_no_proporcionado':
+            $error = 'ID no proporcionado';
+            break;
+        default:
+            $error = 'Ocurrió un error inesperado';
+    }
+}
+
 // Crear nueva novedad
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['crear_novedad'])) {
     $texto = trim($_POST['texto']);
@@ -31,7 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['crear_novedad'])) {
         $error = "Error al crear la novedad";
     }
 }
-
 
 // Obtener novedades
 $query = "SELECT * FROM novedades ORDER BY fechaDesdeNovedad DESC";
@@ -174,11 +203,16 @@ require_once '../includes/header-panel.php';
                                             class="btn btn-sm btn-warning" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="eliminar_novedad.php?id=<?= $novedad['codNovedad'] ?>"
-                                            class="btn btn-sm btn-danger"
-                                            onclick="return confirm('¿Eliminar esta novedad?')" title="Eliminar">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
+                                        
+                                        <!-- Formulario para eliminar -->
+                                        <form method="POST" action="eliminar_novedad.php" style="display: inline;">
+                                            <input type="hidden" name="id" value="<?= $novedad['codNovedad'] ?>">
+                                            <button type="submit" class="btn btn-sm btn-danger" 
+                                                    onclick="return confirm('¿Estás seguro de eliminar esta novedad?\n\n\"<?= addslashes($novedad['textoNovedad']) ?>\")" 
+                                                    title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -205,51 +239,6 @@ require_once '../includes/header-panel.php';
                 this.style.boxShadow = 'none';
             });
         });
-
-        // Add ripple effect to buttons
-        const buttons = document.querySelectorAll('.btn');
-        buttons.forEach(button => {
-            button.addEventListener('click', function (e) {
-                const ripple = document.createElement('div');
-                const rect = this.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                const x = e.clientX - rect.left - size / 2;
-                const y = e.clientY - rect.top - size / 2;
-
-                ripple.style.width = ripple.style.height = size + 'px';
-                ripple.style.left = x + 'px';
-                ripple.style.top = y + 'px';
-                ripple.style.position = 'absolute';
-                ripple.style.borderRadius = '50%';
-                ripple.style.background = 'rgba(255, 255, 255, 0.3)';
-                ripple.style.animation = 'ripple-animation 0.6s ease-out';
-                ripple.style.pointerEvents = 'none';
-
-                this.style.position = 'relative';
-                this.style.overflow = 'hidden';
-                this.appendChild(ripple);
-
-                setTimeout(() => {
-                    ripple.remove();
-                }, 600);
-            });
-        });
-
-        // Add CSS for ripple animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes ripple-animation {
-                0% {
-                    transform: scale(0);
-                    opacity: 1;
-                }
-                100% {
-                    transform: scale(2);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
 
         // Auto-resize textarea
         const textarea = document.querySelector('textarea[name="texto"]');

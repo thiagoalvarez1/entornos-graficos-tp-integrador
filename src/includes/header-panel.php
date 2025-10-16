@@ -32,7 +32,7 @@ $panelConfig = [
         'menu' => [
             ['icon' => 'fa-tags', 'text' => 'Mis Promociones', 'link' => 'mis_promociones.php'],
             ['icon' => 'fa-clipboard-check', 'text' => 'Solicitudes', 'link' => 'mis_solicitudes.php'],
-            ['icon' => 'fa-chart-line', 'text' => 'Estadísticas', 'link' => 'estadisticas.php']
+            ['icon' => 'fa-chart-line', 'text' => 'Estadísticas', 'link' => 'reportes_promociones.php']
         ]
     ]
 ];
@@ -45,7 +45,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= isset($pageTitle) ? "$pageTitle - " : '' ?>PromoShopping</title>
+    <title><?= isset($pageTitle) ? "$pageTitle - " : '' ?>Bandera Shopping</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -60,7 +60,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-brand">PromoShopping</div>
+                <div class="sidebar-brand">Bandera Shopping</div>
                 <?php if ($panelType && isset($panelConfig[$panelType])): ?>
                     <div class="sidebar-subtitle"><?= $panelConfig[$panelType]['title'] ?></div>
                 <?php endif; ?>
@@ -86,7 +86,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <div class="menu-divider"></div>
 
                 <!-- Menú común -->
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="mi_local.php">
                     <i class="fas fa-cog"></i>
                     <span>Configuración</span>
                 </a>

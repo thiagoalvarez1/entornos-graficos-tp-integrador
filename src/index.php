@@ -190,6 +190,7 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
 <?php endif; ?>
 
 <!-- PROMOCIONES DESTACADAS -->
+<!-- PROMOCIONES DESTACADAS -->
 <section id="promociones" class="promociones-section">
     <div class="container">
         <div class="section-header">
@@ -218,53 +219,35 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
                         default => 'discount-badge-inicial'
                     };
 
-                    // Icono según rubro
-                    $icono = 'fas fa-store';
-                    $rubro = strtolower($promo['rubroLocal']);
-                    if (str_contains($rubro, 'tech') || str_contains($rubro, 'tecnolog')) {
-                        $icono = 'fas fa-laptop';
-                    } elseif (str_contains($rubro, 'calzado') || str_contains($rubro, 'shoe')) {
-                        $icono = 'fas fa-shoe-prints';
-                    } elseif (str_contains($rubro, 'moda') || str_contains($rubro, 'ropa') || str_contains($rubro, 'fashion')) {
-                        $icono = 'fas fa-tshirt';
-                    } elseif (str_contains($rubro, 'comida') || str_contains($rubro, 'food') || str_contains($rubro, 'restaurant')) {
-                        $icono = 'fas fa-utensils';
-                    }
+
                     ?>
                     <div class="col-lg-4 col-md-6">
                         <div class="promo-card <?= $card_class ?>" data-aos="fade-up"
                             data-aos-delay="<?= ($index + 1) * 100 ?>">
-                            <span class="category-badge <?= $badge_class ?>">
-                                <i
-                                    class="fas <?= $categoria == 'Premium' ? 'fa-crown' : ($categoria == 'Medium' ? 'fa-gem' : 'fa-star') ?>"></i>
-                                <?= $categoria ?>
-                            </span>
-                            <div class="card-image">
-                                <img src="https://via.placeholder.com/400x200/6366f1/ffffff?text=<?= urlencode($promo['nombreLocal']) ?>"
-                                    alt="<?= htmlspecialchars($promo['nombreLocal']) ?>">
+
+                            <!-- Header con categoría -->
+                            <div class="card-header">
+                                <span class="category-badge <?= $badge_class ?>">
+                                    <i
+                                        class="fas <?= $categoria == 'Premium' ? 'fa-crown' : ($categoria == 'Medium' ? 'fa-gem' : 'fa-star') ?>"></i>
+                                    <?= $categoria ?>
+                                </span>
+
+                                <!-- Badge de descuento -->
                                 <div class="discount-badge <?= $discount_class ?>">
                                     <span class="discount-text"><?= $categoria ?></span>
                                     <span class="discount-label">OFERTA</span>
                                 </div>
+
+                                <!-- Información del local -->
+
                             </div>
+
+                            <!-- Cuerpo de la promoción -->
                             <div class="card-body">
-                                <div class="store-info">
-                                    <div class="store-avatar">
-                                        <i class="<?= $icono ?>"></i>
-                                    </div>
-                                    <div class="store-details">
-                                        <h5 class="store-name"><?= htmlspecialchars($promo['nombreLocal']) ?></h5>
-                                        <span class="store-category"><?= htmlspecialchars($promo['rubroLocal']) ?></span>
-                                    </div>
-                                    <div class="store-rating">
-                                        <i class="fas fa-star"></i>
-                                        <span>4.<?= rand(5, 9) ?></span>
-                                    </div>
-                                </div>
                                 <h4 class="promo-title"><?= htmlspecialchars($promo['textoPromo']) ?></h4>
-                                <p class="promo-description">
-                                    Promoción exclusiva disponible por tiempo limitado. No acumulable con otras ofertas.
-                                </p>
+
+
                                 <div class="promo-details">
                                     <div class="detail-item">
                                         <i class="fas fa-calendar-alt"></i>
@@ -280,6 +263,8 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Footer con acción -->
                             <div class="card-footer">
                                 <?php if (isset($_SESSION['user_id']) && $_SESSION['user_type'] == 'cliente'): ?>
                                     <a href="cliente/solicitar_promocion.php?id=<?= $promo['codPromo'] ?>" class="btn-claim">
@@ -300,22 +285,21 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
                 <!-- Tarjeta ejemplo si no hay promociones -->
                 <div class="col-lg-4 col-md-6">
                     <div class="promo-card card-premium">
-                        <span class="category-badge badge-premium">
-                            <i class="fas fa-crown"></i> Premium
-                        </span>
-                        <div class="card-image">
-                            <img src="https://via.placeholder.com/400x200/6366f1/ffffff?text=Ejemplo" alt="Ejemplo">
+                        <div class="card-header">
+                            <span class="category-badge badge-premium">
+                                <i class="fas fa-crown"></i> Premium
+                            </span>
+
                             <div class="discount-badge">
                                 <span class="discount-text">30% OFF</span>
                                 <span class="discount-label">OFERTA</span>
                             </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="store-info">
-                                <div class="store-avatar">
+
+                            <div class="store-icon-container">
+                                <div class="store-icon">
                                     <i class="fas fa-store"></i>
                                 </div>
-                                <div class="store-details">
+                                <div class="store-info">
                                     <h5 class="store-name">Nombre del Local</h5>
                                     <span class="store-category">Categoría</span>
                                 </div>
@@ -324,15 +308,28 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
                                     <span>4.8</span>
                                 </div>
                             </div>
-                            <h4 class="promo-title">Título de la promoción</h4>
-                            <p class="promo-description">Descripción de la promoción disponible.</p>
+                        </div>
+
+                        <div class="card-body">
+                            <h4 class="promo-title">Título de la promoción de ejemplo</h4>
+                            <p class="promo-description">Descripción de la promoción disponible por tiempo limitado.</p>
+
                             <div class="promo-details">
                                 <div class="detail-item">
                                     <i class="fas fa-calendar-alt"></i>
                                     <span>Hasta 31/12/2025</span>
                                 </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Lunes a Viernes</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Planta Baja, Local 15</span>
+                                </div>
                             </div>
                         </div>
+
                         <div class="card-footer">
                             <a href="login.php" class="btn-claim">
                                 <span>Iniciar sesión</span>

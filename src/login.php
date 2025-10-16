@@ -6,6 +6,7 @@ require_once 'includes/database.php';
 
 $auth = new Auth();
 
+
 if ($auth->isLoggedIn()) {
     $auth->redirectUser();
 }
@@ -37,12 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/login.css">
+
 </head>
+
 
 <body>
     <div class="login-wrapper">
         <div class="login-card">
             <!-- Header -->
+
             <div class="login-header">
                 <div class="logo-icon">
                     <i class="fas fa-store"></i>
@@ -50,8 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h1 class="brand-title">Bandera Shopping</h1>
                 <p class="brand-subtitle">Inicia sesión en tu cuenta</p>
             </div>
+            <!-- Botón Volver al Inicio -->
+
 
             <!-- Formulario -->
+
             <div class="login-form">
                 <?php if (!empty($error)): ?>
                     <div class="alert" role="alert">
@@ -87,6 +94,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         Iniciar Sesión
                     </button>
                 </form>
+                <!-- Botón Volver al Inicio -->
+                <div class="text-center mb-4">
+                    <a href="index.php" class="btn-back-home">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver al Inicio
+                    </a>
+                </div>
+
 
                 <!-- Divider -->
                 <div class="divider">

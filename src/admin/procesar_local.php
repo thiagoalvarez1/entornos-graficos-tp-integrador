@@ -7,7 +7,7 @@ require_once '../includes/auth.php';
 require_once '../includes/database.php';
 
 $auth = new Auth();
-$auth->checkAccess([USER_ADMIN]); // Asegura que solo el admin puede procesar
+$auth->checkAccess([USER_ADMIN]);
 
 $database = new Database();
 $conn = $database->getConnection();
@@ -24,17 +24,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
                 $dueno_id = intval($_POST['dueno_id']);
                 $estado = $_POST['estado'];
 
-                // 1. Verificar que el dueño no tenga ya un local
+                // Verificar que el dueño no tenga ya un local
                 $check_query = "SELECT codLocal FROM locales WHERE codUsuario = :dueno_id";
                 $check_stmt = $conn->prepare($check_query);
                 $check_stmt->bindParam(':dueno_id', $dueno_id);
                 $check_stmt->execute();
 
                 if ($check_stmt->rowCount() > 0) {
-                    throw new Exception("El dueño seleccionado ya tiene un local asignado. Por favor, seleccione otro.");
+                    throw new Exception("El dueño seleccionado ya tiene un local asignado.");
                 }
 
-                // 2. Insertar nuevo local
+                // Insertar nuevo local
                 $query = "INSERT INTO locales (nombreLocal, ubicacionLocal, rubroLocal, codUsuario, estado, fechaCreacion) 
                           VALUES (:nombre, :ubicacion, :rubro, :dueno_id, :estado, NOW())";
 
@@ -46,7 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
                 $stmt->bindParam(':estado', $estado);
 
                 if ($stmt->execute()) {
-                    $_SESSION['success'] = "Local <strong>{$nombre}</strong> creado exitosamente.";
+                    $_SESSION['swal'] = [
+                        'icon' => 'success',
+                        'title' => '¡Éxito!',
+                        'text' => "Local {$nombre} creado exitosamente.",
+                        'action' => 'crear'
+                    ];
                 } else {
                     throw new Exception("Error al ejecutar la creación del local.");
                 }
@@ -60,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
                 $dueno_id = intval($_POST['dueno_id']);
                 $estado = $_POST['estado'];
 
-                // 1. Verificar que el dueño no esté asignado a OTRO local
+                // Verificar que el dueño no esté asignado a OTRO local
                 $check_query = "SELECT codLocal FROM locales WHERE codUsuario = :dueno_id AND codLocal != :codLocal";
                 $check_stmt = $conn->prepare($check_query);
                 $check_stmt->bindParam(':dueno_id', $dueno_id);
@@ -68,10 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
                 $check_stmt->execute();
 
                 if ($check_stmt->rowCount() > 0) {
-                    throw new Exception("El dueño seleccionado ya está asignado a otro local. Debe desasignarlo primero.");
+                    throw new Exception("El dueño seleccionado ya está asignado a otro local.");
                 }
 
-                // 2. Actualizar el local
+                // Actualizar el local
                 $query = "UPDATE locales 
                           SET nombreLocal = :nombre, ubicacionLocal = :ubicacion, 
                               rubroLocal = :rubro, codUsuario = :dueno_id, estado = :estado 
@@ -86,7 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
                 $stmt->bindParam(':codLocal', $codLocal);
 
                 if ($stmt->execute()) {
-                    $_SESSION['success'] = "Local **#{$codLocal} ({$nombre})** actualizado exitosamente.";
+                    $_SESSION['swal'] = [
+                        'icon' => 'success',
+                        'title' => '¡Actualizado!',
+                        'text' => "Local #{$codLocal} ({$nombre}) actualizado exitosamente.",
+                        'action' => 'editar'
+                    ];
                 } else {
                     throw new Exception("Error al ejecutar la actualización del local.");
                 }
@@ -94,23 +104,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
 
             case 'eliminar':
                 $codLocal = intval($_POST['codLocal']);
+                $nombre = trim($_POST['nombre']); // Asegúrate de enviar el nombre desde el formulario
 
-                // **ATENCIÓN**: Considera el manejo de Claves Foráneas. 
-                // Si tienes promociones o usos de promociones vinculados, la eliminación fallará.
-                // Podrías: 
-                // 1. Eliminar promociones relacionadas: 
-                // $conn->exec("DELETE FROM promociones WHERE codLocal = $codLocal");
-                // 2. O solo cambiar el estado a 'inactivo' en lugar de eliminar.
+                // Verificar si tiene promociones activas
+                $check_promos = "SELECT COUNT(*) as total FROM promociones WHERE codLocal = :codLocal AND estadoPromo = 'aprobada'";
+                $stmt_check = $conn->prepare($check_promos);
+                $stmt_check->bindParam(':codLocal', $codLocal);
+                $stmt_check->execute();
+                $result = $stmt_check->fetch(PDO::FETCH_ASSOC);
 
-                // Aquí usamos una eliminación simple (asumiendo CASCADE DELETE en promociones o sin datos vinculados)
+                if ($result['total'] > 0) {
+                    throw new Exception("No se puede eliminar el local porque tiene promociones activas asignadas.");
+                }
+
+                // Eliminar el local
                 $query = "DELETE FROM locales WHERE codLocal = :codLocal";
                 $stmt = $conn->prepare($query);
                 $stmt->bindParam(':codLocal', $codLocal);
 
                 if ($stmt->execute()) {
-                    $_SESSION['success'] = "Local #{$codLocal} eliminado exitosamente.";
+                    $_SESSION['swal'] = [
+                        'icon' => 'success',
+                        'title' => '¡Eliminado!',
+                        'text' => "Local #{$codLocal} ({$nombre}) eliminado exitosamente.",
+                        'action' => 'eliminar'
+                    ];
                 } else {
-                    throw new Exception("Error al eliminar el local. Asegúrese de que no tenga promociones activas.");
+                    throw new Exception("Error al eliminar el local.");
                 }
                 break;
 
@@ -118,12 +138,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
                 throw new Exception("Acción no válida.");
         }
     } catch (Exception $e) {
-        $_SESSION['error'] = "Operación fallida: " . $e->getMessage();
+        $_SESSION['swal'] = [
+            'icon' => 'error',
+            'title' => 'Error',
+            'text' => $e->getMessage(),
+            'action' => 'error'
+        ];
     }
 } else {
-    $_SESSION['error'] = "Acceso no autorizado al procesamiento de locales.";
+    $_SESSION['swal'] = [
+        'icon' => 'error',
+        'title' => 'Error',
+        'text' => "Acceso no autorizado al procesamiento de locales.",
+        'action' => 'error'
+    ];
 }
 
 // Redirigir siempre a la página de gestión
 header('Location: gestion-locales.php');
 exit;
+?>

@@ -577,7 +577,7 @@ try {
         </div>
         <div class="stats-info">
             <i class="fas fa-store"></i>
-            Centro Comercial PromoShopping
+            Centro Comercial Bandera Shopping
         </div>
     </div>
 

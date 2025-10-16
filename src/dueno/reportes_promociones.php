@@ -30,50 +30,36 @@ $fecha_desde = $_GET['fecha_desde'] ?? date('Y-m-01'); // Primer día del mes
 $fecha_hasta = $_GET['fecha_hasta'] ?? date('Y-m-d');
 $filtro_promocion = $_GET['promocion'] ?? 'todas';
 
-// Estadísticas generales
-$query_stats = "SELECT 
-    COUNT(DISTINCT up.codUso) as total_usos,
-    COUNT(DISTINCT up.codCliente) as clientes_unicos,
-    COUNT(DISTINCT CASE WHEN up.estado = 'aceptada' THEN up.codUso END) as usos_aceptados,
-    COUNT(DISTINCT CASE WHEN up.estado = 'rechazada' THEN up.codUso END) as usos_rechazados,
-    COUNT(DISTINCT CASE WHEN up.estado = 'enviada' THEN up.codUso END) as usos_pendientes
-    FROM uso_promociones up
-    JOIN promociones p ON up.codPromo = p.codPromo
-    WHERE p.codLocal = :local_id
-    AND DATE(up.fechaUsoPromo) BETWEEN :fecha_desde AND :fecha_hasta";
+// Estadísticas generales (versión simplificada sin usos_promociones)
+$stats = [
+    'total_usos' => 0,
+    'clientes_unicos' => 0,
+    'usos_aceptados' => 0,
+    'usos_rechazados' => 0,
+    'usos_pendientes' => 0
+];
 
-$stmt_stats = $conn->prepare($query_stats);
-$stmt_stats->bindParam(':local_id', $local_id);
-$stmt_stats->bindParam(':fecha_desde', $fecha_desde);
-$stmt_stats->bindParam(':fecha_hasta', $fecha_hasta);
-$stmt_stats->execute();
-$stats = $stmt_stats->fetch(PDO::FETCH_ASSOC);
-
-// Estadísticas por promoción
+// Estadísticas por promoción (versión simplificada)
 $query_promociones = "SELECT 
     p.codPromo,
     p.textoPromo,
     p.estadoPromo,
     p.categoriaCliente,
-    COUNT(up.codUso) as total_usos,
-    COUNT(CASE WHEN up.estado = 'aceptada' THEN 1 END) as usos_aceptados,
-    COUNT(CASE WHEN up.estado = 'rechazada' THEN 1 END) as usos_rechazados,
-    COUNT(CASE WHEN up.estado = 'enviada' THEN 1 END) as usos_pendientes
+    0 as total_usos,
+    0 as usos_aceptados,
+    0 as usos_rechazados,
+    0 as usos_pendientes
     FROM promociones p
-    LEFT JOIN uso_promociones up ON p.codPromo = up.codPromo 
-        AND DATE(up.fechaUsoPromo) BETWEEN :fecha_desde AND :fecha_hasta
     WHERE p.codLocal = :local_id";
 
 if ($filtro_promocion != 'todas') {
     $query_promociones .= " AND p.codPromo = :filtro_promocion";
 }
 
-$query_promociones .= " GROUP BY p.codPromo ORDER BY total_usos DESC";
+$query_promociones .= " ORDER BY p.fechaCreacion DESC";
 
 $stmt_promociones = $conn->prepare($query_promociones);
 $stmt_promociones->bindParam(':local_id', $local_id);
-$stmt_promociones->bindParam(':fecha_desde', $fecha_desde);
-$stmt_promociones->bindParam(':fecha_hasta', $fecha_hasta);
 if ($filtro_promocion != 'todas') {
     $stmt_promociones->bindParam(':filtro_promocion', $filtro_promocion);
 }
@@ -88,21 +74,17 @@ $stmt_lista->bindParam(':local_id', $local_id);
 $stmt_lista->execute();
 $lista_promociones = $stmt_lista->fetchAll(PDO::FETCH_ASSOC);
 
-// Estadísticas por categoría de cliente
+// Estadísticas por categoría de cliente (versión simplificada)
 $query_categorias = "SELECT 
     p.categoriaCliente,
-    COUNT(up.codUso) as total_usos,
-    COUNT(CASE WHEN up.estado = 'aceptada' THEN 1 END) as usos_aceptados
+    0 as total_usos,
+    0 as usos_aceptados
     FROM promociones p
-    LEFT JOIN uso_promociones up ON p.codPromo = up.codPromo 
-        AND DATE(up.fechaUsoPromo) BETWEEN :fecha_desde AND :fecha_hasta
     WHERE p.codLocal = :local_id
-    GROUP BY p.categoriaCliente ORDER BY total_usos DESC";
+    GROUP BY p.categoriaCliente ORDER BY p.categoriaCliente";
 
 $stmt_categorias = $conn->prepare($query_categorias);
 $stmt_categorias->bindParam(':local_id', $local_id);
-$stmt_categorias->bindParam(':fecha_desde', $fecha_desde);
-$stmt_categorias->bindParam(':fecha_hasta', $fecha_hasta);
 $stmt_categorias->execute();
 $categorias_stats = $stmt_categorias->fetchAll(PDO::FETCH_ASSOC);
 
@@ -133,7 +115,7 @@ require_once '../includes/header-panel.php';
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    .dashboard-container {
+    .main-content-panel {
         max-width: 1400px;
         margin: 0 auto;
         padding: 2rem;
@@ -481,7 +463,7 @@ require_once '../includes/header-panel.php';
     }
 
     @media (max-width: 768px) {
-        .dashboard-container {
+        .main-content-panel {
             padding: 1rem;
         }
         
@@ -495,7 +477,7 @@ require_once '../includes/header-panel.php';
     }
 </style>
 
-<div class="dashboard-container">
+<div class="main-content-panel">
     <!-- Header -->
     <div class="dashboard-header">
         <div class="store-info">
@@ -527,9 +509,9 @@ require_once '../includes/header-panel.php';
                 <select name="promocion" class="filter-select">
                     <option value="todas">Todas las promociones</option>
                     <?php foreach ($lista_promociones as $promo): ?>
-                        <option value="<?= $promo['codPromo'] ?>" <?= $filtro_promocion == $promo['codPromo'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($promo['textoPromo']) ?>
-                        </option>
+                            <option value="<?= $promo['codPromo'] ?>" <?= $filtro_promocion == $promo['codPromo'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($promo['textoPromo']) ?>
+                            </option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -546,62 +528,68 @@ require_once '../includes/header-panel.php';
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-label">Total Usos</div>
+                <div class="stat-label">Total Promociones</div>
                 <div class="stat-icon" style="background: var(--accent-blue);">
-                    <i class="fas fa-chart-bar"></i>
+                    <i class="fas fa-tags"></i>
                 </div>
             </div>
-            <div class="stat-number"><?= $stats['total_usos'] ?></div>
+            <div class="stat-number"><?= count($promociones_stats) ?></div>
             <div class="stat-change positive">
                 <i class="fas fa-arrow-up"></i>
-                Este período
+                Activas
             </div>
         </div>
 
         <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-label">Clientes Únicos</div>
+                <div class="stat-label">Promociones Aprobadas</div>
                 <div class="stat-icon" style="background: var(--accent-green);">
-                    <i class="fas fa-users"></i>
+                    <i class="fas fa-check-circle"></i>
                 </div>
             </div>
-            <div class="stat-number"><?= $stats['clientes_unicos'] ?></div>
+            <div class="stat-number">
+                <?= count(array_filter($promociones_stats, fn($p) => $p['estadoPromo'] == 'aprobada')) ?>
+            </div>
             <div class="stat-change positive">
-                <i class="fas fa-arrow-up"></i>
-                Activos
+                <i class="fas fa-check"></i>
+                Visibles al público
             </div>
         </div>
 
         <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-label">Tasa de Aceptación</div>
+                <div class="stat-label">Tasa de Aprobación</div>
                 <div class="stat-icon" style="background: var(--accent-green);">
                     <i class="fas fa-percentage"></i>
                 </div>
             </div>
             <div class="stat-number">
-                <?php 
-                $tasa = $stats['total_usos'] > 0 ? round(($stats['usos_aceptados'] / $stats['total_usos']) * 100, 1) : 0;
+                <?php
+                $total_promos = count($promociones_stats);
+                $aprobadas = count(array_filter($promociones_stats, fn($p) => $p['estadoPromo'] == 'aprobada'));
+                $tasa = $total_promos > 0 ? round(($aprobadas / $total_promos) * 100, 1) : 0;
                 echo $tasa;
                 ?>%
             </div>
             <div class="stat-change positive">
-                <i class="fas fa-check"></i>
-                <?= $stats['usos_aceptados'] ?> aceptados
+                <i class="fas fa-chart-line"></i>
+                <?= $aprobadas ?> de <?= $total_promos ?>
             </div>
         </div>
 
         <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-label">Solicitudes Hoy</div>
+                <div class="stat-label">Pendientes</div>
                 <div class="stat-icon" style="background: var(--accent-orange);">
                     <i class="fas fa-clock"></i>
                 </div>
             </div>
-            <div class="stat-number"><?= $stats['usos_pendientes'] ?></div>
+            <div class="stat-number">
+                <?= count(array_filter($promociones_stats, fn($p) => $p['estadoPromo'] == 'pendiente')) ?>
+            </div>
             <div class="stat-change">
                 <i class="fas fa-hourglass-half"></i>
-                Pendientes
+                En revisión
             </div>
         </div>
     </div>
@@ -617,32 +605,25 @@ require_once '../includes/header-panel.php';
         
         <div class="progress-container">
             <?php
-            $total = $stats['total_usos'];
-            $porcentaje_aceptadas = $total > 0 ? ($stats['usos_aceptados'] / $total) * 100 : 0;
-            $porcentaje_rechazadas = $total > 0 ? ($stats['usos_rechazados'] / $total) * 100 : 0;
-            $porcentaje_pendientes = $total > 0 ? ($stats['usos_pendientes'] / $total) * 100 : 0;
+            $total_promos = count($promociones_stats);
+            $aprobadas = count(array_filter($promociones_stats, fn($p) => $p['estadoPromo'] == 'aprobada'));
+            $pendientes = count(array_filter($promociones_stats, fn($p) => $p['estadoPromo'] == 'pendiente'));
+            $denegadas = count(array_filter($promociones_stats, fn($p) => $p['estadoPromo'] == 'denegada'));
+
+            $porcentaje_aprobadas = $total_promos > 0 ? ($aprobadas / $total_promos) * 100 : 0;
+            $porcentaje_pendientes = $total_promos > 0 ? ($pendientes / $total_promos) * 100 : 0;
+            $porcentaje_denegadas = $total_promos > 0 ? ($denegadas / $total_promos) * 100 : 0;
             ?>
 
             <div class="progress-item">
                 <div class="progress-info">
                     <div class="progress-dot accepted"></div>
-                    <div class="progress-label">Aceptadas</div>
+                    <div class="progress-label">Aprobadas</div>
                 </div>
-                <div class="progress-value"><?= $stats['usos_aceptados'] ?> (<?= round($porcentaje_aceptadas, 1) ?>%)</div>
+                <div class="progress-value"><?= $aprobadas ?> (<?= round($porcentaje_aprobadas, 1) ?>%)</div>
             </div>
             <div class="progress-bar">
-                <div class="progress-fill accepted" style="width: <?= $porcentaje_aceptadas ?>%"></div>
-            </div>
-
-            <div class="progress-item">
-                <div class="progress-info">
-                    <div class="progress-dot rejected"></div>
-                    <div class="progress-label">Rechazadas</div>
-                </div>
-                <div class="progress-value"><?= $stats['usos_rechazados'] ?> (<?= round($porcentaje_rechazadas, 1) ?>%)</div>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill rejected" style="width: <?= $porcentaje_rechazadas ?>%"></div>
+                <div class="progress-fill accepted" style="width: <?= $porcentaje_aprobadas ?>%"></div>
             </div>
 
             <div class="progress-item">
@@ -650,10 +631,21 @@ require_once '../includes/header-panel.php';
                     <div class="progress-dot pending"></div>
                     <div class="progress-label">Pendientes</div>
                 </div>
-                <div class="progress-value"><?= $stats['usos_pendientes'] ?> (<?= round($porcentaje_pendientes, 1) ?>%)</div>
+                <div class="progress-value"><?= $pendientes ?> (<?= round($porcentaje_pendientes, 1) ?>%)</div>
             </div>
             <div class="progress-bar">
                 <div class="progress-fill pending" style="width: <?= $porcentaje_pendientes ?>%"></div>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-info">
+                    <div class="progress-dot rejected"></div>
+                    <div class="progress-label">Denegadas</div>
+                </div>
+                <div class="progress-value"><?= $denegadas ?> (<?= round($porcentaje_denegadas, 1) ?>%)</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill rejected" style="width: <?= $porcentaje_denegadas ?>%"></div>
             </div>
         </div>
     </div>
@@ -674,57 +666,71 @@ require_once '../includes/header-panel.php';
                         <th>Promoción</th>
                         <th>Categoría</th>
                         <th>Estado</th>
-                        <th>Total Usos</th>
-                        <th>Aceptadas</th>
-                        <th>Efectividad</th>
+                        <th>Vigencia</th>
+                        <th>Días Activos</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($promociones_stats)): ?>
-                        <tr>
-                            <td colspan="6" class="empty-state">
-                                <i class="fas fa-chart-bar"></i>
-                                <p>No hay datos disponibles para el período seleccionado</p>
-                            </td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($promociones_stats as $promo): ?>
-                            <?php
-                            $total_promo = $promo['total_usos'];
-                            $efectividad = $total_promo > 0 ? ($promo['usos_aceptados'] / $total_promo) * 100 : 0;
-                            ?>
                             <tr>
-                                <td>
-                                    <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; font-weight: 500;">
-                                        <?= htmlspecialchars($promo['textoPromo']) ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge-modern badge-<?= strtolower($promo['categoriaCliente']) == 'inicial' ? 'success' : (strtolower($promo['categoriaCliente']) == 'medium' ? 'warning' : 'danger') ?>">
-                                        <?= $promo['categoriaCliente'] ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php
-                                    $badge_class = [
-                                        'pendiente' => 'warning',
-                                        'aprobada' => 'success',
-                                        'denegada' => 'danger'
-                                    ][$promo['estadoPromo']] ?? 'warning';
-                                    ?>
-                                    <span class="badge-modern badge-<?= $badge_class ?>">
-                                        <?= ucfirst($promo['estadoPromo']) ?>
-                                    </span>
-                                </td>
-                                <td><strong><?= $promo['total_usos'] ?></strong></td>
-                                <td><?= $promo['usos_aceptados'] ?></td>
-                                <td>
-                                    <span class="badge-modern badge-<?= $efectividad >= 70 ? 'success' : ($efectividad >= 40 ? 'warning' : 'danger') ?>">
-                                        <?= round($efectividad, 1) ?>%
-                                    </span>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <p>No hay promociones creadas</p>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                    <?php else: ?>
+                            <?php foreach ($promociones_stats as $promo): ?>
+                                    <?php
+                                    $fecha_hasta = new DateTime($promo['fechaHastaPromo']);
+                                    $hoy = new DateTime();
+                                    $dias_restantes = $hoy->diff($fecha_hasta)->days;
+                                    $dias_total = (new DateTime($promo['fechaDesdePromo']))->diff($fecha_hasta)->days;
+                                    $dias_transcurridos = (new DateTime($promo['fechaDesdePromo']))->diff($hoy)->days;
+                                    $dias_transcurridos = min(max($dias_transcurridos, 0), $dias_total);
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; font-weight: 500;">
+                                                <?= htmlspecialchars($promo['textoPromo']) ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-modern badge-<?= strtolower($promo['categoriaCliente']) == 'inicial' ? 'success' : (strtolower($promo['categoriaCliente']) == 'medium' ? 'warning' : 'danger') ?>">
+                                                <?= $promo['categoriaCliente'] ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            $badge_class = [
+                                                'pendiente' => 'warning',
+                                                'aprobada' => 'success',
+                                                'denegada' => 'danger'
+                                            ][$promo['estadoPromo']] ?? 'warning';
+                                            ?>
+                                            <span class="badge-modern badge-<?= $badge_class ?>">
+                                                <?= ucfirst($promo['estadoPromo']) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?php if ($promo['estadoPromo'] == 'aprobada'): ?>
+                                                    <span class="badge-modern badge-<?= $dias_restantes > 7 ? 'success' : ($dias_restantes > 0 ? 'warning' : 'danger') ?>">
+                                                        <?= $dias_restantes > 0 ? $dias_restantes . ' días' : 'Expirada' ?>
+                                                    </span>
+                                            <?php else: ?>
+                                                    <span class="badge-modern badge-secondary">-</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($promo['estadoPromo'] == 'aprobada'): ?>
+                                                    <span class="badge-modern badge-info">
+                                                        <?= $dias_transcurridos ?>/<?= $dias_total ?> días
+                                                    </span>
+                                            <?php else: ?>
+                                                    <span class="badge-modern badge-secondary">-</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                            <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
             </table>
@@ -737,7 +743,7 @@ require_once '../includes/header-panel.php';
             <div class="section-icon">
                 <i class="fas fa-users"></i>
             </div>
-            <h3 class="section-title">Estadísticas por Categoría</h3>
+            <h3 class="section-title">Distribución por Categoría</h3>
         </div>
         
         <div style="overflow-x: auto;">
@@ -745,31 +751,33 @@ require_once '../includes/header-panel.php';
                 <thead>
                     <tr>
                         <th>Categoría</th>
-                        <th>Total Usos</th>
-                        <th>Usos Aceptados</th>
-                        <th>Tasa de Aceptación</th>
+                        <th>Total Promociones</th>
+                        <th>Aprobadas</th>
+                        <th>Tasa de Aprobación</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($categorias_stats as $categoria): ?>
-                        <?php
-                        $tasa_aceptacion = $categoria['total_usos'] > 0 ?
-                            ($categoria['usos_aceptados'] / $categoria['total_usos']) * 100 : 0;
-                        ?>
-                        <tr>
-                            <td>
-                                <span class="badge-modern badge-<?= strtolower($categoria['categoriaCliente']) == 'inicial' ? 'success' : (strtolower($categoria['categoriaCliente']) == 'medium' ? 'warning' : 'danger') ?>">
-                                    <?= $categoria['categoriaCliente'] ?>
-                                </span>
-                            </td>
-                            <td><strong><?= $categoria['total_usos'] ?></strong></td>
-                            <td><?= $categoria['usos_aceptados'] ?></td>
-                            <td>
-                                <span class="badge-modern badge-<?= $tasa_aceptacion >= 70 ? 'success' : ($tasa_aceptacion >= 40 ? 'warning' : 'danger') ?>">
-                                    <?= round($tasa_aceptacion, 1) ?>%
-                                </span>
-                            </td>
-                        </tr>
+                            <?php
+                            $promos_categoria = array_filter($promociones_stats, fn($p) => $p['categoriaCliente'] == $categoria['categoriaCliente']);
+                            $total_categoria = count($promos_categoria);
+                            $aprobadas_categoria = count(array_filter($promos_categoria, fn($p) => $p['estadoPromo'] == 'aprobada'));
+                            $tasa_aprobacion = $total_categoria > 0 ? ($aprobadas_categoria / $total_categoria) * 100 : 0;
+                            ?>
+                            <tr>
+                                <td>
+                                    <span class="badge-modern badge-<?= strtolower($categoria['categoriaCliente']) == 'inicial' ? 'success' : (strtolower($categoria['categoriaCliente']) == 'medium' ? 'warning' : 'danger') ?>">
+                                        <?= $categoria['categoriaCliente'] ?>
+                                    </span>
+                                </td>
+                                <td><strong><?= $total_categoria ?></strong></td>
+                                <td><?= $aprobadas_categoria ?></td>
+                                <td>
+                                    <span class="badge-modern badge-<?= $tasa_aprobacion >= 70 ? 'success' : ($tasa_aprobacion >= 40 ? 'warning' : 'danger') ?>">
+                                        <?= round($tasa_aprobacion, 1) ?>%
+                                    </span>
+                                </td>
+                            </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -803,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const finalValue = parseInt(stat.textContent);
         if (!isNaN(finalValue)) {
             let currentValue = 0;
-            const increment = finalValue / 30;
+            const increment = Math.max(1, finalValue / 30);
             const timer = setInterval(() => {
                 currentValue += increment;
                 if (currentValue >= finalValue) {
