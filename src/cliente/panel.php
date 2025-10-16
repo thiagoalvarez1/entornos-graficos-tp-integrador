@@ -57,8 +57,8 @@ $query_disponibles = "SELECT
     WHERE p.estadoPromo = 'aprobada' 
     AND p.categoriaCliente = (
         SELECT CASE 
-            WHEN COUNT(*) >= 10 THEN 'Premium'
-            WHEN COUNT(*) >= 5 THEN 'Medium'
+            WHEN COUNT(*) >= 4 THEN 'Premium'
+            WHEN COUNT(*) >= 2 THEN 'Medium'
             ELSE 'Inicial'
         END
         FROM uso_promociones up2
@@ -87,15 +87,16 @@ require_once '../includes/header-panel.php';
         <div>
             <h1 class="h3 mb-1">Panel del Cliente</h1>
             <p class="text-muted mb-0">¡Hola,
-                <?= htmlspecialchars(explode('@', $auth->getCurrentUser()['email'])[0]) ?>! Bienvenido a tu panel</p>
+                <?= htmlspecialchars(explode('@', $auth->getCurrentUser()['email'])[0]) ?>! Bienvenido a tu panel
+            </p>
         </div>
         <div class="bg-light p-3 rounded">
             <small class="text-muted">Tu categoría</small>
             <?php
             $categoria = 'Inicial';
-            if ($stats['descuentos_obtenidos'] >= 10) {
+            if ($stats['descuentos_obtenidos'] >= 4) {
                 $categoria = 'Premium';
-            } elseif ($stats['descuentos_obtenidos'] >= 5) {
+            } elseif ($stats['descuentos_obtenidos'] >= 2) {
                 $categoria = 'Medium';
             }
             ?>

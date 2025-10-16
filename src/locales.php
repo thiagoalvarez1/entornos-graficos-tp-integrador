@@ -634,7 +634,7 @@ try {
 
                     <div class="local-actions">
                         <?php if ($local['total_promociones'] > 0): ?>
-                            <a href="promociones_local.php?id=<?= $local['codLocal'] ?>" class="btn-promociones">
+                            <a href="promociones.php?id=<?= $local['codLocal'] ?>" class="btn-promociones">
                                 <i class="fas fa-eye"></i>
                                 Ver promociones
                             </a>

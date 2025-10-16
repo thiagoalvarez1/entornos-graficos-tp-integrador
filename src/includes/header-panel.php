@@ -52,195 +52,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <style>
-        :root {
-            --primary: #2c3e50;
-            --primary-light: #34495e;
-            --secondary: #e74c3c;
-            --accent: #3498db;
-            --text-light: #ecf0f1;
-            --text-muted: rgba(255, 255, 255, 0.7);
-            --hover-bg: rgba(255, 255, 255, 0.15);
-            --border-radius: 8px;
-            --transition: all 0.3s ease;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
-
-        /* Layout Principal */
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: var(--text-light);
-            position: fixed;
-            height: 100vh;
-            z-index: 1000;
-            transition: var(--transition);
-            box-shadow: var(--shadow);
-        }
-
-        .sidebar-header {
-            padding: 1.5rem 1rem;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar-brand {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .sidebar-subtitle {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-        }
-
-        .sidebar-menu {
-            padding: 1rem 0;
-        }
-
-        .nav-link {
-            color: var(--text-muted);
-            padding: 0.75rem 1rem;
-            margin: 0.25rem 0.5rem;
-            border-radius: var(--border-radius);
-            transition: var(--transition);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            border-left: 3px solid transparent;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background-color: var(--hover-bg);
-            color: var(--text-light);
-            border-left-color: var(--accent);
-            transform: translateX(5px);
-        }
-
-        .nav-link i {
-            width: 20px;
-            margin-right: 0.75rem;
-            text-align: center;
-        }
-
-        .menu-divider {
-            height: 1px;
-            background: rgba(255, 255, 255, 0.1);
-            margin: 1rem 0.5rem;
-        }
-
-        /* Contenido Principal */
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 2rem;
-            transition: var(--transition);
-            min-height: 100vh;
-        }
-
-        /* Estados del Sidebar */
-        .sidebar.collapsed {
-            width: 60px;
-        }
-
-        .sidebar.collapsed .nav-link span,
-        .sidebar.collapsed .sidebar-subtitle {
-            display: none;
-        }
-
-        .sidebar.collapsed .nav-link i {
-            margin-right: 0;
-            font-size: 1.1rem;
-        }
-
-        .sidebar.collapsed~.main-content {
-            margin-left: 60px;
-        }
-
-        /* Componentes */
-        .card-panel {
-            border: none;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-        }
-
-        .card-panel:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .badge-status {
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .badge-pending {
-            background: #f39c12;
-            color: white;
-        }
-
-        .badge-approved {
-            background: #2ecc71;
-            color: white;
-        }
-
-        .badge-rejected {
-            background: #e74c3c;
-            color: white;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.mobile-open {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 1rem;
-            }
-
-            .mobile-toggle {
-                display: block !important;
-            }
-        }
-
-        .mobile-toggle {
-            display: none;
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 1001;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            padding: 0.5rem;
-        }
-    </style>
+    <link rel="stylesheet" href="../css/header-panel.css">
 </head>
 
 <body>
@@ -298,3 +110,65 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
         <!-- Contenido Principal -->
         <main class="main-content">
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const sidebar = document.querySelector('.sidebar');
+                    const sidebarToggle = document.querySelector('.sidebar-toggle');
+                    const mobileToggle = document.querySelector('.mobile-toggle');
+                    const sidebarOverlay = document.querySelector('.sidebar-overlay');
+
+                    // Toggle sidebar en desktop
+                    if (sidebarToggle) {
+                        sidebarToggle.addEventListener('click', function () {
+                            sidebar.classList.toggle('collapsed');
+                            // Guardar estado en localStorage
+                            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                        });
+                    }
+
+                    // Toggle sidebar en mobile
+                    if (mobileToggle) {
+                        mobileToggle.addEventListener('click', function () {
+                            sidebar.classList.toggle('mobile-open');
+                            sidebarOverlay.classList.toggle('mobile-open');
+                        });
+                    }
+
+                    // Cerrar sidebar al hacer clic en overlay
+                    if (sidebarOverlay) {
+                        sidebarOverlay.addEventListener('click', function () {
+                            sidebar.classList.remove('mobile-open');
+                            sidebarOverlay.classList.remove('mobile-open');
+                        });
+                    }
+
+                    // Cerrar sidebar en mobile al hacer clic en un link
+                    const navLinks = document.querySelectorAll('.nav-link');
+                    navLinks.forEach(link => {
+                        link.addEventListener('click', function () {
+                            if (window.innerWidth <= 768) {
+                                sidebar.classList.remove('mobile-open');
+                                sidebarOverlay.classList.remove('mobile-open');
+                            }
+                        });
+                    });
+
+                    // Detectar cambio de tamaño de ventana
+                    window.addEventListener('resize', function () {
+                        if (window.innerWidth > 768) {
+                            sidebar.classList.remove('mobile-open');
+                            sidebarOverlay.classList.remove('mobile-open');
+                        }
+                    });
+
+                    // Cargar estado del sidebar desde localStorage
+                    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                        sidebar.classList.add('collapsed');
+                    }
+                });
+            </script>
+            <!-- ========== FIN DEL JAVASCRIPT ========== -->
+
+</body>
+
+</html>

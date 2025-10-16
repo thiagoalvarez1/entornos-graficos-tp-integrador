@@ -1,0 +1,664 @@
+/* ============================================
+   HOME-STYLES.CSS - ESTILOS OPTIMIZADOS Y MEJORADOS
+   ============================================ */
+
+/* VARIABLES MEJORADAS */
+:root {
+    /* Colores principales */
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --primary-light: #818cf8;
+    --secondary: #ec4899;
+    --secondary-dark: #db2777;
+    --accent: #f59e0b;
+    --accent-dark: #d97706;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    
+    /* Escala de grises */
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-tertiary: #9ca3af;
+    --bg-light: #f8fafc;
+    --bg-white: #ffffff;
+    --border: #e5e7eb;
+    --border-light: #f3f4f6;
+    
+    /* Efectos */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+    --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+    --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+    --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    
+    /* Bordes */
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    
+    /* Transiciones */
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* RESET Y BASE MEJORADOS */
+.home-section {
+    box-sizing: border-box;
+}
+
+.home-section *,
+.home-section *::before,
+.home-section *::after {
+    box-sizing: inherit;
+}
+
+/* ANIMACIONES MEJORADAS */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% { 
+        transform: translateY(0px) rotate(0deg); 
+    }
+    33% { 
+        transform: translateY(-10px) rotate(1deg); 
+    }
+    66% { 
+        transform: translateY(-5px) rotate(-1deg); 
+    }
+}
+
+@keyframes pulse-gentle {
+    0%, 100% { 
+        transform: scale(1); 
+    }
+    50% { 
+        transform: scale(1.05); 
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+/* CLASES DE ANIMACIÓN UTILITARIAS */
+.animate-fade-up {
+    animation: fadeUp 0.8s ease-out both;
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-gentle {
+    animation: pulse-gentle 3s ease-in-out infinite;
+}
+
+.animate-slide-left {
+    animation: slideInLeft 0.8s ease-out both;
+}
+
+.animate-slide-right {
+    animation: slideInRight 0.8s ease-out both;
+}
+
+/* DELAYS ESCALONADOS */
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+
+/* ============================================
+   HERO SECTION MEJORADA
+   ============================================ */
+.hero-section {
+    background: linear-gradient(135deg, 
+        var(--primary) 0%, 
+        var(--primary-dark) 45%, 
+        var(--secondary) 100%);
+    color: var(--bg-white);
+    position: relative;
+    overflow: hidden;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    padding: 4rem 0;
+    isolation: isolate;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(255,255,255,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(16px);
+    padding: 0.625rem 1.25rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.15);
+    animation: fadeUp 0.8s ease-out 0.2s both;
+}
+
+.hero-title {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+}
+
+.hero-subtitle {
+    font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+    opacity: 0.95;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+    max-width: 540px;
+    font-weight: 400;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+}
+
+.btn-hero {
+    padding: 1rem 2rem;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition-bounce);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 2px solid transparent;
+    font-size: 1.05rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-hero:hover::before {
+    left: 100%;
+}
+
+.btn-hero.btn-primary {
+    background: var(--bg-white);
+    color: var(--primary-dark);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-hero.btn-outline {
+    border-color: rgba(255,255,255,0.3);
+    color: var(--bg-white);
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+}
+
+.btn-hero:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+}
+
+.btn-hero.btn-primary:hover {
+    background: #f8fafc;
+    color: var(--primary-dark);
+}
+
+.btn-hero.btn-outline:hover {
+    background: var(--bg-white);
+    color: var(--primary);
+    border-color: var(--bg-white);
+}
+
+/* Hero Stats Mejoradas */
+.hero-stats {
+    margin-top: 4rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 2rem;
+    max-width: 600px;
+}
+
+.stat-item {
+    text-align: center;
+    position: relative;
+}
+
+.stat-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    border-radius: 2px;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.stat-item:hover::before {
+    opacity: 1;
+}
+
+.stat-number {
+    font-size: 2.75rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Floating Cards Mejoradas */
+.floating-cards {
+    position: relative;
+    height: 500px;
+    display: none;
+}
+
+@media (min-width: 992px) {
+    .floating-cards {
+        display: block;
+    }
+}
+
+.floating-card {
+    position: absolute;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-xl);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-xl);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    animation: float 6s ease-in-out infinite;
+    max-width: 320px;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: var(--transition);
+}
+
+.floating-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: var(--shadow-xl), 0 0 40px rgba(99, 102, 241, 0.2);
+}
+
+.floating-card:nth-child(1) {
+    top: 10%;
+    left: 5%;
+    animation-delay: 0s;
+}
+
+.floating-card:nth-child(2) {
+    top: 45%;
+    right: 5%;
+    animation-delay: -2s;
+}
+
+.floating-card:nth-child(3) {
+    bottom: 15%;
+    left: 15%;
+    animation-delay: -4s;
+}
+
+.card-icon {
+    font-size: 2.75rem;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-md);
+}
+
+.card-content h4 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.card-content p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Hero Wave Mejorada */
+.hero-wave {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    line-height: 0;
+    z-index: 1;
+}
+
+.hero-wave svg {
+    display: block;
+    width: 100%;
+    height: 80px;
+}
+
+/* ============================================
+   COMPONENTES REUTILIZABLES MEJORADOS
+   ============================================ */
+
+/* Badges Mejorados */
+.badge {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid transparent;
+}
+
+.badge-primary { 
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
+    color: var(--bg-white);
+}
+
+.badge-success { 
+    background: linear-gradient(135deg, var(--success), #059669); 
+    color: var(--bg-white);
+}
+
+.badge-warning { 
+    background: linear-gradient(135deg, var(--warning), var(--accent-dark)); 
+    color: var(--bg-white);
+}
+
+.badge-danger { 
+    background: linear-gradient(135deg, var(--danger), #dc2626); 
+    color: var(--bg-white);
+}
+
+/* Cards Mejoradas */
+.promo-card {
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: var(--transition-bounce);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.promo-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    opacity: 0;
+    transition: var(--transition-slow);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.promo-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+    border-color: transparent;
+}
+
+.promo-card:hover::before {
+    opacity: 0.03;
+}
+
+/* Loading States */
+.skeleton {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite linear;
+    border-radius: var(--radius);
+}
+
+/* ============================================
+   RESPONSIVE MEJORADO
+   ============================================ */
+@media (max-width: 1400px) {
+    .hero-title {
+        font-size: clamp(2.25rem, 5vw, 3.5rem);
+    }
+}
+
+@media (max-width: 1200px) {
+    .floating-card {
+        max-width: 280px;
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 991px) {
+    .hero-section {
+        min-height: auto;
+        padding: 3rem 0;
+        text-align: center;
+    }
+
+    .hero-subtitle {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-actions {
+        justify-content: center;
+    }
+
+    .hero-stats {
+        margin: 3rem auto 0;
+        gap: 1.5rem;
+    }
+
+    .stat-number {
+        font-size: 2.25rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .hero-title {
+        font-size: 2.25rem;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .btn-hero {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hero-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .floating-cards {
+        height: 400px;
+    }
+
+    .floating-card {
+        max-width: 240px;
+        padding: 1.25rem;
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .hero-section {
+        padding: 2.5rem 0;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.125rem;
+    }
+
+    .hero-stats {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+
+    .floating-cards {
+        display: none;
+    }
+}
+
+/* Utilidades de Espaciado Mejoradas */
+.section-padding {
+    padding: 5rem 0;
+}
+
+.section-padding-sm {
+    padding: 3rem 0;
+}
+
+.section-padding-lg {
+    padding: 7rem 0;
+}
+
+/* Modo Oscuro (Preparación) */
+@media (prefers-color-scheme: dark) {
+    .home-section {
+        /* Variables para modo oscuro - listas para implementar */
+    }
+}
+
+/* Mejoras de Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus Visible Mejorado */
+.btn-hero:focus-visible,
+.promo-card:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* High Contrast Support */
+@media (prefers-contrast: high) {
+    :root {
+        --border: #000000;
+        --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.8);
+    }
+}

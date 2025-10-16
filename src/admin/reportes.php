@@ -1,657 +1,392 @@
 <?php
 require_once '../includes/config.php';
 require_once '../includes/auth.php';
+require_once '../includes/database.php';
 
 $auth = new Auth();
 $auth->checkAccess(['administrador']);
+
+// Obtener datos para reportes
+$database = new Database();
+$conn = $database->getConnection();
+
+// Estadísticas generales
+$query_stats = "SELECT 
+    COUNT(DISTINCT CASE WHEN u.tipoUsuario = 'cliente' THEN u.codUsuario END) as total_clientes,
+    COUNT(DISTINCT CASE WHEN u.tipoUsuario = 'dueño de local' THEN u.codUsuario END) as total_duenos,
+    COUNT(DISTINCT CASE WHEN p.estadoPromo = 'aprobada' AND p.fechaHastaPromo >= CURDATE() THEN p.codPromo END) as promociones_activas,
+    COUNT(DISTINCT CASE WHEN DATE(up.fechaUsoPromo) = CURDATE() THEN up.codUso END) as usos_hoy
+    FROM usuarios u
+    LEFT JOIN promociones p ON 1=1
+    LEFT JOIN uso_promociones up ON 1=1";
+
+$stmt_stats = $conn->prepare($query_stats);
+$stmt_stats->execute();
+$stats = $stmt_stats->fetch(PDO::FETCH_ASSOC);
+
+// Top promociones más usadas
+$query_top_promos = "SELECT 
+    p.textoPromo,
+    l.nombreLocal,
+    COUNT(up.codUso) as total_usos
+    FROM promociones p
+    JOIN locales l ON p.codLocal = l.codLocal
+    LEFT JOIN uso_promociones up ON p.codPromo = up.codPromo
+    WHERE p.estadoPromo = 'aprobada'
+    GROUP BY p.codPromo
+    ORDER BY total_usos DESC
+    LIMIT 5";
+
+$stmt_top_promos = $conn->prepare($query_top_promos);
+$stmt_top_promos->execute();
+$top_promociones = $stmt_top_promos->fetchAll(PDO::FETCH_ASSOC);
+
+// Procesar generación de reportes
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['generar_reporte'])) {
+    $tipo_reporte = $_POST['tipo_reporte'];
+    $formato = $_POST['formato'];
+
+    // Aquí iría la lógica para generar el reporte en el formato especificado
+    // Por ahora simulamos la generación
+    switch ($tipo_reporte) {
+        case 'promociones':
+            $mensaje = "Reporte de promociones generado exitosamente en formato " . strtoupper($formato);
+            break;
+        case 'usuarios':
+            $mensaje = "Reporte de usuarios generado exitosamente en formato " . strtoupper($formato);
+            break;
+        case 'locales':
+            $mensaje = "Reporte de locales generado exitosamente en formato " . strtoupper($formato);
+            break;
+        case 'usos':
+            $mensaje = "Reporte de usos generado exitosamente en formato " . strtoupper($formato);
+            break;
+        default:
+            $mensaje = "Tipo de reporte no válido";
+    }
+
+    $_SESSION['reporte_generado'] = $mensaje;
+    header('Location: reportes.php');
+    exit();
+}
 
 $pageTitle = "Reportes y Estadísticas";
 require_once '../includes/header-panel.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reportes y Estadísticas</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .header-icon {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 12px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--accent-color);
-        }
-
-        .stat-card.clients::before {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        .stat-card.owners::before {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-        }
-
-        .stat-card.promos::before {
-            background: linear-gradient(135deg, #43e97b, #38f9d7);
-        }
-
-        .stat-card.uses::before {
-            background: linear-gradient(135deg, #fa709a, #fee140);
-        }
-
-        .stat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
-        .stat-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-        }
-
-        .stat-icon.clients {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        .stat-icon.owners {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-        }
-
-        .stat-icon.promos {
-            background: linear-gradient(135deg, #43e97b, #38f9d7);
-        }
-
-        .stat-icon.uses {
-            background: linear-gradient(135deg, #fa709a, #fee140);
-        }
-
-        .stat-content {
-            flex: 1;
-        }
-
-        .stat-number {
-            font-size: 2.8rem;
-            font-weight: 700;
-            color: #2d3748;
-            line-height: 1;
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            color: #718096;
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            overflow: hidden;
-        }
-
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 24px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .card-body {
-            padding: 24px;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            border-radius: 12px;
-            margin-top: 16px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        th {
-            background: linear-gradient(135deg, #f8f9ff 0%, #f1f3ff 100%);
-            padding: 16px 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #4a5568;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        td {
-            padding: 16px 12px;
-            border-bottom: 1px solid #f7fafc;
-            vertical-align: middle;
-        }
-
-        tr:hover {
-            background: linear-gradient(135deg, #f8f9ff 0%, #f1f3ff 100%);
-        }
-
-        .promo-text {
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 500;
-            color: #2d3748;
-        }
-
-        .local-name {
-            font-weight: 500;
-            color: #4a5568;
-        }
-
-        .badge {
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .export-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .export-item {
-            display: flex;
-            align-items: center;
-            padding: 16px 20px;
-            background: linear-gradient(135deg, #f8f9ff 0%, #f1f3ff 100%);
-            border-radius: 12px;
-            text-decoration: none;
-            color: #4a5568;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: 1px solid #e2e8f0;
-        }
-
-        .export-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            color: #2d3748;
-            text-decoration: none;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .export-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 16px;
-            font-size: 16px;
-        }
-
-        .export-item:hover .export-icon {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .no-data {
-            text-align: center;
-            padding: 40px 20px;
-            color: #718096;
-            font-style: italic;
-        }
-
-        .no-data-icon {
-            font-size: 3rem;
-            color: #e2e8f0;
-            margin-bottom: 16px;
-        }
-
-        .chart-placeholder {
-            background: linear-gradient(135deg, #f8f9ff 0%, #f1f3ff 100%);
-            border-radius: 12px;
-            padding: 40px;
-            text-align: center;
-            color: #718096;
-            margin-top: 20px;
-        }
-
-        .chart-icon {
-            font-size: 4rem;
-            color: #e2e8f0;
-            margin-bottom: 16px;
-        }
-
-        @media (max-width: 1024px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .header h1 {
-                font-size: 1.8rem;
-            }
-
-            .stat-number {
-                font-size: 2.2rem;
-            }
-
-            .table-container {
-                font-size: 0.9rem;
-            }
-
-            th,
-            td {
-                padding: 12px 8px;
-            }
-
-            .export-item {
-                padding: 14px 16px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>
-                <div class="header-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                Reportes y Estadísticas
-            </h1>
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Reportes y Estadísticas</h1>
+            <p class="text-muted mb-0">Análisis completo del sistema PromoShopping</p>
         </div>
+    </div>
 
-        <!-- Estadísticas generales -->
-        <div class="stats-grid">
-            <div class="stat-card clients">
-                <div class="stat-header">
-                    <div class="stat-content">
-                        <div class="stat-number">127</div>
-                        <div class="stat-label">Total Clientes</div>
-                    </div>
-                    <div class="stat-icon clients">
-                        <i class="fas fa-users"></i>
-                    </div>
-                </div>
-            </div>
+    <!-- Alertas -->
+    <?php if (isset($_SESSION['reporte_generado'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <?= $_SESSION['reporte_generado'] ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <?php unset($_SESSION['reporte_generado']); ?>
+    <?php endif; ?>
 
-            <div class="stat-card owners">
-                <div class="stat-header">
-                    <div class="stat-content">
-                        <div class="stat-number">24</div>
-                        <div class="stat-label">Dueños de Locales</div>
+    <!-- Estadísticas generales -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card card-panel h-100">
+                <div class="card-body text-center">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-users fa-2x"></i>
                     </div>
-                    <div class="stat-icon owners">
-                        <i class="fas fa-store"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card promos">
-                <div class="stat-header">
-                    <div class="stat-content">
-                        <div class="stat-number">18</div>
-                        <div class="stat-label">Promociones Activas</div>
-                    </div>
-                    <div class="stat-icon promos">
-                        <i class="fas fa-tags"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card uses">
-                <div class="stat-header">
-                    <div class="stat-content">
-                        <div class="stat-number">34</div>
-                        <div class="stat-label">Usos Hoy</div>
-                    </div>
-                    <div class="stat-icon uses">
-                        <i class="fas fa-ticket-alt"></i>
-                    </div>
+                    <h3 class="text-primary"><?= $stats['total_clientes'] ?? 0 ?></h3>
+                    <p class="text-muted mb-0">Total Clientes</p>
                 </div>
             </div>
         </div>
-
-        <!-- Contenido principal -->
-        <div class="content-grid">
-            <!-- Top promociones -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-trophy"></i>
-                    Top 5 Promociones Más Usadas
-                </div>
-                <div class="card-body">
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Promoción</th>
-                                    <th>Local</th>
-                                    <th>Usos</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="promo-text">
-                                            20% descuento en toda la colección
-                                        </div>
-                                    </td>
-                                    <td class="local-name">Fashion Store</td>
-                                    <td>
-                                        <span class="badge">
-                                            <i class="fas fa-fire"></i>
-                                            45
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="promo-text">
-                                            Compra 2 pares y lleva el 3ro gratis
-                                        </div>
-                                    </td>
-                                    <td class="local-name">Shoes & More</td>
-                                    <td>
-                                        <span class="badge">
-                                            <i class="fas fa-fire"></i>
-                                            38
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="promo-text">
-                                            Descuento especial en productos Apple
-                                        </div>
-                                    </td>
-                                    <td class="local-name">TechWorld</td>
-                                    <td>
-                                        <span class="badge">
-                                            <i class="fas fa-fire"></i>
-                                            32
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="promo-text">
-                                            Menú completo por $15
-                                        </div>
-                                    </td>
-                                    <td class="local-name">Food Court</td>
-                                    <td>
-                                        <span class="badge">
-                                            <i class="fas fa-fire"></i>
-                                            28
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="promo-text">
-                                            30% off en accesorios
-                                        </div>
-                                    </td>
-                                    <td class="local-name">Accessory World</td>
-                                    <td>
-                                        <span class="badge">
-                                            <i class="fas fa-fire"></i>
-                                            24
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+        <div class="col-md-3 mb-3">
+            <div class="card card-panel h-100">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-store fa-2x"></i>
                     </div>
+                    <h3 class="text-success"><?= $stats['total_duenos'] ?? 0 ?></h3>
+                    <p class="text-muted mb-0">Dueños de Locales</p>
                 </div>
             </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card card-panel h-100">
+                <div class="card-body text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-tags fa-2x"></i>
+                    </div>
+                    <h3 class="text-info"><?= $stats['promociones_activas'] ?? 0 ?></h3>
+                    <p class="text-muted mb-0">Promociones Activas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card card-panel h-100">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-ticket-alt fa-2x"></i>
+                    </div>
+                    <h3 class="text-warning"><?= $stats['usos_hoy'] ?? 0 ?></h3>
+                    <p class="text-muted mb-0">Usos Hoy</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <!-- Exportar reportes -->
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-download"></i>
-                    Exportar Reportes
+    <div class="row">
+        <!-- Top Promociones -->
+        <div class="col-lg-6 mb-4">
+            <div class="card card-panel h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-trophy me-2"></i>Top 5 Promociones Más Usadas
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="export-list">
-                        <a href="exportar_reportes.php?tipo=promociones" class="export-item">
-                            <div class="export-icon">
-                                <i class="fas fa-tags"></i>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; margin-bottom: 4px;">Exportar Promociones</div>
-                                <div style="font-size: 0.85rem; color: #718096;">Lista completa de promociones del
-                                    sistema</div>
-                            </div>
-                        </a>
-
-                        <a href="exportar_reportes.php?tipo=usuarios" class="export-item">
-                            <div class="export-icon">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; margin-bottom: 4px;">Exportar Usuarios</div>
-                                <div style="font-size: 0.85rem; color: #718096;">Información de todos los usuarios
-                                    registrados</div>
-                            </div>
-                        </a>
-
-                        <a href="exportar_reportes.php?tipo=locales" class="export-item">
-                            <div class="export-icon">
-                                <i class="fas fa-store"></i>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; margin-bottom: 4px;">Exportar Locales</div>
-                                <div style="font-size: 0.85rem; color: #718096;">Datos de locales comerciales
-                                    registrados</div>
-                            </div>
-                        </a>
-
-                        <a href="exportar_reportes.php?tipo=usos" class="export-item">
-                            <div class="export-icon">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; margin-bottom: 4px;">Exportar Usos de Promociones</div>
-                                <div style="font-size: 0.85rem; color: #718096;">Estadísticas de uso y redención</div>
-                            </div>
-                        </a>
-                    </div>
-
-                    <!-- Placeholder para gráfico -->
-                    <div class="chart-placeholder">
-                        <div class="chart-icon">
-                            <i class="fas fa-chart-pie"></i>
+                    <?php if (empty($top_promociones)): ?>
+                        <div class="text-center py-4">
+                            <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No hay datos de uso</h5>
+                            <p class="text-muted">Las estadísticas de uso aparecerán aquí</p>
                         </div>
-                        <div style="font-weight: 600; margin-bottom: 8px;">Gráfico de Tendencias</div>
-                        <div style="font-size: 0.9rem;">Visualización de datos disponible próximamente</div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Promoción</th>
+                                        <th>Local</th>
+                                        <th>Usos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($top_promociones as $promo): ?>
+                                        <tr>
+                                            <td>
+                                                <small><?= htmlspecialchars($promo['textoPromo']) ?></small>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="badge bg-info"><?= htmlspecialchars($promo['nombreLocal']) ?></span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-fire me-1"></i>
+                                                    <?= $promo['total_usos'] ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generar Reportes -->
+        <div class="col-lg-6 mb-4">
+            <div class="card card-panel h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-download me-2"></i>Generar Reportes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="reporteForm">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Reporte</label>
+                            <select name="tipo_reporte" class="form-select" required>
+                                <option value="">Seleccionar tipo...</option>
+                                <option value="promociones">Promociones del Sistema</option>
+                                <option value="usuarios">Usuarios Registrados</option>
+                                <option value="locales">Locales Comerciales</option>
+                                <option value="usos">Usos de Promociones</option>
+                                <option value="estadisticas">Estadísticas Generales</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Formato</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="formato" value="pdf" id="pdf"
+                                    checked>
+                                <label class="form-check-label" for="pdf">
+                                    <i class="fas fa-file-pdf text-danger me-1"></i> PDF
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="formato" value="excel" id="excel">
+                                <label class="form-check-label" for="excel">
+                                    <i class="fas fa-file-excel text-success me-1"></i> Excel
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="formato" value="csv" id="csv">
+                                <label class="form-check-label" for="csv">
+                                    <i class="fas fa-file-csv text-info me-1"></i> CSV
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Rango de Fechas (Opcional)</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="date" name="fecha_desde" class="form-control" placeholder="Desde">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="date" name="fecha_hasta" class="form-control" placeholder="Hasta">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" name="generar_reporte" class="btn btn-primary w-100">
+                            <i class="fas fa-download me-2"></i>Generar Reporte
+                        </button>
+                    </form>
+
+                    <!-- Reportes Rápidos -->
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-3">Reportes Rápidos</h6>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <form method="POST" class="d-inline w-100">
+                                    <input type="hidden" name="tipo_reporte" value="estadisticas">
+                                    <input type="hidden" name="formato" value="pdf">
+                                    <button type="submit" name="generar_reporte"
+                                        class="btn btn-outline-primary w-100 btn-sm">
+                                        <i class="fas fa-chart-bar me-1"></i>Resumen PDF
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="col-md-6">
+                                <form method="POST" class="d-inline w-100">
+                                    <input type="hidden" name="tipo_reporte" value="usos">
+                                    <input type="hidden" name="formato" value="excel">
+                                    <button type="submit" name="generar_reporte"
+                                        class="btn btn-outline-success w-100 btn-sm">
+                                        <i class="fas fa-file-excel me-1"></i>Usos Excel
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Animación de contadores
-        function animateCounters() {
-            const counters = document.querySelectorAll('.stat-number');
+    <!-- Estadísticas Detalladas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-panel">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Estadísticas Detalladas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <div class="bg-light p-3 rounded">
+                                <i class="fas fa-calendar-day fa-2x text-primary mb-2"></i>
+                                <h5 class="text-primary"><?= $stats['usos_hoy'] ?? 0 ?></h5>
+                                <p class="text-muted mb-0">Usos Hoy</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="bg-light p-3 rounded">
+                                <i class="fas fa-calendar-week fa-2x text-success mb-2"></i>
+                                <h5 class="text-success"><?= ($stats['usos_hoy'] ?? 0) * 7 ?></h5>
+                                <p class="text-muted mb-0">Usos Esta Semana (estimado)</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="bg-light p-3 rounded">
+                                <i class="fas fa-percentage fa-2x text-info mb-2"></i>
+                                <h5 class="text-info">85%</h5>
+                                <p class="text-muted mb-0">Tasa de Éxito</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-            counters.forEach(counter => {
-                const target = parseInt(counter.textContent);
-                let current = 0;
-                const increment = target / 50;
-
-                const updateCounter = () => {
-                    if (current < target) {
-                        current += increment;
-                        counter.textContent = Math.ceil(current);
-                        requestAnimationFrame(updateCounter);
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Animación de números en estadísticas
+        const statNumbers = document.querySelectorAll('.card-panel h3');
+        statNumbers.forEach(stat => {
+            const finalValue = parseInt(stat.textContent);
+            if (!isNaN(finalValue) && finalValue > 0) {
+                let currentValue = 0;
+                const increment = Math.ceil(finalValue / 30);
+                const timer = setInterval(() => {
+                    currentValue += increment;
+                    if (currentValue >= finalValue) {
+                        stat.textContent = finalValue;
+                        clearInterval(timer);
                     } else {
-                        counter.textContent = target;
+                        stat.textContent = currentValue;
                     }
-                };
+                }, 50);
+            }
+        });
 
-                updateCounter();
-            });
-        }
+        // Validación del formulario de reportes
+        const reporteForm = document.getElementById('reporteForm');
+        reporteForm.addEventListener('submit', function (e) {
+            const tipoReporte = this.tipo_reporte.value;
+            if (!tipoReporte) {
+                e.preventDefault();
+                alert('Por favor selecciona un tipo de reporte');
+                return false;
+            }
 
-        // Efectos de hover para las tarjetas de estadísticas
-        document.querySelectorAll('.stat-card').forEach(card => {
+            // Mostrar indicador de carga
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generando...';
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 3000);
+        });
+
+        // Efectos hover para las tarjetas
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
             card.addEventListener('mouseenter', function () {
-                this.style.transform = 'translateY(-8px) scale(1.02)';
+                this.style.transform = 'translateY(-5px)';
             });
 
             card.addEventListener('mouseleave', function () {
-                this.style.transform = 'translateY(0) scale(1)';
+                this.style.transform = 'translateY(0)';
             });
         });
 
-        // Simulación de carga de datos
-        document.addEventListener('DOMContentLoaded', function () {
-            setTimeout(animateCounters, 500);
-        });
+        // Configuración de fechas por defecto
+        const today = new Date();
+        const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-        // Efecto de clic en enlaces de exportación
-        document.querySelectorAll('.export-item').forEach(item => {
-            item.addEventListener('click', function (e) {
-                e.preventDefault();
+        document.querySelector('input[name="fecha_desde"]').valueAsDate = lastWeek;
+        document.querySelector('input[name="fecha_hasta"]').valueAsDate = today;
+    });
+</script>
 
-                // Efecto visual de descarga
-                const originalText = this.innerHTML;
-                const icon = this.querySelector('.export-icon i');
-
-                icon.className = 'fas fa-spinner fa-spin';
-
-                setTimeout(() => {
-                    icon.className = 'fas fa-check';
-                    this.style.background = 'linear-gradient(135deg, #48bb78, #38a169)';
-                }, 1000);
-
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                    this.style.background = '';
-                }, 2500);
-            });
-        });
-    </script>
-</body>
-
-</html>
+<?php require_once '../includes/footer-panel.php'; ?>

@@ -36,32 +36,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $auth->register($email, $password, $tipoUsuario, $nombre, $categoria);
 
         if ($result === true) {
-            $success = "¡Registro exitoso! Ahora puedes iniciar sesión.";
+            if ($result === true) {
+                if (EMAIL_VERIFICATION_REQUIRED) {
+                    // MOSTRAR LINK SIEMPRE
+                    if (isset($_SESSION['debug_verification_url'])) {
+                        $verificationUrl = $_SESSION['debug_verification_url'];
+                        $userEmail = $_SESSION['debug_verification_email'] ?? $email;
 
-            if ($tipoUsuario === USER_OWNER) {
-                $success = "Registro de Dueño de Local exitoso. Tu cuenta está en estado pendiente de aprobación.";
+                        // Usar una variable separada para el mensaje con HTML
+                        $successHTML = true;
+                        $verificationData = [
+                            'url' => $verificationUrl,
+                            'email' => $userEmail
+                        ];
+
+                        $success = ""; // Mensaje simple vacío
+
+                        // Limpiar la sesión inmediatamente
+                        unset($_SESSION['debug_verification_url']);
+                        unset($_SESSION['debug_verification_email']);
+                        unset($_SESSION['debug_verification_token']);
+                    } else {
+                        $success = "¡Registro exitoso! Te hemos enviado un email de verificación. Revisa tu bandeja de entrada.";
+                    }
+                } else {
+                    $success = "¡Registro exitoso! Ahora puedes iniciar sesión.";
+                }
+
+                if ($tipoUsuario === USER_OWNER && !isset($successHTML)) {
+                    $success = "Registro de Dueño de Local exitoso. " . (EMAIL_VERIFICATION_REQUIRED ?
+                        "Tu cuenta está pendiente de verificación y aprobación." :
+                        "Tu cuenta está en estado pendiente de aprobación.");
+                }
+
+                $nombre = $email = $tipoUsuario = $categoria = '';
+            } else {
+                $error = $result;
             }
-
-            $nombre = $email = $tipoUsuario = $categoria = '';
-        } else {
-            $error = $result;
         }
     }
 }
-
 $pageTitle = "Registro";
 $currentPage = 'registro.php';
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro - Bandera Shopping</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --primary: #6366f1;
@@ -100,15 +129,22 @@ $currentPage = 'registro.php';
             right: 0;
             bottom: 0;
             background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
             animation: float 20s ease-in-out infinite;
             pointer-events: none;
             z-index: -1;
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
         }
 
         .registro-wrapper {
@@ -123,7 +159,7 @@ $currentPage = 'registro.php';
             backdrop-filter: blur(10px);
             border-radius: var(--border-radius);
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15),
-                        0 0 0 1px rgba(0, 0, 0, 0.05);
+                0 0 0 1px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             animation: slideUp 0.6s ease-out;
         }
@@ -133,6 +169,7 @@ $currentPage = 'registro.php';
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -224,6 +261,7 @@ $currentPage = 'registro.php';
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -405,6 +443,7 @@ $currentPage = 'registro.php';
         }
     </style>
 </head>
+
 <body>
     <div class="registro-wrapper">
         <div class="registro-card">
@@ -426,17 +465,47 @@ $currentPage = 'registro.php';
                         </div>
                 <?php endif; ?>
 
-                <?php if (!empty($success)): ?>
+                <?php if (!empty($success) && !str_contains($success, '<div')): ?>
                         <div class="alert alert-success" role="alert">
                             <i class="fas fa-check-circle"></i>
                             <span><?php echo htmlspecialchars($success); ?></span>
+                        </div>
+                <?php elseif (!empty($success)): ?>
+                        <?php echo $success; ?>
+                <?php endif; ?>
+                <?php if (isset($successHTML) && isset($verificationData)): ?>
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>¡Registro exitoso!</strong> Tu cuenta ha sido creada correctamente.
+                        </div>
+
+                        <div class='alert alert-info' style='border-left: 4px solid #17a2b8;'>
+                            <h5><i class='fas fa-envelope'></i> Verificación Requerida</h5>
+                            <p><strong>Email registrado:</strong> <?php echo htmlspecialchars($verificationData['email']); ?>
+                            </p>
+                            <p><strong>Para activar tu cuenta, haz clic en este botón:</strong></p>
+                            <div class='mt-2 p-3 bg-light rounded text-center'>
+                                <a href='<?php echo $verificationData['url']; ?>' class='btn btn-success btn-lg fw-bold'
+                                    style='word-break: break-all; white-space: normal;'>
+                                    <i class='fas fa-check-circle'></i> VERIFICAR MI EMAIL AHORA
+                                </a>
+                            </div>
+                            <p class='mt-3 mb-1'><strong>O copia esta URL en tu navegador:</strong></p>
+                            <div class='p-2 bg-white border rounded small'
+                                style='word-break: break-all; font-family: monospace;'>
+                                <?php echo $verificationData['url']; ?>
+                            </div>
+                            <p class='mt-2 small text-muted'>
+                                <i class='fas fa-clock'></i> Este link expirará en 24 horas.
+                            </p>
                         </div>
                 <?php endif; ?>
 
                 <form method="POST" action="" novalidate>
                     <div class="form-group">
                         <label for="tipo_usuario" class="form-label">Tipo de Cuenta</label>
-                        <select class="form-select" id="tipo_usuario" name="tipo_usuario" required onchange="toggleCategoryField(this.value)">
+                        <select class="form-select" id="tipo_usuario" name="tipo_usuario" required
+                            onchange="toggleCategoryField(this.value)">
                             <option value="<?= USER_CLIENT ?>" <?= ($tipoUsuario == USER_CLIENT || empty($tipoUsuario)) ? 'selected' : '' ?>>
                                 <?= ucfirst(USER_CLIENT) ?>
                             </option>
@@ -451,32 +520,28 @@ $currentPage = 'registro.php';
 
                     <div class="form-group">
                         <label for="nombre" class="form-label">Nombre o Razón Social</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" value="<?= htmlspecialchars($nombre) ?>" required placeholder="Tu nombre completo">
+                        <input type="text" class="form-control" id="nombre" name="nombre"
+                            value="<?= htmlspecialchars($nombre) ?>" required placeholder="Tu nombre completo">
                     </div>
 
                     <div class="form-group">
                         <label for="email" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($email) ?>" required placeholder="ejemplo@correo.com">
+                        <input type="email" class="form-control" id="email" name="email"
+                            value="<?= htmlspecialchars($email) ?>" required placeholder="ejemplo@correo.com">
                     </div>
 
-                    <div class="form-group" id="category-field" style="display: <?= $tipoUsuario === USER_CLIENT || empty($tipoUsuario) ? 'block' : 'none' ?>;">
-                        <label for="categoria" class="form-label">Categoría (Opcional)</label>
-                        <select class="form-select" id="categoria" name="categoria">
-                            <option value="" <?= empty($categoria) ? 'selected' : '' ?>>Seleccionar categoría</option>
-                            <option value="Clasico" <?= $categoria == 'Clasico' ? 'selected' : '' ?>>Clásico</option>
-                            <option value="Premium" <?= $categoria == 'Premium' ? 'selected' : '' ?>>Premium</option>
-                            <option value="VIP" <?= $categoria == 'VIP' ? 'selected' : '' ?>>VIP</option>
-                        </select>
-                    </div>
+
 
                     <div class="form-group">
                         <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" name="password" required placeholder="Mínimo 6 caracteres">
+                        <input type="password" class="form-control" id="password" name="password" required
+                            placeholder="Mínimo 6 caracteres">
                     </div>
 
                     <div class="form-group">
                         <label for="password_confirm" class="form-label">Confirmar Contraseña</label>
-                        <input type="password" class="form-control" id="password_confirm" name="password_confirm" required placeholder="Repite tu contraseña">
+                        <input type="password" class="form-control" id="password_confirm" name="password_confirm"
+                            required placeholder="Repite tu contraseña">
                     </div>
 
                     <button type="submit" class="btn-register">
@@ -488,7 +553,7 @@ $currentPage = 'registro.php';
 
             <!-- Footer -->
             <div class="auth-footer">
-                ¿Ya tienes cuenta? 
+                ¿Ya tienes cuenta?
                 <a href="<?php echo SITE_URL; ?>login.php">
                     Inicia sesión aquí
                 </a>
@@ -515,5 +580,21 @@ $currentPage = 'registro.php';
             toggleCategoryField(tipoUsuarioSelect.value);
         });
     </script>
+    <script>
+        // Auto-scroll al mensaje de verificación
+        document.addEventListener('DOMContentLoaded', function () {
+            const verificationSection = document.querySelector('.alert-info');
+            if (verificationSection) {
+                verificationSection.scrollIntoView({ behavior: 'smooth' });
+
+                // Resaltar el botón
+                const verifyButton = verificationSection.querySelector('.btn-success');
+                if (verifyButton) {
+                    verifyButton.focus();
+                }
+            }
+        });
+    </script>
 </body>
+
 </html>

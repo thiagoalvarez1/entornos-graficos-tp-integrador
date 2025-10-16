@@ -38,9 +38,7 @@ $promociones = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <h1 class="h3 mb-1">Mis Promociones</h1>
             <p class="text-muted mb-0">Historial de promociones solicitadas</p>
         </div>
-        <a href="promociones_disponibles.php" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Nueva Promoción
-        </a>
+
     </div>
 
     <!-- Tarjeta de contenido -->
@@ -119,13 +117,13 @@ $promociones = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Animación para las filas de la tabla
         const tableRows = document.querySelectorAll('tbody tr');
         tableRows.forEach((row, index) => {
             row.style.opacity = '0';
             row.style.transform = 'translateX(-20px)';
-            
+
             setTimeout(() => {
                 row.style.transition = 'all 0.5s ease';
                 row.style.opacity = '1';

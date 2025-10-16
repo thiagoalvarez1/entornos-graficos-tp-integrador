@@ -1,928 +1,309 @@
 <?php
 require_once '../includes/config.php';
 require_once '../includes/auth.php';
+require_once '../includes/database.php';
 
 $auth = new Auth();
 $auth->checkAccess(['administrador']);
 
-$pageTitle = "Reportes y Estadísticas";
+// Obtener datos para el dashboard
+$database = new Database();
+$conn = $database->getConnection();
+
+// Estadísticas generales
+$query_stats = "SELECT 
+    COUNT(DISTINCT l.codLocal) as locales_registrados,
+    COUNT(DISTINCT p.codPromo) as promociones_activas,
+    COUNT(DISTINCT CASE WHEN u.estado = 'pendiente' AND u.tipoUsuario = 'dueño de local' THEN u.codUsuario END) as duenos_pendientes,
+    COUNT(DISTINCT CASE WHEN up.estado = 'enviada' THEN up.codUso END) as solicitudes_pendientes
+    FROM locales l
+    LEFT JOIN promociones p ON l.codLocal = p.codLocal AND p.estadoPromo = 'aprobada' AND p.fechaHastaPromo >= CURDATE()
+    LEFT JOIN usuarios u ON u.tipoUsuario = 'dueño de local'
+    LEFT JOIN uso_promociones up ON up.estado = 'enviada'";
+
+$stmt_stats = $conn->prepare($query_stats);
+$stmt_stats->execute();
+$stats = $stmt_stats->fetch(PDO::FETCH_ASSOC);
+
+// Dueños pendientes de validación
+$query_duenos = "SELECT 
+    u.codUsuario,
+    u.nombreUsuario,
+    u.nombreUsuario AS email,
+    l.nombreLocal,
+    u.fechaRegistro
+    FROM usuarios u
+    LEFT JOIN locales l ON u.codUsuario = l.codUsuario
+    WHERE u.tipoUsuario = 'dueño de local' 
+    AND u.estado = 'pendiente'
+    ORDER BY u.fechaRegistro DESC
+    LIMIT 5";
+
+$stmt_duenos = $conn->prepare($query_duenos);
+$stmt_duenos->execute();
+$duenos_pendientes = $stmt_duenos->fetchAll(PDO::FETCH_ASSOC);
+
+// Novedades recientes
+$query_novedades = "SELECT 
+    textoNovedad,
+    fechaCreacion
+    FROM novedades 
+    ORDER BY fechaCreacion DESC
+    LIMIT 3";
+
+$stmt_novedades = $conn->prepare($query_novedades);
+$stmt_novedades->execute();
+$novedades_recientes = $stmt_novedades->fetchAll(PDO::FETCH_ASSOC);
+
+$pageTitle = "Dashboard Administrador";
 require_once '../includes/header-panel.php';
 ?>
 
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-    :root {
-        --primary-purple: #6366f1;
-        --secondary-purple: #8b5cf6;
-        --accent-blue: #0ea5e9;
-        --accent-green: #10b981;
-        --accent-orange: #f59e0b;
-        --accent-red: #ef4444;
-        --gradient-start: #667eea;
-        --gradient-middle: #764ba2;
-        --gradient-end: #f093fb;
-        --dark-bg: #0f172a;
-        --dark-surface: #1e293b;
-        --glass-bg: rgba(255, 255, 255, 0.1);
-        --glass-border: rgba(255, 255, 255, 0.2);
-        --text-primary: #1e293b;
-        --text-secondary: #64748b;
-        --shadow-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        --shadow-heavy: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Inter', sans-serif;
-        background: linear-gradient(-45deg, var(--gradient-start), var(--gradient-middle), var(--secondary-purple), var(--gradient-end));
-        background-size: 400% 400%;
-        animation: gradientShift 20s ease infinite;
-        min-height: 100vh;
-        overflow-x: hidden;
-        position: relative;
-    }
-
-    @keyframes gradientShift {
-        0% {
-            background-position: 0% 50%;
-        }
-
-        50% {
-            background-position: 100% 50%;
-        }
-
-        100% {
-            background-position: 0% 50%;
-        }
-    }
-
-    /* Efectos de fondo */
-    body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background:
-            radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 40% 80%, rgba(14, 165, 233, 0.1) 0%, transparent 50%);
-        pointer-events: none;
-        z-index: 0;
-    }
-
-
-    .sidebar.collapsed {
-        transform: translateX(-280px);
-    }
-
-    .sidebar::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .sidebar::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    .sidebar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 2px;
-    }
-
-    .sidebar-header {
-        padding: 2rem 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        text-align: center;
-    }
-
-    .sidebar-logo {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
-        border-radius: 16px;
-        margin-bottom: 1rem;
-        animation: logoFloat 3s ease-in-out infinite;
-    }
-
-    @keyframes logoFloat {
-
-        0%,
-        100% {
-            transform: translateY(0px);
-        }
-
-        50% {
-            transform: translateY(-5px);
-        }
-    }
-
-    .sidebar-logo i {
-        color: white;
-        font-size: 1.5rem;
-    }
-
-    .sidebar-title {
-        color: white;
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-    }
-
-    .sidebar-subtitle {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.875rem;
-        font-weight: 400;
-    }
-
-    .sidebar-nav {
-        padding: 1rem 0;
-    }
-
-    .nav-section {
-        margin-bottom: 2rem;
-    }
-
-    .nav-section-title {
-        color: rgba(255, 255, 255, 0.4);
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.75rem;
-        padding: 0 1.5rem;
-    }
-
-    .nav-link {
-        display: flex;
-        align-items: center;
-        padding: 0.875rem 1.5rem;
-        color: rgba(255, 255, 255, 0.7);
-        text-decoration: none;
-        transition: all 0.3s ease;
-        position: relative;
-        margin: 0.25rem 1rem;
-        border-radius: 12px;
-        font-weight: 500;
-    }
-
-    .nav-link::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3px;
-        background: var(--primary-purple);
-        border-radius: 0 2px 2px 0;
-        transform: scaleY(0);
-        transition: transform 0.3s ease;
-    }
-
-    .nav-link:hover,
-    .nav-link.active {
-        color: white;
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateX(5px);
-    }
-
-    .nav-link.active::before {
-        transform: scaleY(1);
-    }
-
-    .nav-link i {
-        width: 20px;
-        margin-right: 0.875rem;
-        font-size: 1.125rem;
-    }
-
-    .nav-link .badge {
-        margin-left: auto;
-        background: var(--accent-orange);
-        color: white;
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 6px;
-    }
-
-    /* Main Content */
-    .main-content {
-        margin-left: 280px;
-        min-height: 100vh;
-        padding: 0;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        z-index: 1;
-    }
-
-    .main-content.collapsed {
-        margin-left: 0;
-    }
-
-    /* Top Navbar */
-    .top-navbar {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 1rem 2rem;
-        box-shadow: var(--shadow-light);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
-
-    .navbar-brand {
-        display: none;
-    }
-
-    .sidebar-toggle {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 12px;
-        padding: 0.75rem;
-        color: var(--text-primary);
-        transition: all 0.3s ease;
-    }
-
-    .sidebar-toggle:hover {
-        background: rgba(99, 102, 241, 0.1);
-        border-color: var(--primary-purple);
-        color: var(--primary-purple);
-        transform: scale(1.05);
-    }
-
-    .user-dropdown {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.5rem 1rem;
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        text-decoration: none;
-        color: var(--text-primary);
-        transition: all 0.3s ease;
-        font-weight: 500;
-    }
-
-    .user-dropdown:hover {
-        background: rgba(99, 102, 241, 0.1);
-        border-color: var(--primary-purple);
-        color: var(--primary-purple);
-        transform: translateY(-2px);
-    }
-
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        border: 2px solid rgba(255, 255, 255, 0.5);
-    }
-
-    /* Content Area */
-    .content-area {
-        padding: 2rem;
-    }
-
-    .page-header {
-        margin-bottom: 2rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .page-title {
-        color: white;
-        font-size: 2rem;
-        font-weight: 700;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        margin: 0;
-    }
-
-    .btn-gradient {
-        background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
-        border: none;
-        border-radius: 12px;
-        color: white;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: var(--shadow-medium);
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .btn-gradient:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-heavy);
-        color: white;
-    }
-
-    /* Stats Cards */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: var(--shadow-medium);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--gradient-start);
-        transition: all 0.3s ease;
-    }
-
-    .stat-card.primary::before {
-        background: linear-gradient(90deg, var(--primary-purple), var(--secondary-purple));
-    }
-
-    .stat-card.success::before {
-        background: linear-gradient(90deg, var(--accent-green), #059669);
-    }
-
-    .stat-card.info::before {
-        background: linear-gradient(90deg, var(--accent-blue), #0284c7);
-    }
-
-    .stat-card.warning::before {
-        background: linear-gradient(90deg, var(--accent-orange), #d97706);
-    }
-
-    .stat-card:hover {
-        transform: translateY(-8px);
-        box-shadow: var(--shadow-heavy);
-    }
-
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .stat-card.primary .stat-icon {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-        color: var(--primary-purple);
-    }
-
-    .stat-card.success .stat-icon {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
-        color: var(--accent-green);
-    }
-
-    .stat-card.info .stat-icon {
-        background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(2, 132, 199, 0.1));
-        color: var(--accent-blue);
-    }
-
-    .stat-card.warning .stat-icon {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
-        color: var(--accent-orange);
-    }
-
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-    }
-
-    .stat-label {
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-    }
-
-    .stat-change {
-        font-size: 0.875rem;
-        font-weight: 600;
-        margin-top: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .stat-change.positive {
-        color: var(--accent-green);
-    }
-
-    .stat-change.negative {
-        color: var(--accent-red);
-    }
-
-    /* Content Cards */
-    .content-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .content-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-        box-shadow: var(--shadow-medium);
-        transition: all 0.3s ease;
-        overflow: hidden;
-    }
-
-    .content-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-heavy);
-    }
-
-    .card-header {
-        padding: 1.5rem 2rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        display: flex;
-        justify-content: between;
-        align-items: center;
-    }
-
-    .card-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin: 0;
-    }
-
-    .card-body {
-        padding: 2rem;
-    }
-
-    /* Tables */
-    .table-container {
-        border-radius: 12px;
-        overflow: hidden;
-        background: white;
-    }
-
-    .table {
-        margin: 0;
-    }
-
-    .table th {
-        background: rgba(99, 102, 241, 0.05);
-        border: none;
-        font-weight: 600;
-        color: var(--text-primary);
-        padding: 1rem;
-    }
-
-    .table td {
-        border: none;
-        padding: 1rem;
-        vertical-align: middle;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .table tr:hover {
-        background: rgba(99, 102, 241, 0.02);
-    }
-
-    /* Badges */
-    .badge {
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-    }
-
-    .badge-pending {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--accent-orange);
-        border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-
-    .badge-approved {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--accent-green);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-
-    .badge-rejected {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--accent-red);
-        border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    /* Action Buttons */
-    .btn-action {
-        padding: 0.5rem;
-        border-radius: 8px;
-        border: 1px solid transparent;
-        transition: all 0.3s ease;
-        margin: 0 0.25rem;
-    }
-
-    .btn-action.success {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--accent-green);
-        border-color: rgba(16, 185, 129, 0.2);
-    }
-
-    .btn-action.danger {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--accent-red);
-        border-color: rgba(239, 68, 68, 0.2);
-    }
-
-    .btn-action:hover {
-        transform: scale(1.1);
-    }
-
-    /* Chart Container */
-    .chart-container {
-        height: 300px;
-        position: relative;
-    }
-
-    /* News List */
-    .news-item {
-        padding: 1.5rem 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .news-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-
-    .news-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-    }
-
-    .news-date {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .news-excerpt {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-        line-height: 1.5;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .sidebar {
-            transform: translateX(-280px);
-        }
-
-        .sidebar.show {
-            transform: translateX(0);
-        }
-
-        .main-content {
-            margin-left: 0;
-        }
-
-        .content-area {
-            padding: 1rem;
-        }
-
-        .page-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .content-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* Dropdown Menu */
-    .dropdown-menu {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 16px;
-        box-shadow: var(--shadow-heavy);
-        padding: 0.5rem;
-    }
-
-    .dropdown-item {
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .dropdown-item:hover {
-        background: rgba(99, 102, 241, 0.1);
-        color: var(--primary-purple);
-    }
-</style>
-
-
-
-<!-- Main Content -->
-<div class="main-content" id="mainContent">
-    <!-- Top Navbar -->
-    <nav class="top-navbar">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <button class="sidebar-toggle" id="sidebarToggle">
-                <i class="fas fa-bars"></i>
-            </button>
-
+<div class="container-fluid py-4">
+    <!-- Header de bienvenida -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Panel de Administración</h1>
+            <p class="text-muted mb-0">Gestión completa del sistema PromoShopping</p>
         </div>
-    </nav>
+        <a href="generar_reporte.php" class="btn btn-primary">
+            <i class="fas fa-download me-2"></i>Generar Reporte
+        </a>
+    </div>
 
-    <!-- Content Area -->
-    <div class="content-area">
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1 class="page-title">Dashboard</h1>
-            <a href="#" class="btn-gradient">
-                <i class="fas fa-download"></i>
-                Generar Reporte
-            </a>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-            <div class="stat-card primary">
-                <div class="stat-icon">
-                    <i class="fas fa-store"></i>
-                </div>
-                <div class="stat-value">24</div>
-                <div class="stat-label">Locales Registrados</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    +12% este mes
-                </div>
-            </div>
-
-            <div class="stat-card success">
-                <div class="stat-icon">
-                    <i class="fas fa-tags"></i>
-                </div>
-                <div class="stat-value">18</div>
-                <div class="stat-label">Promociones Activas</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    +8% esta semana
-                </div>
-            </div>
-
-            <div class="stat-card info">
-                <div class="stat-icon">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <div class="stat-value">5</div>
-                <div class="stat-label">Solicitudes Pendientes</div>
-                <div class="stat-change negative">
-                    <i class="fas fa-arrow-down"></i>
-                    -20% hoy
-                </div>
-            </div>
-
-            <div class="stat-card warning">
-                <div class="stat-icon">
-                    <i class="fas fa-user-check"></i>
-                </div>
-                <div class="stat-value">3</div>
-                <div class="stat-label">Dueños por Validar</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    +2 nuevos
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card card-panel h-100">
+                <div class="card-body text-center">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-store fa-2x"></i>
+                    </div>
+                    <h3 class="text-primary"><?= $stats['locales_registrados'] ?? 0 ?></h3>
+                    <p class="text-muted mb-0">Locales Registrados</p>
                 </div>
             </div>
         </div>
+        <div class="col-md-3 mb-3">
+            <div class="card card-panel h-100">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-tags fa-2x"></i>
+                    </div>
+                    <h3 class="text-success"><?= $stats['promociones_activas'] ?? 0 ?></h3>
+                    <p class="text-muted mb-0">Promociones Activas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card card-panel h-100">
+                <div class="card-body text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-clipboard-list fa-2x"></i>
+                    </div>
+                    <h3 class="text-info"><?= $stats['solicitudes_pendientes'] ?? 0 ?></h3>
+                    <p class="text-muted mb-0">Solicitudes Pendientes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card card-panel h-100">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                    <h3 class="text-warning"><?= $stats['duenos_pendientes'] ?? 0 ?></h3>
+                    <p class="text-muted mb-0">Dueños por Validar</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Content Cards -->
-        <div class="content-grid">
-            <!-- Promociones Pendientes -->
-            <div class="content-card">
-                <div class="card-header">
-                    <h3 class="card-title">Dueños por Validar</h3>
-                    <a href="validar-duenos.php" class="btn-gradient btn-sm">Ver todos</a>
+    <div class="row">
+        <!-- Dueños por Validar -->
+        <div class="col-lg-6 mb-4">
+            <div class="card card-panel h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-check me-2"></i>Dueños por Validar
+                    </h5>
+                    <a href="validar-duenos.php" class="btn btn-sm btn-outline-primary">Ver todos</a>
                 </div>
                 <div class="card-body">
-                    <div class="table-container">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Email</th>
-                                    <th>Local</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>María González</strong></td>
-                                    <td>maria@fashionstore.com</td>
-                                    <td>Fashion Store</td>
-                                    <td>
-                                        <button class="btn-action success">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button class="btn-action danger">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Carlos López</strong></td>
-                                    <td>carlos@shoesmore.com</td>
-                                    <td>Shoes & More</td>
-                                    <td>
-                                        <button class="btn-action success">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button class="btn-action danger">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Ana Martínez</strong></td>
-                                    <td>ana@techworld.com</td>
-                                    <td>TechWorld</td>
-                                    <td>
-                                        <button class="btn-action success">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button class="btn-action danger">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <?php if (empty($duenos_pendientes)): ?>
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No hay dueños pendientes</h5>
+                            <p class="text-muted">No hay solicitudes de dueños pendientes de validación</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Local</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($duenos_pendientes as $dueno): ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?= htmlspecialchars($dueno['nombreUsuario']) ?></strong>
+                                            </td>
+                                            <td><?= htmlspecialchars($dueno['email']) ?></td>
+                                            <td>
+                                                <?php if ($dueno['nombreLocal']): ?>
+                                                    <span
+                                                        class="badge bg-info"><?= htmlspecialchars($dueno['nombreLocal']) ?></span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-warning">Sin local</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <form method="POST" action="procesar_validacion.php" class="d-inline">
+                                                    <input type="hidden" name="usuario_id" value="<?= $dueno['codUsuario'] ?>">
+                                                    <input type="hidden" name="accion" value="aprobar">
+                                                    <button type="submit" class="btn btn-success btn-sm"
+                                                        onclick="return confirm('¿Aprobar a <?= htmlspecialchars($dueno['nombreUsuario']) ?>?')">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                                <form method="POST" action="procesar_validacion.php" class="d-inline ms-1">
+                                                    <input type="hidden" name="usuario_id" value="<?= $dueno['codUsuario'] ?>">
+                                                    <input type="hidden" name="accion" value="rechazar">
+                                                    <button type="submit" class="btn btn-danger btn-sm"
+                                                        onclick="return confirm('¿Rechazar a <?= htmlspecialchars($dueno['nombreUsuario']) ?>?')">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
 
-        <!-- Chart and News Row -->
-        <div class="content-grid">
-            <!-- Chart -->
-            <div class="content-card" style="grid-column: 1 / -1;">
-                <div class="card-header">
-                    <h3 class="card-title">Resumen de Actividad</h3>
-                    <div class="d-flex gap-2">
-                        <select class="form-select form-select-sm" style="width: auto;">
-                            <option>Últimos 7 días</option>
-                            <option>Último mes</option>
-                            <option>Últimos 3 meses</option>
-                        </select>
-                    </div>
+        <!-- Novedades Recientes -->
+        <div class="col-lg-6 mb-4">
+            <div class="card card-panel h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bullhorn me-2"></i>Novedades Recientes
+                    </h5>
+                    <a href="gestion_novedades.php" class="btn btn-sm btn-outline-primary">Gestionar</a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="activityChart"></canvas>
+                    <?php if (empty($novedades_recientes)): ?>
+                        <div class="text-center py-4">
+                            <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No hay novedades</h5>
+                            <p class="text-muted">Crea la primera novedad del sistema</p>
+                            <a href="crear_novedad.php" class="btn btn-primary mt-2">
+                                <i class="fas fa-plus me-2"></i>Crear Novedad
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <div class="list-group list-group-flush">
+                            <?php foreach ($novedades_recientes as $novedad): ?>
+                                <div class="list-group-item px-0">
+                                    <h6 class="mb-2"><?= htmlspecialchars($novedad['textoNovedad']) ?></h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        <?= date('d/m/Y H:i', strtotime($novedad['fechaCreacion'])) ?>
+                                    </small>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-panel">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <a href="gestion-locales.php" class="btn btn-outline-primary btn-lg w-100 h-100 py-3">
+                                <i class="fas fa-store fa-2x mb-2"></i>
+                                <br>
+                                <span>Gestionar Locales</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="gestion_promociones.php" class="btn btn-outline-success btn-lg w-100 h-100 py-3">
+                                <i class="fas fa-tags fa-2x mb-2"></i>
+                                <br>
+                                <span>Promociones</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="gestion_novedades.php" class="btn btn-outline-info btn-lg w-100 h-100 py-3">
+                                <i class="fas fa-bullhorn fa-2x mb-2"></i>
+                                <br>
+                                <span>Novedades</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="reportes.php" class="btn btn-outline-warning btn-lg w-100 h-100 py-3">
+                                <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                                <br>
+                                <span>Reportes</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="content-grid">
-            <!-- Novedades Recientes -->
-            <div class="content-card">
+    <!-- Información del Sistema -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card card-panel">
                 <div class="card-header">
-                    <h3 class="card-title">Novedades Recientes</h3>
-                    <a href="#" class="btn-gradient btn-sm">
-                        <i class="fas fa-plus"></i>
-                        Nueva
-                    </a>
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Información del Sistema
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="news-item">
-                        <h6 class="news-title">Nueva colección de verano</h6>
-                        <p class="news-date">
-                            <i class="fas fa-calendar me-1"></i>
-                            15 de Agosto, 2025
-                        </p>
-                        <p class="news-excerpt">
-                            Descubre las nuevas tendencias de verano en todos nuestros locales participantes.
-                        </p>
-                    </div>
-                    <div class="news-item">
-                        <h6 class="news-title">Horario extendido</h6>
-                        <p class="news-date">
-                            <i class="fas fa-calendar me-1"></i>
-                            10 de Agosto, 2025
-                        </p>
-                        <p class="news-excerpt">
-                            A partir de esta semana, extendemos nuestro horario de atención hasta las 22hs.
-                        </p>
-                    </div>
-                    <div class="news-item">
-                        <h6 class="news-title">Promociones de fin de mes</h6>
-                        <p class="news-date">
-                            <i class="fas fa-calendar me-1"></i>
-                            5 de Agosto, 2025
-                        </p>
-                        <p class="news-excerpt">
-                            Aprovecha las increíbles ofertas de fin de mes en todos los locales adheridos.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="content-card">
-                <div class="card-header">
-                    <h3 class="card-title">Acciones Rápidas</h3>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-3">
-                        <a href="#" class="btn-gradient d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <i class="fas fa-plus-circle"></i>
-                                <div>
-                                    <strong>Agregar Local</strong>
-                                    <small class="d-block opacity-75">Registrar nuevo comercio</small>
-                                </div>
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <div class="bg-light p-3 rounded">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <h5 class="text-primary">150+</h5>
+                                <p class="text-muted mb-0">Usuarios Registrados</p>
                             </div>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-
-                        <a href="#" class="btn-gradient d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <i class="fas fa-bullhorn"></i>
-                                <div>
-                                    <strong>Nueva Novedad</strong>
-                                    <small class="d-block opacity-75">Publicar anuncio</small>
-                                </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="bg-light p-3 rounded">
+                                <i class="fas fa-shopping-bag fa-2x text-success mb-2"></i>
+                                <h5 class="text-success">500+</h5>
+                                <p class="text-muted mb-0">Promociones Creadas</p>
                             </div>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-
-                        <a href="#" class="btn-gradient d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <i class="fas fa-chart-line"></i>
-                                <div>
-                                    <strong>Ver Reportes</strong>
-                                    <small class="d-block opacity-75">Analíticas detalladas</small>
-                                </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="bg-light p-3 rounded">
+                                <i class="fas fa-chart-line fa-2x text-info mb-2"></i>
+                                <h5 class="text-info">95%</h5>
+                                <p class="text-muted mb-0">Satisfacción del Sistema</p>
                             </div>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-
-                        <a href="#" class="btn-gradient d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <i class="fas fa-cog"></i>
-                                <div>
-                                    <strong>Configuración</strong>
-                                    <small class="d-block opacity-75">Ajustes del sistema</small>
-                                </div>
-                            </div>
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -930,219 +311,74 @@ require_once '../includes/header-panel.php';
     </div>
 </div>
 
-<!-- Chart.js CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Sidebar Toggle
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-
-        sidebarToggle.addEventListener('click', function () {
-            if (window.innerWidth <= 768) {
-                sidebar.classList.toggle('show');
-            } else {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('collapsed');
+        // Animación de números en estadísticas
+        const statNumbers = document.querySelectorAll('.card-panel h3');
+        statNumbers.forEach(stat => {
+            const finalValue = parseInt(stat.textContent);
+            if (!isNaN(finalValue) && finalValue > 0) {
+                let currentValue = 0;
+                const increment = Math.ceil(finalValue / 30);
+                const timer = setInterval(() => {
+                    currentValue += increment;
+                    if (currentValue >= finalValue) {
+                        stat.textContent = finalValue;
+                        clearInterval(timer);
+                    } else {
+                        stat.textContent = currentValue;
+                    }
+                }, 50);
             }
         });
 
-        // Close sidebar on mobile when clicking outside
-        document.addEventListener('click', function (e) {
-            if (window.innerWidth <= 768) {
-                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
-                    sidebar.classList.remove('show');
-                }
-            }
+        // Efectos hover para las tarjetas
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function () {
+                this.style.transform = 'translateY(-5px)';
+            });
+
+            card.addEventListener('mouseleave', function () {
+                this.style.transform = 'translateY(0)';
+            });
         });
 
-        // Activity Chart
-        const ctx = document.getElementById('activityChart');
-        if (ctx) {
-            const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
-            gradient.addColorStop(1, 'rgba(99, 102, 241, 0.05)');
+        // Animación de entrada para las tarjetas
+        const animatedCards = document.querySelectorAll('.card-panel');
+        animatedCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
 
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sab', 'Dom'],
-                    datasets: [{
-                        label: 'Promociones Activas',
-                        data: [12, 19, 15, 17, 14, 16, 18],
-                        backgroundColor: gradient,
-                        borderColor: '#6366f1',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#6366f1',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                    }, {
-                        label: 'Nuevos Locales',
-                        data: [8, 12, 10, 14, 11, 13, 15],
-                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                        borderColor: '#10b981',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#10b981',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 20,
-                                font: {
-                                    weight: '600'
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            border: {
-                                display: false
-                            },
-                            ticks: {
-                                font: {
-                                    weight: '600'
-                                }
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            },
-                            border: {
-                                display: false
-                            },
-                            ticks: {
-                                font: {
-                                    weight: '600'
-                                }
-                            }
-                        }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    }
-                }
-            });
-        }
-
-        // Animate stats on scroll
-        const observerOptions = {
-            threshold: 0.3
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const statValue = entry.target.querySelector('.stat-value');
-                    if (statValue && !statValue.classList.contains('animated')) {
-                        statValue.classList.add('animated');
-                        animateNumber(statValue);
-                    }
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.stat-card').forEach(card => {
-            observer.observe(card);
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
         });
 
-        function animateNumber(element) {
-            const finalValue = parseInt(element.textContent);
-            const duration = 1500;
-            const increment = finalValue / (duration / 16);
-            let current = 0;
-
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= finalValue) {
-                    current = finalValue;
-                    clearInterval(timer);
-                }
-                element.textContent = Math.floor(current);
-            }, 16);
-        }
-
-        // Action button hover effects
-        document.querySelectorAll('.btn-action').forEach(button => {
+        // Confirmación para acciones
+        const actionButtons = document.querySelectorAll('.btn-danger, .btn-success');
+        actionButtons.forEach(button => {
             button.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                // Create ripple effect
-                const ripple = document.createElement('div');
-                const rect = button.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                const x = e.clientX - rect.left - size / 2;
-                const y = e.clientY - rect.top - size / 2;
-
-                ripple.style.width = ripple.style.height = size + 'px';
-                ripple.style.left = x + 'px';
-                ripple.style.top = y + 'px';
-                ripple.classList.add('ripple');
-
-                button.appendChild(ripple);
-
-                setTimeout(() => {
-                    ripple.remove();
-                }, 600);
+                if (!confirm('¿Estás seguro de que quieres realizar esta acción?')) {
+                    e.preventDefault();
+                }
             });
         });
 
-        // Add CSS for ripple effect
-        const style = document.createElement('style');
-        style.textContent = `
-            .btn-action {
-                position: relative;
-                overflow: hidden;
-            }
-            
-            .ripple {
-                position: absolute;
-                border-radius: 50%;
-                background: rgba(255, 255, 255, 0.3);
-                animation: ripple-animation 0.6s ease-out;
-                pointer-events: none;
-            }
-            
-            @keyframes ripple-animation {
-                0% {
-                    transform: scale(0);
-                    opacity: 1;
-                }
-                100% {
-                    transform: scale(2);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
+        // Actualización automática de estadísticas
+        setInterval(() => {
+            fetch(window.location.href)
+                .then(response => response.text())
+                .then(html => {
+                    console.log('Dashboard actualizado silenciosamente');
+                })
+                .catch(() => {
+                    // Silenciar errores de red
+                });
+        }, 30000); // Cada 30 segundos
     });
 </script>
 
-
-<?php
-require_once __DIR__ . '/../includes/footer-panel.php';
-?>
+<?php require_once '../includes/footer-panel.php'; ?>

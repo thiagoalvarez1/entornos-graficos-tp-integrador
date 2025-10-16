@@ -208,9 +208,7 @@ require_once '../includes/header-panel.php';
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
                             </button>
-                            <a href="promociones_disponibles.php" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-2"></i>Cancelar
-                            </a>
+
                         </div>
                     </form>
                 </div>

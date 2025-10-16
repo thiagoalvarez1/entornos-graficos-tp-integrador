@@ -750,9 +750,6 @@ echo ($currentPage == 'login.php' || $currentPage == 'registro.php') ? 'login-pa
                                     <span>Mi Cuenta</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-modern">
-                                    <li><a class="dropdown-item-modern" href="admin/panel.php">
-                                            <i class="fas fa-tachometer-alt"></i>Panel de Control
-                                        </a></li>
                                     <li><a class="dropdown-item-modern" href="<?php echo SITE_URL; ?>perfil.php">
                                             <i class="fas fa-user-edit"></i>Mi Perfil
                                         </a></li>
