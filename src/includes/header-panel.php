@@ -86,11 +86,18 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <div class="menu-divider"></div>
 
                 <!-- Menú común -->
-                <a class="nav-link" href="mi_local.php">
-                    <i class="fas fa-cog"></i>
-                    <span>Configuración</span>
-                </a>
-
+                <?php if ($_SESSION['user_type'] === 'dueño de local'): ?>
+                    <a class="nav-link" href="../dueno/mi_local.php">
+                        <i class="fas fa-tags"></i>
+                        <span>Mi local</span>
+                    </a>
+                <?php endif; ?>
+                <?php if ($_SESSION['user_type'] === 'cliente'): ?>
+                    <a class="nav-link" href="../cliente/mis_promociones.php">
+                        <i class="fas fa-tags"></i>
+                        <span>Mis Promociones</span>
+                    </a>
+                <?php endif; ?>
                 <a class="nav-link" href="<?= SITE_URL ?>index.php">
                     <i class="fas fa-home"></i>
                     <span>Volver al Sitio</span>

@@ -501,7 +501,8 @@
 .category-badge {
     position: absolute;
     top: 1rem;
-    left: 1rem;
+    right: 1rem !important;  /* Fuerza la posición derecha */
+    left: auto !important;   /* Anula cualquier left */
     padding: 0.5rem 0.875rem;
     border-radius: 20px;
     font-size: 0.75rem;
@@ -543,43 +544,6 @@
 
 .promo-card:hover .card-image img {
     transform: scale(1.08);
-}
-
-.discount-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: var(--white);
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
-    text-align: center;
-    min-width: 70px;
-    box-shadow: var(--shadow-lg);
-}
-
-.discount-badge-medium {
-    background: linear-gradient(135deg, var(--secondary), #be185d);
-}
-
-.discount-badge-inicial {
-    background: linear-gradient(135deg, var(--accent), #d97706);
-}
-
-.discount-text {
-    display: block;
-    font-size: 1.15rem;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 0.15rem;
-}
-
-.discount-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    opacity: 0.9;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 .card-body {
@@ -1175,4 +1139,10 @@
     .promo-title {
         font-size: 1.1rem;
     }
+}
+/* FIX FORCE - Mover badge a derecha */
+.category-badge {
+    right: 1rem !important;
+    left: auto !important;
+    transform: none !important;
 }

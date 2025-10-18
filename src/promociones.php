@@ -5,6 +5,36 @@ require_once 'includes/database.php';
 $pageTitle = "Promociones";
 require_once 'includes/header.php';
 
+// Función para convertir números a nombres de días
+function convertirDias($diasSemana)
+{
+    $diasMap = [
+        '1' => 'Lunes',
+        '2' => 'Martes',
+        '3' => 'Miércoles',
+        '4' => 'Jueves',
+        '5' => 'Viernes',
+        '6' => 'Sábado',
+        '7' => 'Domingo'
+    ];
+
+    // Si es un string con números separados por comas
+    if (strpos($diasSemana, ',') !== false) {
+        $numerosDias = explode(',', $diasSemana);
+        $nombresDias = [];
+        foreach ($numerosDias as $numero) {
+            $numero = trim($numero);
+            if (isset($diasMap[$numero])) {
+                $nombresDias[] = $diasMap[$numero];
+            }
+        }
+        return implode(', ', $nombresDias);
+    }
+
+    // Si es un solo número
+    return isset($diasMap[$diasSemana]) ? $diasMap[$diasSemana] : $diasSemana;
+}
+
 $database = new Database();
 $conn = $database->getConnection();
 
@@ -16,6 +46,7 @@ try {
             p.textoPromo, 
             p.fechaDesdePromo, 
             p.fechaHastaPromo, 
+            p.diasSemana,
             l.nombreLocal,
             l.ubicacionLocal,
             l.rubroLocal
@@ -62,6 +93,9 @@ try {
                                 </li>
                                 <li class="text-muted"><i class="far fa-calendar-alt me-1"></i>Válido hasta:
                                     <?= date('d/m/Y', strtotime($promo['fechaHastaPromo'])) ?>
+                                </li>
+                                <li class="text-muted"><i class="fas fa-clock me-1"></i>Días:
+                                    <?= htmlspecialchars(convertirDias($promo['diasSemana'])) ?>
                                 </li>
                             </ul>
                             <div class="d-grid mt-3">

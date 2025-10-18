@@ -1,7 +1,7 @@
 <?php
 require_once 'includes/config.php';
 require_once 'includes/database.php';
-$pageTitle = "Inicio - Bandera";
+$pageTitle = "Inicio - Bandera Shopping";
 require_once 'includes/header.php';
 
 // Obtener promociones destacadas
@@ -190,7 +190,6 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
 <?php endif; ?>
 
 <!-- PROMOCIONES DESTACADAS -->
-<!-- PROMOCIONES DESTACADAS -->
 <section id="promociones" class="promociones-section">
     <div class="container">
         <div class="section-header">
@@ -213,40 +212,23 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
                         'Medium' => 'badge-medium',
                         default => 'badge-inicial'
                     };
-                    $discount_class = match ($categoria) {
-                        'Premium' => '',
-                        'Medium' => 'discount-badge-medium',
-                        default => 'discount-badge-inicial'
-                    };
-
-
                     ?>
                     <div class="col-lg-4 col-md-6">
                         <div class="promo-card <?= $card_class ?>" data-aos="fade-up"
                             data-aos-delay="<?= ($index + 1) * 100 ?>">
 
-                            <!-- Header con categoría -->
+                            <!-- Header solo con categoría arriba a la derecha -->
                             <div class="card-header">
                                 <span class="category-badge <?= $badge_class ?>">
                                     <i
                                         class="fas <?= $categoria == 'Premium' ? 'fa-crown' : ($categoria == 'Medium' ? 'fa-gem' : 'fa-star') ?>"></i>
                                     <?= $categoria ?>
                                 </span>
-
-                                <!-- Badge de descuento -->
-                                <div class="discount-badge <?= $discount_class ?>">
-                                    <span class="discount-text"><?= $categoria ?></span>
-                                    <span class="discount-label">OFERTA</span>
-                                </div>
-
-                                <!-- Información del local -->
-
                             </div>
 
                             <!-- Cuerpo de la promoción -->
                             <div class="card-body">
                                 <h4 class="promo-title"><?= htmlspecialchars($promo['textoPromo']) ?></h4>
-
 
                                 <div class="promo-details">
                                     <div class="detail-item">
@@ -289,25 +271,6 @@ $total_promociones = count($promociones_destacadas) > 0 ? count($promociones_des
                             <span class="category-badge badge-premium">
                                 <i class="fas fa-crown"></i> Premium
                             </span>
-
-                            <div class="discount-badge">
-                                <span class="discount-text">30% OFF</span>
-                                <span class="discount-label">OFERTA</span>
-                            </div>
-
-                            <div class="store-icon-container">
-                                <div class="store-icon">
-                                    <i class="fas fa-store"></i>
-                                </div>
-                                <div class="store-info">
-                                    <h5 class="store-name">Nombre del Local</h5>
-                                    <span class="store-category">Categoría</span>
-                                </div>
-                                <div class="store-rating">
-                                    <i class="fas fa-star"></i>
-                                    <span>4.8</span>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="card-body">

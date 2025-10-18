@@ -138,7 +138,7 @@ require_once 'includes/header.php';
         <h2 class="section-title text-center mb-5">Encuéntranos</h2>
         <div class="mapa-container">
             <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.0167396244504!2d-58.38160252346943!3d-34.60368627282481!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95a3350b61fb651d%3A0x8c9e5a7e1b7b5f5d!2sBuenos%20Aires%2C%20Argentina!5e0!3m2!1ses!2sar!4v1234567890"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d107131.6470342566!2d-60.73285344589839!3d-32.9533466790198!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95b6539335d7d0ab%3A0x7c2d0bdc26b5dd49!2sRosario%2C%20Santa%20Fe!5e0!3m2!1ses!2sar!4v1234567890"
                 width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"
                 referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
