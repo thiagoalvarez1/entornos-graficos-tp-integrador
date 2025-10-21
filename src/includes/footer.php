@@ -104,9 +104,9 @@
                             <ul class="footer-links-modern">
                                 <?php
                                 $contactInfo = [
-                                    ['url' => '#', 'icon' => 'map-marker-alt', 'text' => 'Shopping del Sol, Rosario'],
+                                    ['url' => '#', 'icon' => 'map-marker-alt', 'text' => 'Bandera, Rosario'],
                                     ['url' => 'tel:+5493414123456', 'icon' => 'phone', 'text' => '(0341) 123-4567'],
-                                    ['url' => 'mailto:info@promoshopping.com', 'icon' => 'envelope', 'text' => 'info@promoshopping.com'],
+                                    ['url' => 'mailto:info@promoshopping.com', 'icon' => 'envelope', 'text' => 'info@bandera.com'],
                                     ['url' => '#', 'icon' => 'clock', 'text' => 'Lun-Dom: 10:00 - 22:00']
                                 ];
                                 foreach ($contactInfo as $info):
