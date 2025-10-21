@@ -58,7 +58,7 @@ $novedades_recientes = $stmt_novedades->fetchAll(PDO::FETCH_ASSOC);
 $pageTitle = "Dashboard Administrador";
 require_once '../includes/header-panel.php';
 ?>
-
+<link rel="stylesheet" href="../css/panel-admin.css">
 <div class="container-fluid py-4">
     <!-- Header de bienvenida -->
     <div class="d-flex justify-content-between align-items-center mb-4">

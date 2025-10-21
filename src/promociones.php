@@ -68,6 +68,7 @@ try {
     $promociones = [];
 }
 ?>
+<link rel="stylesheet" href="css/promociones.css">
 
 <div class="container mt-4 mb-5">
     <div class="row">
