@@ -192,6 +192,7 @@ require_once '../includes/header-panel.php';
         </div>
     <?php endif; ?>
 
+    <!-- En la sección de Solicitudes Recientes del panel -->
     <div class="row">
         <!-- Solicitudes Recientes -->
         <div class="col-lg-6 mb-4">
@@ -233,18 +234,19 @@ require_once '../includes/header-panel.php';
                                                 <small><?= date('d/m/Y H:i', strtotime($solicitud['fechaUsoPromo'])) ?></small>
                                             </td>
                                             <td>
-                                                <form method="POST" action="procesar_solicitud.php" class="d-inline">
+                                                <!-- FORMULARIO CORREGIDO - usa los mismos nombres que en mis_solicitudes.php -->
+                                                <form method="POST" action="mis_solicitudes.php" class="d-inline">
                                                     <input type="hidden" name="codUso" value="<?= $solicitud['codUso'] ?>">
-                                                    <input type="hidden" name="accion" value="aceptar">
-                                                    <button type="submit" class="btn btn-success btn-sm"
+                                                    <button type="submit" name="aceptar_solicitud"
+                                                        class="btn btn-success btn-sm"
                                                         onclick="return confirm('¿Aceptar solicitud de <?= htmlspecialchars($solicitud['cliente']) ?>?')">
                                                         <i class="fas fa-check"></i>
                                                     </button>
                                                 </form>
-                                                <form method="POST" action="procesar_solicitud.php" class="d-inline ms-1">
+                                                <form method="POST" action="mis_solicitudes.php" class="d-inline ms-1">
                                                     <input type="hidden" name="codUso" value="<?= $solicitud['codUso'] ?>">
-                                                    <input type="hidden" name="accion" value="rechazar">
-                                                    <button type="submit" class="btn btn-danger btn-sm"
+                                                    <button type="submit" name="rechazar_solicitud"
+                                                        class="btn btn-danger btn-sm"
                                                         onclick="return confirm('¿Rechazar solicitud de <?= htmlspecialchars($solicitud['cliente']) ?>?')">
                                                         <i class="fas fa-times"></i>
                                                     </button>
@@ -260,160 +262,109 @@ require_once '../includes/header-panel.php';
             </div>
         </div>
 
-        <!-- Promociones Activas -->
-        <div class="col-lg-6 mb-4">
-            <div class="card card-panel h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-tags me-2"></i>Promociones Activas
-                    </h5>
-                    <a href="mis_promociones.php" class="btn btn-sm btn-outline-primary">Gestionar</a>
-                </div>
-                <div class="card-body">
-                    <?php if (empty($promociones_activas)): ?>
-                        <div class="text-center py-4">
-                            <i class="fas fa-tags fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No hay promociones activas</h5>
-                            <p class="text-muted">Crea tu primera promoción para comenzar</p>
-                            <a href="mis_promociones.php" class="btn btn-primary mt-2">
-                                <i class="fas fa-plus me-2"></i>Crear Promoción
-                            </a>
-                        </div>
-                    <?php else: ?>
-                        <div class="list-group list-group-flush">
-                            <?php foreach ($promociones_activas as $promocion): ?>
-                                <div class="list-group-item px-0">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="mb-0"><?= htmlspecialchars($promocion['textoPromo']) ?></h6>
-                                        <span class="badge bg-info"><?= $promocion['categoriaCliente'] ?></span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <small class="text-muted">
-                                                <i class="fas fa-calendar me-1"></i>
-                                                Hasta <?= date('d/m/Y', strtotime($promocion['fechaHastaPromo'])) ?>
-                                            </small>
-                                            <small class="text-muted ms-3">
-                                                <i class="fas fa-clock me-1"></i>
-                                                <?= $promocion['diasSemana'] ?>
-                                            </small>
-                                        </div>
-                                        <a href="editar_promocion.php?id=<?= $promocion['codPromo'] ?>"
-                                            class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Acciones rápidas -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card card-panel">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-bolt me-2"></i>Acciones Rápidas
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-3 mb-3">
-                            <a href="mis_promociones.php" class="btn btn-outline-primary btn-lg w-100 h-100 py-3">
-                                <i class="fas fa-plus fa-2x mb-2"></i>
-                                <br>
-                                <span>Nueva Promoción</span>
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="mis_promociones.php" class="btn btn-outline-success btn-lg w-100 h-100 py-3">
-                                <i class="fas fa-tags fa-2x mb-2"></i>
-                                <br>
-                                <span>Mis Promociones</span>
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="mis_solicitudes.php" class="btn btn-outline-info btn-lg w-100 h-100 py-3">
-                                <i class="fas fa-clipboard-check fa-2x mb-2"></i>
-                                <br>
-                                <span>Solicitudes</span>
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="mi_local.php" class="btn btn-outline-warning btn-lg w-100 h-100 py-3">
-                                <i class="fas fa-store fa-2x mb-2"></i>
-                                <br>
-                                <span>Mi Local</span>
-                            </a>
+        <!-- Acciones rápidas -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-panel">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3 mb-3">
+                                <a href="mis_promociones.php" class="btn btn-outline-primary btn-lg w-100 h-100 py-3">
+                                    <i class="fas fa-plus fa-2x mb-2"></i>
+                                    <br>
+                                    <span>Nueva Promoción</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="mis_promociones.php" class="btn btn-outline-success btn-lg w-100 h-100 py-3">
+                                    <i class="fas fa-tags fa-2x mb-2"></i>
+                                    <br>
+                                    <span>Mis Promociones</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="mis_solicitudes.php" class="btn btn-outline-info btn-lg w-100 h-100 py-3">
+                                    <i class="fas fa-clipboard-check fa-2x mb-2"></i>
+                                    <br>
+                                    <span>Solicitudes</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="mi_local.php" class="btn btn-outline-warning btn-lg w-100 h-100 py-3">
+                                    <i class="fas fa-store fa-2x mb-2"></i>
+                                    <br>
+                                    <span>Mi Local</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Animación de números en estadísticas
-        const statNumbers = document.querySelectorAll('.card-panel h3');
-        statNumbers.forEach(stat => {
-            const finalValue = parseInt(stat.textContent);
-            if (!isNaN(finalValue) && finalValue > 0) {
-                let currentValue = 0;
-                const increment = Math.ceil(finalValue / 30);
-                const timer = setInterval(() => {
-                    currentValue += increment;
-                    if (currentValue >= finalValue) {
-                        stat.textContent = finalValue;
-                        clearInterval(timer);
-                    } else {
-                        stat.textContent = currentValue;
-                    }
-                }, 50);
-            }
-        });
-
-        // Efectos hover para las tarjetas
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            card.addEventListener('mouseenter', function () {
-                this.style.transform = 'translateY(-5px)';
-            });
-
-            card.addEventListener('mouseleave', function () {
-                this.style.transform = 'translateY(0)';
-            });
-        });
-
-        // Animación de entrada para las tarjetas
-        const animatedCards = document.querySelectorAll('.card-panel');
-        animatedCards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-
-            setTimeout(() => {
-                card.style.transition = 'all 0.5s ease';
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-            }, index * 100);
-        });
-
-        // Confirmación para acciones
-        const deleteButtons = document.querySelectorAll('.btn-danger');
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', function (e) {
-                if (!confirm('¿Estás seguro de que quieres realizar esta acción?')) {
-                    e.preventDefault();
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Animación de números en estadísticas
+            const statNumbers = document.querySelectorAll('.card-panel h3');
+            statNumbers.forEach(stat => {
+                const finalValue = parseInt(stat.textContent);
+                if (!isNaN(finalValue) && finalValue > 0) {
+                    let currentValue = 0;
+                    const increment = Math.ceil(finalValue / 30);
+                    const timer = setInterval(() => {
+                        currentValue += increment;
+                        if (currentValue >= finalValue) {
+                            stat.textContent = finalValue;
+                            clearInterval(timer);
+                        } else {
+                            stat.textContent = currentValue;
+                        }
+                    }, 50);
                 }
             });
-        });
-    });
-</script>
 
-<?php require_once '../includes/footer-panel.php'; ?>
+            // Efectos hover para las tarjetas
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function () {
+                    this.style.transform = 'translateY(-5px)';
+                });
+
+                card.addEventListener('mouseleave', function () {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+            // Animación de entrada para las tarjetas
+            const animatedCards = document.querySelectorAll('.card-panel');
+            animatedCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Confirmación para acciones
+            const deleteButtons = document.querySelectorAll('.btn-danger');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    if (!confirm('¿Estás seguro de que quieres realizar esta acción?')) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+    </script>
+
+    <?php require_once '../includes/footer-panel.php'; ?>

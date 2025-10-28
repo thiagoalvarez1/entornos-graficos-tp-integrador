@@ -74,6 +74,9 @@ $pageTitle = "Solicitar Promoción";
 require_once '../includes/header-panel.php';
 ?>
 
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
 <div class="container-fluid py-4">
     <!-- Header de la página -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -186,7 +189,7 @@ require_once '../includes/header-panel.php';
                         </p>
                     </div>
 
-                    <form method="POST">
+                    <form method="POST" id="solicitudForm">
                         <div class="mb-3">
                             <label class="form-label">Cliente</label>
                             <input type="text" class="form-control"
@@ -205,7 +208,7 @@ require_once '../includes/header-panel.php';
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg">
+                            <button type="button" class="btn btn-success btn-lg" id="btnSolicitar">
                                 <i class="fas fa-paper-plane me-2"></i>Enviar Solicitud
                             </button>
 
@@ -217,15 +220,61 @@ require_once '../includes/header-panel.php';
     </div>
 </div>
 
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Confirmación antes de enviar
-        const form = document.querySelector('form');
-        form.addEventListener('submit', function (e) {
-            if (!confirm('¿Estás seguro de que quieres solicitar esta promoción?')) {
-                e.preventDefault();
-            }
-        });
+        // Verificar que los elementos existan antes de agregar event listeners
+        const btnSolicitar = document.getElementById('btnSolicitar');
+        const form = document.getElementById('solicitudForm');
+
+        if (btnSolicitar && form) {
+            btnSolicitar.addEventListener('click', function () {
+                const promocionNombre = "<?= htmlspecialchars($promocion['textoPromo']) ?>";
+                const localNombre = "<?= htmlspecialchars($promocion['nombreLocal']) ?>";
+
+                Swal.fire({
+                    title: '¿Solicitar promoción?',
+                    html: `
+                    <div class="text-start">
+                        <p>¿Estás seguro de que quieres solicitar esta promoción?</p>
+                        <div class="alert alert-warning small mt-3 mb-0">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>Detalles de la solicitud:</strong>
+                            <ul class="mb-0 mt-2 ps-3">
+                                <li><strong>Promoción:</strong> ${promocionNombre}</li>
+                                <li><strong>Local:</strong> ${localNombre}</li>
+                                <li>El dueño revisará tu solicitud</li>
+                                <li>Recibirás una notificación con el resultado</li>
+                            </ul>
+                        </div>
+                    </div>
+                `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-paper-plane me-2"></i>Sí, enviar solicitud',
+                    cancelButtonText: '<i class="fas fa-times me-2"></i>Cancelar',
+                    reverseButtons: true,
+                    backdrop: true,
+                    allowOutsideClick: false,
+                    customClass: {
+                        confirmButton: 'btn btn-success',
+                        cancelButton: 'btn btn-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Enviar el formulario
+                        form.submit();
+                    }
+                });
+            });
+        } else {
+            console.error('No se encontraron los elementos del formulario');
+        }
     });
 </script>
 

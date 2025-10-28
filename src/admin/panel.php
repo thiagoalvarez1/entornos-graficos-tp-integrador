@@ -55,7 +55,7 @@ $stmt_novedades = $conn->prepare($query_novedades);
 $stmt_novedades->execute();
 $novedades_recientes = $stmt_novedades->fetchAll(PDO::FETCH_ASSOC);
 
-$pageTitle = "Dashboard Administrador";
+$pageTitle = "Panel Administrador";
 require_once '../includes/header-panel.php';
 ?>
 <link rel="stylesheet" href="../css/panel-admin.css">
@@ -313,7 +313,7 @@ require_once '../includes/header-panel.php';
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Animación de números en estadísticas
+        // 1. ANIMACIÓN DE NÚMEROS EN ESTADÍSTICAS (solo si existen)
         const statNumbers = document.querySelectorAll('.card-panel h3');
         statNumbers.forEach(stat => {
             const finalValue = parseInt(stat.textContent);
@@ -332,7 +332,7 @@ require_once '../includes/header-panel.php';
             }
         });
 
-        // Efectos hover para las tarjetas
+        // 2. EFECTOS HOVER PARA TARJETAS (solo si existen)
         const cards = document.querySelectorAll('.card');
         cards.forEach(card => {
             card.addEventListener('mouseenter', function () {
@@ -344,7 +344,7 @@ require_once '../includes/header-panel.php';
             });
         });
 
-        // Animación de entrada para las tarjetas
+        // 3. ANIMACIÓN DE ENTRADA PARA TARJETAS (solo si existen)
         const animatedCards = document.querySelectorAll('.card-panel');
         animatedCards.forEach((card, index) => {
             card.style.opacity = '0';
@@ -357,7 +357,7 @@ require_once '../includes/header-panel.php';
             }, index * 100);
         });
 
-        // Confirmación para acciones
+        // 4. CONFIRMACIÓN PARA ACCIONES (solo si existen)
         const actionButtons = document.querySelectorAll('.btn-danger, .btn-success');
         actionButtons.forEach(button => {
             button.addEventListener('click', function (e) {
@@ -366,19 +366,6 @@ require_once '../includes/header-panel.php';
                 }
             });
         });
-
-        // Actualización automática de estadísticas
-        setInterval(() => {
-            fetch(window.location.href)
-                .then(response => response.text())
-                .then(html => {
-                    console.log('Dashboard actualizado silenciosamente');
-                })
-                .catch(() => {
-                    // Silenciar errores de red
-                });
-        }, 30000); // Cada 30 segundos
     });
 </script>
-
 <?php require_once '../includes/footer-panel.php'; ?>

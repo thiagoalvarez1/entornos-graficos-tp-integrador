@@ -11,7 +11,60 @@ $database = new Database();
 $conn = $database->getConnection();
 $user_id = $_SESSION['user_id'];
 
-// Estadísticas del cliente
+// Primero: Determinar la categoría del cliente
+$query_categoria = "SELECT 
+    CASE 
+        WHEN COUNT(*) >= 4 THEN 'Premium'
+        WHEN COUNT(*) >= 2 THEN 'Medium'
+        ELSE 'Inicial'
+    END as categoria
+    FROM uso_promociones 
+    WHERE codCliente = :user_id AND estado = 'aceptada'";
+
+$stmt_categoria = $conn->prepare($query_categoria);
+$stmt_categoria->bindParam(':user_id', $user_id);
+$stmt_categoria->execute();
+$categoria_cliente = $stmt_categoria->fetch(PDO::FETCH_ASSOC)['categoria'];
+
+// Segundo: Promociones disponibles según jerarquía de categorías
+$query_disponibles = "SELECT 
+    p.codPromo,
+    p.textoPromo,
+    p.categoriaCliente,
+    l.nombreLocal,
+    l.ubicacionLocal
+    FROM promociones p
+    JOIN locales l ON p.codLocal = l.codLocal
+    WHERE p.estadoPromo = 'aprobada' 
+    AND (
+        -- Cliente Premium puede ver todas las categorías
+        (:categoria = 'Premium') OR
+        -- Cliente Medium puede ver Medium e Inicial
+        (:categoria = 'Medium' AND p.categoriaCliente IN ('Medium', 'Inicial')) OR
+        -- Cliente Inicial solo puede ver Inicial
+        (:categoria = 'Inicial' AND p.categoriaCliente = 'Inicial')
+    )
+    AND p.codPromo NOT IN (
+        SELECT up3.codPromo 
+        FROM uso_promociones up3 
+        WHERE up3.codCliente = :user_id
+    )
+    ORDER BY 
+        CASE p.categoriaCliente
+            WHEN 'Premium' THEN 1
+            WHEN 'Medium' THEN 2
+            WHEN 'Inicial' THEN 3
+        END,
+        p.fechaCreacion DESC
+    LIMIT 6";
+
+$stmt_disponibles = $conn->prepare($query_disponibles);
+$stmt_disponibles->bindParam(':user_id', $user_id);
+$stmt_disponibles->bindParam(':categoria', $categoria_cliente);
+$stmt_disponibles->execute();
+$promociones_disponibles = $stmt_disponibles->fetchAll(PDO::FETCH_ASSOC);
+
+// El resto del código permanece igual...
 $query_stats = "SELECT 
     COUNT(DISTINCT up.codPromo) as promociones_usadas,
     COUNT(DISTINCT p.codLocal) as locales_visitados,
@@ -45,38 +98,6 @@ $stmt_recientes->bindParam(':user_id', $user_id);
 $stmt_recientes->execute();
 $promociones_recientes = $stmt_recientes->fetchAll(PDO::FETCH_ASSOC);
 
-// Promociones disponibles (nuevas)
-$query_disponibles = "SELECT 
-    p.codPromo,
-    p.textoPromo,
-    p.categoriaCliente,
-    l.nombreLocal,
-    l.ubicacionLocal
-    FROM promociones p
-    JOIN locales l ON p.codLocal = l.codLocal
-    WHERE p.estadoPromo = 'aprobada' 
-    AND p.categoriaCliente = (
-        SELECT CASE 
-            WHEN COUNT(*) >= 4 THEN 'Premium'
-            WHEN COUNT(*) >= 2 THEN 'Medium'
-            ELSE 'Inicial'
-        END
-        FROM uso_promociones up2
-        WHERE up2.codCliente = :user_id AND up2.estado = 'aceptada'
-    )
-    AND p.codPromo NOT IN (
-        SELECT up3.codPromo 
-        FROM uso_promociones up3 
-        WHERE up3.codCliente = :user_id
-    )
-    ORDER BY p.fechaCreacion DESC
-    LIMIT 6";
-
-$stmt_disponibles = $conn->prepare($query_disponibles);
-$stmt_disponibles->bindParam(':user_id', $user_id);
-$stmt_disponibles->execute();
-$promociones_disponibles = $stmt_disponibles->fetchAll(PDO::FETCH_ASSOC);
-
 $pageTitle = "Panel Cliente";
 require_once '../includes/header-panel.php';
 ?>
@@ -93,202 +114,212 @@ require_once '../includes/header-panel.php';
         <div class="bg-light p-3 rounded">
             <small class="text-muted">Tu categoría</small>
             <?php
-            $categoria = 'Inicial';
-            if ($stats['descuentos_obtenidos'] >= 4) {
-                $categoria = 'Premium';
-            } elseif ($stats['descuentos_obtenidos'] >= 2) {
-                $categoria = 'Medium';
-            }
+            // Usamos la variable $categoria_cliente que ya calculamos
+            $badge_class = match ($categoria_cliente) {
+                'Premium' => 'badge-approved',
+                'Medium' => 'badge-pending',
+                default => 'badge-rejected'
+            };
             ?>
-            <div
-                class="badge-status <?= $categoria == 'Premium' ? 'badge-approved' : ($categoria == 'Medium' ? 'badge-pending' : 'badge-rejected') ?> mt-1">
-                <?= $categoria ?>
+            <div class="badge-status <?= $badge_class ?> mt-1">
+                <?= $categoria_cliente ?>
             </div>
-        </div>
-    </div>
-
-    <!-- Estadísticas -->
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card card-panel h-100">
-                <div class="card-body text-center">
-                    <div class="text-primary mb-2">
-                        <i class="fas fa-percentage fa-2x"></i>
-                    </div>
-                    <h3 class="text-primary"><?= $stats['descuentos_obtenidos'] ?? 0 ?></h3>
-                    <p class="text-muted mb-0">Descuentos Obtenidos</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card card-panel h-100">
-                <div class="card-body text-center">
-                    <div class="text-success mb-2">
-                        <i class="fas fa-store fa-2x"></i>
-                    </div>
-                    <h3 class="text-success"><?= $stats['locales_visitados'] ?? 0 ?></h3>
-                    <p class="text-muted mb-0">Locales Visitados</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card card-panel h-100">
-                <div class="card-body text-center">
-                    <div class="text-warning mb-2">
-                        <i class="fas fa-tags fa-2x"></i>
-                    </div>
-                    <h3 class="text-warning"><?= $stats['promociones_usadas'] ?? 0 ?></h3>
-                    <p class="text-muted mb-0">Promociones Usadas</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card card-panel h-100">
-                <div class="card-body text-center">
-                    <div class="text-info mb-2">
-                        <i class="fas fa-clock fa-2x"></i>
-                    </div>
-                    <h3 class="text-info"><?= $stats['solicitudes_pendientes'] ?? 0 ?></h3>
-                    <p class="text-muted mb-0">Solicitudes Pendientes</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Promociones disponibles -->
-        <div class="col-lg-8 mb-4">
-            <div class="card card-panel h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-gift me-2"></i>Promociones Disponibles
-                    </h5>
-                    <a href="promociones_disponibles.php" class="btn btn-sm btn-outline-primary">Ver todas</a>
-                </div>
-                <div class="card-body">
-                    <?php if (empty($promociones_disponibles)): ?>
-                        <div class="text-center py-4">
-                            <i class="fas fa-gift fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No hay promociones disponibles</h5>
-                            <p class="text-muted">¡Pronto habrá nuevas ofertas para ti!</p>
-                        </div>
+            <div class="mt-2">
+                <small class="text-muted">
+                    <?php if ($categoria_cliente == 'Premium'): ?>
+                        ✅ Puedes acceder a todas las promociones
+                    <?php elseif ($categoria_cliente == 'Medium'): ?>
+                        ⚡ Puedes acceder a promociones Medium e Inicial
                     <?php else: ?>
-                        <div class="row">
-                            <?php foreach ($promociones_disponibles as $promocion): ?>
-                                <div class="col-md-6 mb-3">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h6 class="card-title"><?= htmlspecialchars($promocion['nombreLocal']) ?></h6>
-                                                <span class="badge bg-info"><?= $promocion['categoriaCliente'] ?></span>
-                                            </div>
-                                            <p class="card-text small"><?= htmlspecialchars($promocion['textoPromo']) ?></p>
-                                            <p class="small text-muted mb-2">
-                                                <i class="fas fa-map-marker-alt me-1"></i>
-                                                <?= htmlspecialchars($promocion['ubicacionLocal']) ?>
-                                            </p>
+                        🔒 Solo promociones Inicial disponibles
+                    <?php endif; ?>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card card-panel h-100">
+            <div class="card-body text-center">
+                <div class="text-primary mb-2">
+                    <i class="fas fa-percentage fa-2x"></i>
+                </div>
+                <h3 class="text-primary"><?= $stats['descuentos_obtenidos'] ?? 0 ?></h3>
+                <p class="text-muted mb-0">Descuentos Obtenidos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-panel h-100">
+            <div class="card-body text-center">
+                <div class="text-success mb-2">
+                    <i class="fas fa-store fa-2x"></i>
+                </div>
+                <h3 class="text-success"><?= $stats['locales_visitados'] ?? 0 ?></h3>
+                <p class="text-muted mb-0">Locales Visitados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-panel h-100">
+            <div class="card-body text-center">
+                <div class="text-warning mb-2">
+                    <i class="fas fa-tags fa-2x"></i>
+                </div>
+                <h3 class="text-warning"><?= $stats['promociones_usadas'] ?? 0 ?></h3>
+                <p class="text-muted mb-0">Promociones Usadas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-panel h-100">
+            <div class="card-body text-center">
+                <div class="text-info mb-2">
+                    <i class="fas fa-clock fa-2x"></i>
+                </div>
+                <h3 class="text-info"><?= $stats['solicitudes_pendientes'] ?? 0 ?></h3>
+                <p class="text-muted mb-0">Solicitudes Pendientes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Promociones disponibles -->
+    <div class="col-lg-8 mb-4">
+        <div class="card card-panel h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-gift me-2"></i>Promociones Disponibles
+                </h5>
+                <a href="promociones_disponibles.php" class="btn btn-sm btn-outline-primary">Ver todas</a>
+            </div>
+            <div class="card-body">
+                <?php if (empty($promociones_disponibles)): ?>
+                    <div class="text-center py-4">
+                        <i class="fas fa-gift fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay promociones disponibles</h5>
+                        <p class="text-muted">¡Pronto habrá nuevas ofertas para ti!</p>
+                    </div>
+                <?php else: ?>
+                    <div class="row">
+                        <?php foreach ($promociones_disponibles as $promocion): ?>
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title"><?= htmlspecialchars($promocion['nombreLocal']) ?></h6>
+                                            <span class="badge bg-info"><?= $promocion['categoriaCliente'] ?></span>
                                         </div>
-                                        <div class="card-footer bg-transparent">
-                                            <a href="solicitar_promocion.php?id=<?= $promocion['codPromo'] ?>"
-                                                class="btn btn-success btn-sm w-100">
-                                                <i class="fas fa-paper-plane me-2"></i>Solicitar
-                                            </a>
-                                        </div>
+                                        <p class="card-text small"><?= htmlspecialchars($promocion['textoPromo']) ?></p>
+                                        <p class="small text-muted mb-2">
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            <?= htmlspecialchars($promocion['ubicacionLocal']) ?>
+                                        </p>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <a href="solicitar_promocion.php?id=<?= $promocion['codPromo'] ?>"
+                                            class="btn btn-success btn-sm w-100">
+                                            <i class="fas fa-paper-plane me-2"></i>Solicitar
+                                        </a>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Actividad reciente -->
-        <div class="col-lg-4 mb-4">
-            <div class="card card-panel h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-history me-2"></i>Actividad Reciente
-                    </h5>
-                    <a href="mis_promociones.php" class="btn btn-sm btn-outline-primary">Ver historial</a>
-                </div>
-                <div class="card-body">
-                    <?php if (empty($promociones_recientes)): ?>
-                        <div class="text-center py-4">
-                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">Sin actividad reciente</h5>
-                            <p class="text-muted">Comienza a usar promociones para ver tu historial aquí</p>
-                        </div>
-                    <?php else: ?>
-                        <div class="list-group list-group-flush">
-                            <?php foreach ($promociones_recientes as $reciente): ?>
-                                <div class="list-group-item px-0">
-                                    <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <h6 class="mb-0"><?= htmlspecialchars($reciente['nombreLocal']) ?></h6>
-                                        <span
-                                            class="badge-status <?= $reciente['estado'] == 'aceptada' ? 'badge-approved' : ($reciente['estado'] == 'enviada' ? 'badge-pending' : 'badge-rejected') ?>">
-                                            <?= ucfirst($reciente['estado']) ?>
-                                        </span>
-                                    </div>
-                                    <p class="small text-muted mb-1"><?= htmlspecialchars($reciente['textoPromo']) ?></p>
-                                    <small class="text-muted">
-                                        <i class="fas fa-calendar me-1"></i>
-                                        <?= date('d/m/Y H:i', strtotime($reciente['fechaUsoPromo'])) ?>
-                                    </small>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <!-- Acciones rápidas -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card card-panel">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-bolt me-2"></i>Acciones Rápidas
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-3 mb-3">
-                            <a href="promociones_disponibles.php"
-                                class="btn btn-outline-primary btn-lg w-100 h-100 py-3">
-                                <i class="fas fa-search fa-2x mb-2"></i>
-                                <br>
-                                <span>Explorar Promociones</span>
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="mis_promociones.php" class="btn btn-outline-success btn-lg w-100 h-100 py-3">
-                                <i class="fas fa-tags fa-2x mb-2"></i>
-                                <br>
-                                <span>Mis Promociones</span>
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="#" class="btn btn-outline-info btn-lg w-100 h-100 py-3">
-                                <i class="fas fa-qrcode fa-2x mb-2"></i>
-                                <br>
-                                <span>Mi Código QR</span>
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="#" class="btn btn-outline-warning btn-lg w-100 h-100 py-3">
-                                <i class="fas fa-star fa-2x mb-2"></i>
-                                <br>
-                                <span>Favoritos</span>
-                            </a>
-                        </div>
+    <!-- Actividad reciente -->
+    <div class="col-lg-4 mb-4">
+        <div class="card card-panel h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Actividad Reciente
+                </h5>
+                <a href="mis_promociones.php" class="btn btn-sm btn-outline-primary">Ver historial</a>
+            </div>
+            <div class="card-body">
+                <?php if (empty($promociones_recientes)): ?>
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Sin actividad reciente</h5>
+                        <p class="text-muted">Comienza a usar promociones para ver tu historial aquí</p>
+                    </div>
+                <?php else: ?>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($promociones_recientes as $reciente): ?>
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="mb-0"><?= htmlspecialchars($reciente['nombreLocal']) ?></h6>
+                                    <span
+                                        class="badge-status <?= $reciente['estado'] == 'aceptada' ? 'badge-approved' : ($reciente['estado'] == 'enviada' ? 'badge-pending' : 'badge-rejected') ?>">
+                                        <?= ucfirst($reciente['estado']) ?>
+                                    </span>
+                                </div>
+                                <p class="small text-muted mb-1"><?= htmlspecialchars($reciente['textoPromo']) ?></p>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    <?= date('d/m/Y H:i', strtotime($reciente['fechaUsoPromo'])) ?>
+                                </small>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acciones rápidas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-panel">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <a href="promociones_disponibles.php" class="btn btn-outline-primary btn-lg w-100 h-100 py-3">
+                            <i class="fas fa-search fa-2x mb-2"></i>
+                            <br>
+                            <span>Explorar Promociones</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="mis_promociones.php" class="btn btn-outline-success btn-lg w-100 h-100 py-3">
+                            <i class="fas fa-tags fa-2x mb-2"></i>
+                            <br>
+                            <span>Mis Promociones</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="#" class="btn btn-outline-info btn-lg w-100 h-100 py-3">
+                            <i class="fas fa-qrcode fa-2x mb-2"></i>
+                            <br>
+                            <span>Mi Código QR</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="#" class="btn btn-outline-warning btn-lg w-100 h-100 py-3">
+                            <i class="fas fa-star fa-2x mb-2"></i>
+                            <br>
+                            <span>Favoritos</span>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <script>

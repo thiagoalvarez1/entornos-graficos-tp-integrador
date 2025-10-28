@@ -9,37 +9,85 @@ require_once 'includes/header.php';
 $database = new Database();
 $conn = $database->getConnection();
 
+// Configuración de paginación - CORREGIDO
+$por_pagina = 6;
+$pagina_actual = isset($_GET['pagina']) ? max(1, (int) $_GET['pagina']) : 1;
+
 $locales = [];
 $filtros = [
     'rubro' => $_GET['rubro'] ?? '',
     'busqueda' => $_GET['busqueda'] ?? ''
 ];
 
+$total_locales = 0;
+$total_paginas = 1;
+
 try {
-    // Query base
-    $query = "SELECT l.*, COUNT(p.codPromo) as total_promociones 
+    // Query base para contar total
+    $query_count = "SELECT COUNT(DISTINCT l.codLocal) as total
               FROM locales l 
               LEFT JOIN promociones p ON l.codLocal = p.codLocal AND p.estadoPromo = 'aprobada'
               WHERE l.estado = 'activo'";
     $params = [];
 
-    // Aplicar filtros
+    // Aplicar filtros al count
     if (!empty($filtros['rubro'])) {
-        $query .= " AND l.rubroLocal = :rubro";
+        $query_count .= " AND l.rubroLocal = :rubro";
         $params[':rubro'] = $filtros['rubro'];
     }
 
     if (!empty($filtros['busqueda'])) {
-        $query .= " AND (l.nombreLocal LIKE :busqueda OR l.rubroLocal LIKE :busqueda)";
+        $query_count .= " AND (l.nombreLocal LIKE :busqueda OR l.rubroLocal LIKE :busqueda)";
         $params[':busqueda'] = '%' . $filtros['busqueda'] . '%';
     }
 
-    $query .= " GROUP BY l.codLocal ORDER BY l.nombreLocal";
+    // Obtener total de locales
+    $stmt_count = $conn->prepare($query_count);
+    foreach ($params as $key => $value) {
+        $stmt_count->bindValue($key, $value);
+    }
+    $stmt_count->execute();
+    $total_locales = $stmt_count->fetch(PDO::FETCH_ASSOC)['total'];
+    $total_paginas = ceil($total_locales / $por_pagina);
+
+    // CORRECCIÓN: Asegurar que la página actual esté dentro del rango válido
+    if ($pagina_actual < 1)
+        $pagina_actual = 1;
+    if ($total_paginas > 0 && $pagina_actual > $total_paginas) {
+        $pagina_actual = $total_paginas;
+    }
+
+    // CORRECCIÓN: Calcular offset solo si hay resultados
+    $offset = ($pagina_actual - 1) * $por_pagina;
+    if ($offset < 0)
+        $offset = 0;
+
+    // Query para obtener locales con paginación - CORREGIDO
+    $query = "SELECT l.*, COUNT(p.codPromo) as total_promociones 
+              FROM locales l 
+              LEFT JOIN promociones p ON l.codLocal = p.codLocal AND p.estadoPromo = 'aprobada'
+              WHERE l.estado = 'activo'";
+
+    // Aplicar filtros
+    if (!empty($filtros['rubro'])) {
+        $query .= " AND l.rubroLocal = :rubro";
+    }
+
+    if (!empty($filtros['busqueda'])) {
+        $query .= " AND (l.nombreLocal LIKE :busqueda OR l.rubroLocal LIKE :busqueda)";
+    }
+
+    $query .= " GROUP BY l.codLocal ORDER BY l.nombreLocal LIMIT :limit OFFSET :offset";
 
     $stmt = $conn->prepare($query);
     foreach ($params as $key => $value) {
         $stmt->bindValue($key, $value);
     }
+
+    // Vincular parámetros de paginación de manera segura
+    $stmt->bindValue(':limit', $por_pagina, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
     $stmt->execute();
     $locales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -51,6 +99,9 @@ try {
 } catch (PDOException $e) {
     echo "<div class='alert alert-danger'>No se pudieron cargar los locales: " . $e->getMessage() . "</div>";
 }
+
+// Construir URL base para paginación manteniendo filtros - CORREGIDO
+$url_base = "locales.php?" . htmlspecialchars(http_build_query($filtros), ENT_QUOTES);
 ?>
 
 <link rel="stylesheet" href="css/locales.css">
@@ -111,9 +162,13 @@ try {
     <div class="stats-bar">
         <div class="stats-info">
             Mostrando <span class="stats-count"><?= count($locales) ?></span>
-            <?= count($locales) === 1 ? 'local' : 'locales' ?>
+            de <span class="stats-total"><?= $total_locales ?></span>
+            <?= $total_locales === 1 ? 'local' : 'locales' ?>
             <?php if (!empty($filtros['rubro']) || !empty($filtros['busqueda'])): ?>
                 con los filtros aplicados
+            <?php endif; ?>
+            <?php if ($total_paginas > 1): ?>
+                - Página <?= $pagina_actual ?> de <?= $total_paginas ?>
             <?php endif; ?>
         </div>
         <div class="stats-info">
@@ -189,6 +244,58 @@ try {
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <!-- PAGINACIÓN -->
+        <?php if ($total_paginas > 1): ?>
+            <nav aria-label="Paginación de locales" class="pagination-section">
+                <ul class="pagination justify-content-center">
+                    <!-- Botón Anterior -->
+                    <li class="page-item <?= $pagina_actual == 1 ? 'disabled' : '' ?>">
+                        <a class="page-link" href="<?= $url_base ?>&pagina=<?= $pagina_actual - 1 ?>" aria-label="Anterior">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+
+                    <!-- Números de página -->
+                    <?php
+                    // Mostrar páginas (máximo 5 páginas alrededor de la actual)
+                    $inicio = max(1, $pagina_actual - 2);
+                    $fin = min($total_paginas, $pagina_actual + 2);
+
+                    // Mostrar primera página si no está en el rango
+                    if ($inicio > 1) {
+                        echo '<li class="page-item"><a class="page-link" href="' . $url_base . '&pagina=1">1</a></li>';
+                        if ($inicio > 2)
+                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                    }
+
+                    for ($i = $inicio; $i <= $fin; $i++):
+                        ?>
+                        <li class="page-item <?= $i == $pagina_actual ? 'active' : '' ?>">
+                            <a class="page-link" href="<?= $url_base ?>&pagina=<?= $i ?>"><?= $i ?></a>
+                        </li>
+                    <?php endfor; ?>
+
+                    <!-- Mostrar última página si no está en el rango -->
+                    <?php if ($fin < $total_paginas): ?>
+                        <?php if ($fin < $total_paginas - 1): ?>
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        <?php endif; ?>
+                        <li class="page-item"><a class="page-link"
+                                href="<?= $url_base ?>&pagina=<?= $total_paginas ?>"><?= $total_paginas ?></a></li>
+                    <?php endif; ?>
+
+                    <!-- Botón Siguiente -->
+                    <li class="page-item <?= $pagina_actual == $total_paginas ? 'disabled' : '' ?>">
+                        <a class="page-link" href="<?= $url_base ?>&pagina=<?= $pagina_actual + 1 ?>" aria-label="Siguiente">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+
+            </nav>
+        <?php endif; ?>
+
     <?php else: ?>
         <div class="empty-state">
             <div class="empty-icon">
@@ -311,8 +418,11 @@ try {
 
         // Stats counter animation
         const statsCount = document.querySelector('.stats-count');
-        if (statsCount) {
+        const statsTotal = document.querySelector('.stats-total');
+
+        if (statsCount && statsTotal) {
             const finalValue = parseInt(statsCount.textContent);
+            const totalValue = parseInt(statsTotal.textContent);
             let currentValue = 0;
             const increment = Math.max(1, Math.ceil(finalValue / 30));
 
