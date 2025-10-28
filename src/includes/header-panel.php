@@ -1,6 +1,4 @@
 <?php
-// includes/header-panel.php - Header optimizado para paneles
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -47,7 +45,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($pageTitle) ? "$pageTitle - " : '' ?>Bandera Shopping</title>
 
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -70,7 +67,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <!-- Dashboard común -->
                 <a class="nav-link <?= $currentPage === 'panel.php' ? 'active' : '' ?>" href="panel.php">
                     <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
+                    <span>Panel</span>
                 </a>
 
                 <!-- Menú específico del panel -->
@@ -174,7 +171,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     }
                 });
             </script>
-            <!-- ========== FIN DEL JAVASCRIPT ========== -->
 
 </body>
 

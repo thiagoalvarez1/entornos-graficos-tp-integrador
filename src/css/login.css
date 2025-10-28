@@ -426,6 +426,37 @@
                 padding: 0 0.5rem;
             }
         }
+
+        .form-group {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 10px;
+            top: 38px;
+            color: #888;
+        }
+
+        .form-control {
+            padding-left: 35px;
+            padding-right: 35px;
+        }
+
+        .toggle-password {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #888;
+        font-size: 1rem;
+        }
+
+        .toggle-password:hover {
+        color: #000;
+        }
+
         
 
         /* Utilitarios */

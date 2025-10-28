@@ -1,6 +1,6 @@
 <?php
 // Herramienta para identificar archivos con duplicados
-echo "<h2>🔍 Buscando archivos con código duplicado</h2>";
+echo "<h2>Buscando archivos con código duplicado</h2>";
 
 $filesToCheck = [
     'index.php',
@@ -21,9 +21,9 @@ foreach ($filesToCheck as $file) {
         $hasBody = strpos($content, '</body>') !== false;
 
         if ($hasDoctype || $hasHtml || $hasHead || $hasBody) {
-            echo "<p style='color: red;'>❌ $file - TIENE CÓDIGO DUPLICADO</p>";
+            echo "<p style='color: red;'>$file - TIENE CÓDIGO DUPLICADO</p>";
         } else {
-            echo "<p style='color: green;'>✅ $file - OK</p>";
+            echo "<p style='color: green;'>$file - OK</p>";
         }
     }
 }
