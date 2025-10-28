@@ -115,11 +115,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const passwordInput = document.querySelector('#password');
 
         togglePassword.addEventListener('click', function () {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.classList.toggle('fa-eye-slash');
+            const isPassword = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+
+            // Asegura que se cambie correctamente el icono
+            if (isPassword) {
+                this.classList.remove('fa-eye');
+                this.classList.add('fa-eye-slash');
+            } else {
+                this.classList.remove('fa-eye-slash');
+                this.classList.add('fa-eye');
+            }
         });
     </script>
 </body>
-
 </html>

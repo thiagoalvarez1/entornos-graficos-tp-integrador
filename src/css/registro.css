@@ -348,3 +348,71 @@
                 font-size: 0.85rem;
             }
         }
+
+        .registro-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: #f8f9fa;
+        }
+
+        .registro-card {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        max-width: 420px;
+        width: 100%;
+        }
+
+        .form-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+        padding-right: 2.3rem;
+        }
+
+        .toggle-password {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #888;
+        cursor: pointer;
+        font-size: 1rem;
+        }
+
+        .toggle-password:hover {
+        color: #000;
+        }
+
+        .btn-register {
+        width: 100%;
+        background-color: #007bff;
+        border: none;
+        color: white;
+        padding: 0.7rem;
+        border-radius: 5px;
+        font-weight: 600;
+        }
+
+        .btn-register:hover {
+        background-color: #0056b3;
+        }
+
+        .auth-footer {
+        text-align: center;
+        margin-top: 1rem;
+        }
+
+        .auth-footer a {
+        color: #007bff;
+        text-decoration: none;
+        }
+
+        .auth-footer a:hover {
+        text-decoration: underline;
+        }
