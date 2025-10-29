@@ -59,7 +59,7 @@ echo ($currentPage == 'login.php' || $currentPage == 'registro.php') ? 'login-pa
                     <i class="fas fa-bars"></i>
                 </button>
 
-                <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="collapse navbar-collapse" id="navbarNav"> 
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
                             <a class="nav-link-modern <?php echo $currentPage == 'index.php' ? 'active' : ''; ?>"
@@ -68,20 +68,26 @@ echo ($currentPage == 'login.php' || $currentPage == 'registro.php') ? 'login-pa
                                 <span>Inicio</span>
                             </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link-modern" href="<?php echo SITE_URL; ?>promociones.php">
+                            <a class="nav-link-modern <?php echo $currentPage == 'promociones.php' ? 'active' : ''; ?>"
+                                href="<?php echo SITE_URL; ?>promociones.php">
                                 <i class="fas fa-tags"></i>
                                 <span>Promociones</span>
                             </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link-modern" href="<?php echo SITE_URL; ?>locales.php">
+                            <a class="nav-link-modern <?php echo $currentPage == 'locales.php' ? 'active' : ''; ?>"
+                                href="<?php echo SITE_URL; ?>locales.php">
                                 <i class="fas fa-store"></i>
                                 <span>Locales</span>
                             </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link-modern" href="<?php echo SITE_URL; ?>contacto.php">
+                            <a class="nav-link-modern <?php echo $currentPage == 'contacto.php' ? 'active' : ''; ?>"
+                                href="<?php echo SITE_URL; ?>contacto.php">
                                 <i class="fas fa-envelope"></i>
                                 <span>Contacto</span>
                             </a>

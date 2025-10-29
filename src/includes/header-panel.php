@@ -63,7 +63,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <?php endif; ?>
             </div>
 
-            <nav class="sidebar-menu">
+           <nav class="sidebar-menu">
                 <!-- Dashboard común -->
                 <a class="nav-link <?= $currentPage === 'panel.php' ? 'active' : '' ?>" href="panel.php">
                     <i class="fas fa-tachometer-alt"></i>
@@ -84,23 +84,25 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
                 <!-- Menú común -->
                 <?php if ($_SESSION['user_type'] === 'dueño de local'): ?>
-                    <a class="nav-link" href="../dueno/mi_local.php">
+                    <a class="nav-link <?= $currentPage === 'mi_local.php' ? 'active' : '' ?>" href="../dueno/mi_local.php">
                         <i class="fas fa-tags"></i>
                         <span>Mi local</span>
                     </a>
                 <?php endif; ?>
+
                 <?php if ($_SESSION['user_type'] === 'cliente'): ?>
-                    <a class="nav-link" href="../cliente/mis_promociones.php">
+                    <a class="nav-link <?= $currentPage === 'mis_promociones.php' ? 'active' : '' ?>" href="../cliente/mis_promociones.php">
                         <i class="fas fa-tags"></i>
                         <span>Mis Promociones</span>
                     </a>
                 <?php endif; ?>
-                <a class="nav-link" href="<?= SITE_URL ?>index.php">
+
+                <a class="nav-link <?= $currentPage === 'index.php' ? 'active' : '' ?>" href="<?= SITE_URL ?>index.php">
                     <i class="fas fa-home"></i>
                     <span>Volver al Sitio</span>
                 </a>
 
-                <a class="nav-link text-danger" href="<?= SITE_URL ?>logout.php">
+                <a class="nav-link text-danger <?= $currentPage === 'logout.php' ? 'active' : '' ?>" href="<?= SITE_URL ?>logout.php">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Cerrar Sesión</span>
                 </a>
