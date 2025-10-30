@@ -181,18 +181,26 @@ $currentPage = 'registro.php';
                             value="<?= htmlspecialchars($email) ?>" required placeholder="ejemplo@correo.com">
                     </div>
 
-
-
                     <div class="form-group">
                         <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" name="password" required
-                            placeholder="Mínimo 6 caracteres">
+                        <div class="password-input-container">
+                            <input type="password" class="form-control password-input" id="password" name="password"
+                                required placeholder="Mínimo 6 caracteres">
+                            <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label for="password_confirm" class="form-label">Confirmar Contraseña</label>
-                        <input type="password" class="form-control" id="password_confirm" name="password_confirm"
-                            required placeholder="Repite tu contraseña">
+                        <div class="password-input-container">
+                            <input type="password" class="form-control password-input" id="password_confirm"
+                                name="password_confirm" required placeholder="Repite tu contraseña">
+                            <button type="button" class="password-toggle" onclick="togglePassword('password_confirm')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn-register">
@@ -230,6 +238,21 @@ $currentPage = 'registro.php';
             } else {
                 categoryField.style.display = 'none';
                 document.getElementById('categoria').value = '';
+            }
+        }
+
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggleIcon = passwordField.parentNode.querySelector('.password-toggle i');
+
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
             }
         }
 

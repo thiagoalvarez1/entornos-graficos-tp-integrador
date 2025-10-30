@@ -16,7 +16,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <li class="nav-item">
             <a class="nav-link <?= ($currentPage == 'panel.php' ? 'active' : '') ?>" href="panel.php">
                 <i class="fas fa-tachometer-alt"></i>
-                <span>Dashboard</span>
+                <span>Panel</span>
             </a>
         </li>
         <li class="nav-item">

@@ -105,13 +105,9 @@ $promociones_activas = $stmt_activas->fetchAll(PDO::FETCH_ASSOC);
 
 <body>
     <div class="container">
-        <div class="header">
-            <h1>
-                <div class="header-icon">
-                    <i class="fas fa-tags"></i>
-                </div>
-                Gestión de Promociones
-            </h1>
+        <div class="validar-duenos-header">
+            <h1><i class="fas fa-user-check me-2"></i>Gestión de promociones</h1>
+            <p>Gestión y aprobación de promociones</p>
         </div>
 
         <!-- Alertas -->

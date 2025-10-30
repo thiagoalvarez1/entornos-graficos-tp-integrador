@@ -62,28 +62,31 @@ require_once '../includes/header-panel.php';
 
 <div class="main-content-panel">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h2 text-primary"><i class="fas fa-store me-2"></i>Gestión de Locales</h1>
+        <h1 class="h2 text-primary"><i class="fas fa-store me-2" aria-hidden="true"></i>Gestión de Locales</h1>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearLocalModal">
-            <i class="fas fa-plus-circle me-1"></i> Nuevo Local
+            <i class="fas fa-plus-circle me-1" aria-hidden="true"></i> Nuevo Local
         </button>
     </div>
 
     <div class="card shadow-sm mb-5">
         <div class="card-header bg-white border-bottom">
-            <h6 class="mb-0 fw-bold text-muted">Listado de Locales</h6>
+            <h2 class="h6 mb-0 fw-bold text-muted">Listado de Locales</h2>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0" aria-describedby="tabla-locales-desc">
+                    <caption id="tabla-locales-desc" class="visually-hidden">
+                        Tabla de locales registrados en el sistema con sus datos y acciones disponibles
+                    </caption>
                     <thead class="bg-light">
                         <tr>
-                            <th class="text-center">ID</th>
-                            <th>Nombre</th>
-                            <th>Ubicación</th>
-                            <th>Rubro</th>
-                            <th>Dueño (Email)</th>
-                            <th class="text-center">Estado</th>
-                            <th class="text-center">Acciones</th>
+                            <th scope="col" class="text-center">ID</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Ubicación</th>
+                            <th scope="col">Rubro</th>
+                            <th scope="col">Dueño (Email)</th>
+                            <th scope="col" class="text-center">Estado</th>
+                            <th scope="col" class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -97,15 +100,18 @@ require_once '../includes/header-panel.php';
                                     <td>
                                         <?php echo htmlspecialchars($local['email_dueno']); ?>
                                         <?php if ($local['estado_dueno'] !== 'activo'): ?>
-                                            <span class="badge bg-danger ms-1"
-                                                title="El dueño está Inactivo o Pendiente. El local no aparecerá al público.">⚠️</span>
+                                            <span class="badge bg-danger ms-1" role="status"
+                                                aria-label="Dueño inactivo - El local no aparecerá al público">
+                                                ⚠️
+                                            </span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
                                         <?php
                                         $badge_class = $local['estado'] == 'activo' ? 'success' : 'danger';
                                         $estado_texto = ucfirst($local['estado']);
-                                        echo "<span class='badge bg-{$badge_class}'>{$estado_texto}</span>";
+                                        $estado_aria = $local['estado'] == 'activo' ? 'Activo' : 'Inactivo';
+                                        echo "<span class='badge bg-{$badge_class}' role='status' aria-label='Estado: {$estado_aria}'>{$estado_texto}</span>";
                                         ?>
                                     </td>
                                     <td class="text-center">
@@ -116,21 +122,27 @@ require_once '../includes/header-panel.php';
                                             data-ubicacion="<?php echo htmlspecialchars($local['ubicacionLocal']); ?>"
                                             data-rubro="<?php echo htmlspecialchars($local['rubroLocal']); ?>"
                                             data-usuario="<?php echo htmlspecialchars($local['codUsuario']); ?>"
-                                            data-estado="<?php echo htmlspecialchars($local['estado']); ?>">
-                                            <i class="fas fa-edit"></i>
+                                            data-estado="<?php echo htmlspecialchars($local['estado']); ?>"
+                                            aria-label="Editar local <?php echo htmlspecialchars($local['nombreLocal']); ?>">
+                                            <i class="fas fa-edit" aria-hidden="true"></i>
+                                            <span class="visually-hidden">Editar</span>
                                         </button>
 
                                         <button class="btn btn-sm btn-outline-danger delete-local-btn"
                                             data-id="<?php echo $local['codLocal']; ?>"
-                                            data-nombre="<?php echo htmlspecialchars($local['nombreLocal']); ?>">
-                                            <i class="fas fa-trash-alt"></i>
+                                            data-nombre="<?php echo htmlspecialchars($local['nombreLocal']); ?>"
+                                            aria-label="Eliminar local <?php echo htmlspecialchars($local['nombreLocal']); ?>">
+                                            <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                                            <span class="visually-hidden">Eliminar</span>
                                         </button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">No se encontraron locales.</td>
+                                <td colspan="7" class="text-center py-4 text-muted" role="cell">
+                                    No se encontraron locales.
+                                </td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -145,10 +157,11 @@ require_once '../includes/header-panel.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="crearLocalModalLabel"><i class="fas fa-plus-circle me-2"></i>Crear Nuevo
-                    Local</h5>
+                <h2 class="modal-title h5" id="crearLocalModalLabel">
+                    <i class="fas fa-plus-circle me-2" aria-hidden="true"></i>Crear Nuevo Local
+                </h2>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
+                    aria-label="Cerrar modal de creación"></button>
             </div>
             <form id="crearLocalForm" action="procesar_local.php" method="POST">
                 <div class="modal-body">
@@ -156,21 +169,33 @@ require_once '../includes/header-panel.php';
 
                     <div class="mb-3">
                         <label for="crear_nombre" class="form-label">Nombre del Local</label>
-                        <input type="text" class="form-control" id="crear_nombre" name="nombre" required
-                            maxlength="100">
+                        <input type="text" class="form-control" id="crear_nombre" name="nombre" required maxlength="100"
+                            aria-describedby="crear_nombre_help">
+                        <small id="crear_nombre_help" class="form-text text-muted">
+                            Ingrese el nombre comercial del local
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="crear_ubicacion" class="form-label">Ubicación (Ej: Planta Baja, Local 123)</label>
+                        <label for="crear_ubicacion" class="form-label">Ubicación</label>
                         <input type="text" class="form-control" id="crear_ubicacion" name="ubicacion" required
-                            maxlength="50">
+                            maxlength="50" aria-describedby="crear_ubicacion_help"
+                            placeholder="Ej: Planta Baja, Local 123">
+                        <small id="crear_ubicacion_help" class="form-text text-muted">
+                            Especifique la ubicación física dentro del shopping
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="crear_rubro" class="form-label">Rubro (Ej: Tecnología, Comida)</label>
-                        <input type="text" class="form-control" id="crear_rubro" name="rubro" required maxlength="20">
+                        <label for="crear_rubro" class="form-label">Rubro</label>
+                        <input type="text" class="form-control" id="crear_rubro" name="rubro" required maxlength="20"
+                            aria-describedby="crear_rubro_help" placeholder="Ej: Tecnología, Comida">
+                        <small id="crear_rubro_help" class="form-text text-muted">
+                            Indique el rubro o categoría del local
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="crear_dueno_id" class="form-label">Dueño Asignado</label>
-                        <select class="form-select" id="crear_dueno_id" name="dueno_id" required>
+                        <select class="form-select" id="crear_dueno_id" name="dueno_id" required
+                            aria-describedby="crear_dueno_help">
                             <option value="" selected disabled>Seleccione un dueño</option>
                             <?php if (!empty($duenos)): ?>
                                 <?php foreach ($duenos as $dueno): ?>
@@ -182,21 +207,26 @@ require_once '../includes/header-panel.php';
                                 <option disabled>No hay dueños activos sin local asignado</option>
                             <?php endif; ?>
                         </select>
-                        <small class="form-text text-muted">Solo se muestran dueños activos que aún no tienen un
-                            local.</small>
+                        <small id="crear_dueno_help" class="form-text text-muted">
+                            Solo se muestran dueños activos que aún no tienen un local asignado
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="crear_estado" class="form-label">Estado</label>
-                        <select class="form-select" id="crear_estado" name="estado" required>
+                        <select class="form-select" id="crear_estado" name="estado" required
+                            aria-describedby="crear_estado_help">
                             <option value="activo" selected>Activo</option>
                             <option value="inactivo">Inactivo</option>
                         </select>
+                        <small id="crear_estado_help" class="form-text text-muted">
+                            Los locales inactivos no aparecerán en las promociones
+                        </small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i> Guardar Local
+                        <i class="fas fa-save me-1" aria-hidden="true"></i> Guardar Local
                     </button>
                 </div>
             </form>
@@ -209,9 +239,11 @@ require_once '../includes/header-panel.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="editarLocalModalLabel"><i class="fas fa-edit me-2"></i>Editar Local</h5>
+                <h2 class="modal-title h5" id="editarLocalModalLabel">
+                    <i class="fas fa-edit me-2" aria-hidden="true"></i>Editar Local
+                </h2>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
+                    aria-label="Cerrar modal de edición"></button>
             </div>
             <form id="editarLocalForm" action="procesar_local.php" method="POST">
                 <div class="modal-body">
@@ -220,20 +252,32 @@ require_once '../includes/header-panel.php';
 
                     <div class="mb-3">
                         <label for="edit_nombre" class="form-label">Nombre del Local</label>
-                        <input type="text" class="form-control" id="edit_nombre" name="nombre" required maxlength="100">
+                        <input type="text" class="form-control" id="edit_nombre" name="nombre" required maxlength="100"
+                            aria-describedby="edit_nombre_help">
+                        <small id="edit_nombre_help" class="form-text text-muted">
+                            Nombre comercial del local
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit_ubicacion" class="form-label">Ubicación</label>
                         <input type="text" class="form-control" id="edit_ubicacion" name="ubicacion" required
-                            maxlength="50">
+                            maxlength="50" aria-describedby="edit_ubicacion_help">
+                        <small id="edit_ubicacion_help" class="form-text text-muted">
+                            Ubicación física dentro del shopping
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit_rubro" class="form-label">Rubro</label>
-                        <input type="text" class="form-control" id="edit_rubro" name="rubro" required maxlength="20">
+                        <input type="text" class="form-control" id="edit_rubro" name="rubro" required maxlength="20"
+                            aria-describedby="edit_rubro_help">
+                        <small id="edit_rubro_help" class="form-text text-muted">
+                            Rubro o categoría del local
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit_dueno_id" class="form-label">Dueño Asignado</label>
-                        <select class="form-select" id="edit_dueno_id" name="dueno_id" required>
+                        <select class="form-select" id="edit_dueno_id" name="dueno_id" required
+                            aria-describedby="edit_dueno_help">
                             <?php
                             $query_all_duenos = "
                                 SELECT 
@@ -254,21 +298,26 @@ require_once '../includes/header-panel.php';
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <small class="form-text text-muted">Asegúrese de que solo un local tenga el mismo dueño
-                            asignado.</small>
+                        <small id="edit_dueno_help" class="form-text text-muted">
+                            Asegúrese de que solo un local tenga el mismo dueño asignado
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit_estado" class="form-label">Estado</label>
-                        <select class="form-select" id="edit_estado" name="estado" required>
+                        <select class="form-select" id="edit_estado" name="estado" required
+                            aria-describedby="edit_estado_help">
                             <option value="activo">Activo</option>
                             <option value="inactivo">Inactivo</option>
                         </select>
+                        <small id="edit_estado_help" class="form-text text-muted">
+                            Los locales inactivos no aparecerán en las promociones
+                        </small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-info text-white">
-                        <i class="fas fa-save me-1"></i> Guardar Cambios
+                        <i class="fas fa-save me-1" aria-hidden="true"></i> Guardar Cambios
                     </button>
                 </div>
             </form>

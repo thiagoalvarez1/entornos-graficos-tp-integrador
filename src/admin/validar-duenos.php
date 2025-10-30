@@ -119,13 +119,9 @@ require_once '../includes/header-panel.php';
 
 <body>
     <div class="container">
-        <div class="header">
-            <h1>
-                <div class="header-icon">
-                    <i class="fas fa-user-shield"></i>
-                </div>
-                Validar Dueños de Locales
-            </h1>
+        <div class="validar-duenos-header">
+            <h1><i class="fas fa-user-check me-2"></i>Validar Dueños</h1>
+            <p>Gestión y aprobación de dueños de locales registrados</p>
         </div>
 
         <!-- Mostrar mensaje de éxito -->

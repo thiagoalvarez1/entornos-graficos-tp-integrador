@@ -1,0 +1,191 @@
+/* ============================================
+   MEJORAS DE ACCESIBILIDAD WCAG 2.1
+   ============================================ */
+
+/* 1. MEJORA DE CONTRASTE */
+.text-muted {
+    color: #6b7280 !important;
+}
+
+.text-light {
+    color: #f8f9fa !important;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* 2. FOCUS STATES MEJORADOS */
+.btn:focus,
+.nav-link:focus,
+.form-control:focus,
+.form-select:focus,
+.card:focus {
+    outline: 3px solid #0056b3 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.25) !important;
+}
+
+/* 3. ENCABEZADOS VISUALMENTE OCULTOS PERO ACCESIBLES */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* 4. MEJORA DE LINKS */
+a:not([href]):not([class]),
+a[href=""] {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* 5. ESTADOS DE CARGA ACCESIBLES */
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn:disabled::before {
+    content: " (Deshabilitado)";
+}
+
+/* 6. MEJORA DE FORMULARIOS */
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control:required,
+.form-select:required {
+    border-left: 3px solid #dc3545;
+}
+
+/* 7. ANIMACIONES REDUCIDAS */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* 8. MEJORA DE TABLAS */
+.table th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+.table-responsive {
+    border: 1px solid #dee2e6;
+}
+
+/* 9. SKIP LINKS */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #0056b3;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 10000;
+    border-radius: 0 0 4px 4px;
+}
+
+.skip-link:focus {
+    top: 6px;
+}
+
+/* 10. MEJORA DE CARDS */
+.card {
+    position: relative;
+}
+
+.card:focus-within {
+    outline: 2px solid #0056b3;
+    outline-offset: 2px;
+}
+
+/* 11. ALERTAS MEJORADAS */
+.alert {
+    border-left: 4px solid;
+    padding-left: 1rem;
+}
+
+.alert-success {
+    border-left-color: #198754;
+}
+
+.alert-danger {
+    border-left-color: #dc3545;
+}
+
+.alert-warning {
+    border-left-color: #ffc107;
+}
+
+.alert-info {
+    border-left-color: #0dcaf0;
+}
+
+/* Enlace para saltar navegación */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #000;
+    color: white;
+    padding: 8px 12px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 10000;
+    font-weight: bold;
+    transition: top 0.3s ease;
+}
+
+.skip-link:focus {
+    top: 6px;
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+}
+
+/* Mejorar foco para teclado */
+a:focus, 
+button:focus, 
+input:focus, 
+select:focus,
+.nav-link-modern:focus,
+.btn:focus {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+}
+
+/* Asegurar contraste para elementos de navegación */
+.navbar-toggler-modern:focus {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+}
+
+/* Estilos para información de usuario */
+.user-info {
+    font-size: 0.875rem;
+}
+
+.user-email {
+    color: #6b7280;
+}
+
+.user-type {
+    font-size: 0.75rem;
+    text-transform: capitalize;
+}

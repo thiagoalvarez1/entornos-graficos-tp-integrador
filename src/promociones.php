@@ -186,64 +186,78 @@ $url_base = "promociones.php?" . http_build_query($filtros);
     </div>
 
     <!-- Filtros -->
-    <div class="filters-section mb-4">
-        <form method="GET" class="filters-row">
-            <div class="filter-group">
-                <label class="filter-label">
-                    <i class="fas fa-search"></i>
-                    Buscar promoción
-                </label>
-                <input type="text" name="busqueda" class="filter-input" placeholder="Texto de la promoción o local..."
-                    value="<?= htmlspecialchars($filtros['busqueda']) ?>">
-            </div>
-
-            <div class="filter-group">
-                <label class="filter-label">
-                    <i class="fas fa-star"></i>
-                    Categoría
-                </label>
-                <select name="categoria" class="filter-select">
-                    <option value="">Todas las categorías</option>
-                    <?php foreach ($categorias as $categoria): ?>
-                        <option value="<?= htmlspecialchars($categoria) ?>" <?= $filtros['categoria'] === $categoria ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($categoria) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label class="filter-label">
-                    <i class="fas fa-store"></i>
-                    Local
-                </label>
-                <select name="local" class="filter-select">
-                    <option value="">Todos los locales</option>
-                    <?php foreach ($locales as $local): ?>
-                        <option value="<?= htmlspecialchars($local) ?>" <?= $filtros['local'] === $local ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($local) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <div class="filter-buttons">
-                    <button type="submit" class="btn-filter">
-                        <i class="fas fa-filter"></i>
-                        Aplicar filtros
-                    </button>
-                    <a href="promociones.php" class="btn-filter btn-clear">
-                        <i class="fas fa-times"></i>
-                        Limpiar
-                    </a>
+    <section aria-labelledby="filtros-titulo">
+        <h2 id="filtros-titulo" class="visually-hidden">Filtros de búsqueda</h2>
+        <div class="filters-section mb-4">
+            <form method="GET" class="filters-row" role="search" aria-label="Filtrar promociones">
+                <div class="filter-group">
+                    <label for="busqueda" class="filter-label">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        Buscar promoción
+                    </label>
+                    <input type="text" id="busqueda" name="busqueda" class="filter-input" 
+                           placeholder="Texto de la promoción o local..."
+                           value="<?= htmlspecialchars($filtros['busqueda']) ?>"
+                           aria-describedby="busqueda-help">
+                    <small id="busqueda-help" class="visually-hidden">
+                        Busca por texto de promoción o nombre del local
+                    </small>
                 </div>
-            </div>
-        </form>
-    </div>
+
+                <div class="filter-group">
+                    <label for="categoria" class="filter-label">
+                        <i class="fas fa-star" aria-hidden="true"></i>
+                        Categoría
+                    </label>
+                    <select id="categoria" name="categoria" class="filter-select" aria-describedby="categoria-help">
+                        <option value="">Todas las categorías</option>
+                        <?php foreach ($categorias as $categoria): ?>
+                            <option value="<?= htmlspecialchars($categoria) ?>" <?= $filtros['categoria'] === $categoria ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($categoria) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small id="categoria-help" class="visually-hidden">
+                        Filtra por categoría de cliente
+                    </small>
+                </div>
+
+                <div class="filter-group">
+                    <label for="local" class="filter-label">
+                        <i class="fas fa-store" aria-hidden="true"></i>
+                        Local
+                    </label>
+                    <select id="local" name="local" class="filter-select" aria-describedby="local-help">
+                        <option value="">Todos los locales</option>
+                        <?php foreach ($locales as $local): ?>
+                            <option value="<?= htmlspecialchars($local) ?>" <?= $filtros['local'] === $local ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($local) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small id="local-help" class="visually-hidden">
+                        Filtra por nombre del local
+                    </small>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-buttons">
+                        <button type="submit" class="btn-filter">
+                            <i class="fas fa-filter" aria-hidden="true"></i>
+                            Aplicar filtros
+                        </button>
+                        <a href="promociones.php" class="btn-filter btn-clear">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                            Limpiar filtros
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
 
     <!-- Barra de estadísticas -->
-    <div class="stats-info">
+    <div class="stats-info" aria-live="polite" aria-atomic="true">
         Mostrando <span class="stats-count"><?= count($promociones) ?></span>
         de <span class="stats-total"><?= $total_promociones ?></span>
         <?= $total_promociones === 1 ? 'promoción' : 'promociones' ?>
@@ -252,69 +266,77 @@ $url_base = "promociones.php?" . http_build_query($filtros);
         <?php endif; ?>
     </div>
 
-
     <!-- Grid de promociones -->
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        <?php if (!empty($promociones)): ?>
-            <?php foreach ($promociones as $promo): ?>
-                <div class="col">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title fw-bold text-primary"><?= htmlspecialchars($promo['nombreLocal']) ?></h5>
-                                <span class="badge 
-                                    <?= $promo['categoriaCliente'] == 'Premium' ? 'bg-warning' :
-                                        ($promo['categoriaCliente'] == 'Medium' ? 'bg-info' : 'bg-secondary') ?>">
-                                    <?= htmlspecialchars($promo['categoriaCliente']) ?>
-                                </span>
+    <section aria-labelledby="resultados-titulo">
+        <h2 id="resultados-titulo" class="visually-hidden">Resultados de promociones</h2>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <?php if (!empty($promociones)): ?>
+                <?php foreach ($promociones as $index => $promo): ?>
+                    <div class="col">
+                        <article class="card h-100 border-0 shadow-sm" aria-labelledby="promo-<?= $promo['codPromo'] ?>-titulo">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h3 id="promo-<?= $promo['codPromo'] ?>-titulo" class="card-title fw-bold text-primary h5">
+                                        <?= htmlspecialchars($promo['nombreLocal']) ?>
+                                    </h3>
+                                    <span class="badge 
+                                        <?= $promo['categoriaCliente'] == 'Premium' ? 'bg-warning' :
+                                            ($promo['categoriaCliente'] == 'Medium' ? 'bg-info' : 'bg-secondary') ?>"
+                                        aria-label="Categoría: <?= htmlspecialchars($promo['categoriaCliente']) ?>">
+                                        <?= htmlspecialchars($promo['categoriaCliente']) ?>
+                                    </span>
+                                </div>
+                                <p class="card-subtitle mb-2 text-muted h6"><?= htmlspecialchars($promo['rubroLocal']) ?></p>
+                                <p class="card-text"><?= htmlspecialchars($promo['textoPromo']) ?></p>
                             </div>
-                            <h6 class="card-subtitle mb-2 text-muted"><?= htmlspecialchars($promo['rubroLocal']) ?></h6>
-                            <p class="card-text"><?= htmlspecialchars($promo['textoPromo']) ?></p>
-                        </div>
-                        <div class="card-footer bg-transparent border-0 pt-0">
-                            <ul class="list-unstyled mb-0 small">
-                                <li class="text-muted">
-                                    <i class="fas fa-map-marker-alt me-1"></i>
-                                    <?= htmlspecialchars($promo['ubicacionLocal']) ?>
-                                </li>
-                                <li class="text-muted">
-                                    <i class="far fa-calendar-alt me-1"></i>
-                                    Válido hasta: <?= date('d/m/Y', strtotime($promo['fechaHastaPromo'])) ?>
-                                </li>
-                                <li class="text-muted">
-                                    <i class="fas fa-clock me-1"></i>
-                                    Días: <?= htmlspecialchars(convertirDias($promo['diasSemana'])) ?>
-                                </li>
-                            </ul>
-                            <div class="d-grid mt-3">
-                                <a href="login.php?id=<?= $promo['codPromo'] ?>" class="btn btn-primary-modern">
-                                    Solicitar Promoción <i class="fas fa-arrow-right ms-1"></i>
-                                </a>
+                            <div class="card-footer bg-transparent border-0 pt-0">
+                                <ul class="list-unstyled mb-0 small" aria-label="Detalles de la promoción">
+                                    <li class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1" aria-hidden="true"></i>
+                                        <?= htmlspecialchars($promo['ubicacionLocal']) ?>
+                                    </li>
+                                    <li class="text-muted">
+                                        <i class="far fa-calendar-alt me-1" aria-hidden="true"></i>
+                                        Válido hasta: <?= date('d/m/Y', strtotime($promo['fechaHastaPromo'])) ?>
+                                    </li>
+                                    <li class="text-muted">
+                                        <i class="fas fa-clock me-1" aria-hidden="true"></i>
+                                        Días: <?= htmlspecialchars(convertirDias($promo['diasSemana'])) ?>
+                                    </li>
+                                </ul>
+                                <div class="d-grid mt-3">
+                                    <a href="login.php?id=<?= $promo['codPromo'] ?>" class="btn btn-primary-modern"
+                                       aria-label="Solicitar promoción de <?= htmlspecialchars($promo['nombreLocal']) ?> - <?= htmlspecialchars($promo['textoPromo']) ?>">
+                                        Solicitar Promoción <i class="fas fa-arrow-right ms-1" aria-hidden="true"></i>
+                                    </a>
+                                </div>
                             </div>
-                        </div>
+                        </article>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="col-12">
+                    <div class="alert alert-info" role="alert">
+                        <?php if (!empty($filtros['busqueda']) || !empty($filtros['categoria']) || !empty($filtros['local'])): ?>
+                            No hay promociones que coincidan con los filtros aplicados.
+                        <?php else: ?>
+                            No hay promociones activas en este momento. ¡Vuelve pronto!
+                        <?php endif; ?>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <div class="col-12 text-center">
-                <div class="alert alert-info" role="alert">
-                    <?php if (!empty($filtros['busqueda']) || !empty($filtros['categoria']) || !empty($filtros['local'])): ?>
-                        No hay promociones que coincidan con los filtros aplicados.
-                    <?php else: ?>
-                        No hay promociones activas en este momento. ¡Vuelve pronto!
-                    <?php endif; ?>
-                </div>
-            </div>
-        <?php endif; ?>
-    </div>
+            <?php endif; ?>
+        </div>
+    </section>
 
     <!-- PAGINACIÓN -->
     <?php if ($total_paginas > 1 && $total_promociones > 0): ?>
         <nav aria-label="Paginación de promociones" class="mt-5">
+            <h3 class="visually-hidden">Navegación entre páginas</h3>
             <ul class="pagination justify-content-center">
                 <!-- Botón Anterior -->
                 <li class="page-item <?= $pagina_actual == 1 ? 'disabled' : '' ?>">
-                    <a class="page-link" href="<?= $url_base ?>&pagina=<?= $pagina_actual - 1 ?>" aria-label="Anterior">
+                    <a class="page-link" href="<?= $url_base ?>&pagina=<?= $pagina_actual - 1 ?>" 
+                       aria-label="Página anterior" <?= $pagina_actual == 1 ? 'tabindex="-1" aria-disabled="true"' : '' ?>>
                         <span aria-hidden="true">&laquo;</span>
                     </a>
                 </li>
@@ -325,29 +347,33 @@ $url_base = "promociones.php?" . http_build_query($filtros);
                 $fin = min($total_paginas, $pagina_actual + 2);
 
                 if ($inicio > 1) {
-                    echo '<li class="page-item"><a class="page-link" href="' . $url_base . '&pagina=1">1</a></li>';
+                    echo '<li class="page-item"><a class="page-link" href="' . $url_base . '&pagina=1" aria-label="Ir a página 1">1</a></li>';
                     if ($inicio > 2)
-                        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        echo '<li class="page-item disabled"><span class="page-link" aria-hidden="true">...</span></li>';
                 }
 
                 for ($i = $inicio; $i <= $fin; $i++):
                     ?>
                     <li class="page-item <?= $i == $pagina_actual ? 'active' : '' ?>">
-                        <a class="page-link" href="<?= $url_base ?>&pagina=<?= $i ?>"><?= $i ?></a>
+                        <a class="page-link" href="<?= $url_base ?>&pagina=<?= $i ?>" 
+                           aria-label="Página <?= $i ?>" <?= $i == $pagina_actual ? 'aria-current="page"' : '' ?>>
+                            <?= $i ?>
+                        </a>
                     </li>
                 <?php endfor; ?>
 
                 <?php if ($fin < $total_paginas): ?>
                     <?php if ($fin < $total_paginas - 1): ?>
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                        <li class="page-item disabled"><span class="page-link" aria-hidden="true">...</span></li>
                     <?php endif; ?>
-                    <li class="page-item"><a class="page-link"
-                            href="<?= $url_base ?>&pagina=<?= $total_paginas ?>"><?= $total_paginas ?></a></li>
+                    <li class="page-item"><a class="page-link" href="<?= $url_base ?>&pagina=<?= $total_paginas ?>"
+                           aria-label="Ir a página <?= $total_paginas ?>"><?= $total_paginas ?></a></li>
                 <?php endif; ?>
 
                 <!-- Botón Siguiente -->
                 <li class="page-item <?= $pagina_actual == $total_paginas ? 'disabled' : '' ?>">
-                    <a class="page-link" href="<?= $url_base ?>&pagina=<?= $pagina_actual + 1 ?>" aria-label="Siguiente">
+                    <a class="page-link" href="<?= $url_base ?>&pagina=<?= $pagina_actual + 1 ?>" 
+                       aria-label="Página siguiente" <?= $pagina_actual == $total_paginas ? 'tabindex="-1" aria-disabled="true"' : '' ?>>
                         <span aria-hidden="true">&raquo;</span>
                     </a>
                 </li>
@@ -355,20 +381,19 @@ $url_base = "promociones.php?" . http_build_query($filtros);
 
             <!-- Navegación rápida -->
             <div class="text-center mt-3">
-                <small class="text-muted">
-                    Ir a página:
-                    <select class="form-select d-inline-block w-auto mx-2 pagination-select"
-                        onchange="window.location.href='<?= htmlspecialchars($url_base, ENT_QUOTES) ?>&pagina=' + this.value">
-                        <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
-                            <option value="<?= $i ?>" <?= $i == $pagina_actual ? 'selected' : '' ?>><?= $i ?></option>
-                        <?php endfor; ?>
-                    </select>
-                </small>
+                <label for="pagination-select" class="text-muted me-2">Ir a página:</label>
+                <select id="pagination-select" class="form-select d-inline-block w-auto mx-2 pagination-select"
+                    onchange="window.location.href='<?= htmlspecialchars($url_base, ENT_QUOTES) ?>&pagina=' + this.value"
+                    aria-label="Seleccionar página">
+                    <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
+                        <option value="<?= $i ?>" <?= $i == $pagina_actual ? 'selected' : '' ?>>
+                            <?= $i ?>
+                        </option>
+                    <?php endfor; ?>
+                </select>
             </div>
         </nav>
     <?php endif; ?>
-
-
 </div>
 
 <?php
